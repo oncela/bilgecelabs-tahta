@@ -9,3 +9,7 @@ panel/storage/
 # Editör / sistem
 .DS_Store
 *.swp
+# NSIS derleme çıktıları (kaynak .nsi izlenir)
+installer/*.exe
+installer/bilgece.ico
+installer/*.bmp

@@ -149,6 +149,11 @@ function device_from_token(): int {
     return $id;
 }
 
+/** Cihaz türü etiketleri (panelde görünen). */
+function device_types(): array {
+    return ['board' => 'Akıllı tahta', 'classroom' => 'Sınıf bilgisayarı', 'office' => 'İdare', 'desk' => 'Danışma', 'other' => 'Diğer'];
+}
+
 function device_label(array $d): string {
     return $d['name'] ?: $d['hostname'] ?: ('Tahta #' . $d['id']);
 }

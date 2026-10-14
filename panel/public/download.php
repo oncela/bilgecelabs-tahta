@@ -10,19 +10,24 @@ require_login();
 
 const DEFAULT_SERVER = 'https://tahta.bilgecelabs.com'; // ajandaki defaultServer ile aynı
 
-$exe = ACI_ROOT . '/storage/aci-ajan.exe';
-if (!is_file($exe)) { http_response_code(404); exit('Ajan dosyası bulunamadı.'); }
+$agent = ACI_ROOT . '/storage/aci-ajan.exe';
+$setup = ACI_ROOT . '/storage/kurulum.exe';
 
-// Kaldırma aracı: aynı exe, "BilgeceTahtaKaldir.exe" adıyla (anahtar gerekmez)
+// Kaldırma aracı: sade ajan, "BilgeceTahtaKaldir.exe" adıyla (anahtar gerekmez)
 if (($_GET['tool'] ?? '') === 'kaldir') {
+    if (!is_file($agent)) { http_response_code(404); exit('Dosya bulunamadı.'); }
     audit('download', 'kaldırma aracı');
     header('Content-Type: application/vnd.microsoft.portable-executable');
     header('Content-Disposition: attachment; filename="BilgeceTahtaKaldir.exe"');
-    header('Content-Length: ' . filesize($exe));
+    header('Content-Length: ' . filesize($agent));
     header('Cache-Control: no-store');
-    readfile($exe);
+    readfile($agent);
     exit;
 }
+
+// Kurulum sihirbazı (NSIS). Yoksa sade ajana düş (eski yöntem).
+$exe = is_file($setup) ? $setup : $agent;
+if (!is_file($exe)) { http_response_code(404); exit('Kurulum dosyası bulunamadı.'); }
 
 $key = setting('enroll_key');
 if (!$key || !preg_match('/^[0-9a-f]{32}$/', $key)) { http_response_code(500); exit('Kayıt anahtarı geçersiz.'); }

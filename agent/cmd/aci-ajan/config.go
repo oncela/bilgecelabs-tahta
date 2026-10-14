@@ -16,6 +16,9 @@ type Config struct {
 	EnrollKey string `json:"enroll_key"`
 	DeviceID  int64  `json:"device_id"`
 	Token     string `json:"token"`
+	DevType   string `json:"dev_type"` // board / classroom / office / desk / other
+	Room      string `json:"room"`     // konum/sınıf (ör. 7-B, Danışma)
+	DevName   string `json:"dev_name"` // panelde görünecek ad (isteğe bağlı)
 }
 
 var (

@@ -21,7 +21,11 @@ release: lint agent ## Ajanı panele kopyala (indirme sayfası bunu kullanır)
 	mkdir -p panel/storage
 	cp agent/build/bilgece-tahta.exe panel/storage/aci-ajan.exe
 	echo "$(VERSION)" > panel/storage/aci-ajan.version
-	sha256sum panel/storage/aci-ajan.exe
+	cp theme/brand/favicon.ico installer/bilgece.ico
+	python3 installer/make-splash.py
+	cd installer && makensis -DAGENT=../agent/build/bilgece-tahta.exe -DVERSION=$(VERSION) bilgece-tahta.nsi >/dev/null
+	cp installer/bilgece-tahta-kurulum.exe panel/storage/kurulum.exe
+	sha256sum panel/storage/aci-ajan.exe panel/storage/kurulum.exe
 
 clean:
 	rm -rf agent/build

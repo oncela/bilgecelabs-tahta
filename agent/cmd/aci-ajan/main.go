@@ -54,12 +54,15 @@ func main() {
 		fs := flag.NewFlagSet("install", flag.ExitOnError)
 		server := fs.String("server", defaultServer, "panel adresi")
 		key := fs.String("key", "", "kayıt anahtarı (panelde Ayarlar sayfasında)")
+		devType := fs.String("type", "", "cihaz türü: board/classroom/office/desk/other")
+		room := fs.String("room", "", "konum/sınıf")
+		name := fs.String("name", "", "cihaz adı")
 		fs.Parse(os.Args[2:])
 		if *key == "" {
 			fmt.Println("HATA: --key gerekli")
 			os.Exit(2)
 		}
-		if err := install(*server, *key); err != nil {
+		if err := install(*server, *key, *devType, *room, *name); err != nil {
 			fmt.Println("HATA:", err)
 			os.Exit(1)
 		}

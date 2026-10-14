@@ -189,6 +189,9 @@ func (a *agent) enroll() error {
 		"mac":        primaryMAC(),
 		"os":         osVersion(),
 		"version":    version,
+		"dev_type":   a.cfg.DevType,
+		"room":       a.cfg.Room,
+		"dev_name":   a.cfg.DevName,
 	}
 	var resp struct {
 		DeviceID int64  `json:"device_id"`

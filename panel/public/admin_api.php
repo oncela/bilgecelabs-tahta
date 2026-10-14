@@ -15,7 +15,7 @@ $in = $isPost ? json_in() : [];
 switch ("$action:" . ($isPost ? 'POST' : 'GET')) {
 
 case 'devices:GET':
-    $rows = db()->query('SELECT d.id, d.hostname, d.name, d.room, d.mac, d.os, d.agent_version, d.ip,
+    $rows = db()->query('SELECT d.id, d.hostname, d.name, d.room, d.dev_type, d.mac, d.os, d.agent_version, d.ip,
             d.logged_user, d.uptime_s, d.defender, d.defender_at, d.last_seen, d.mesh_state,
             (SELECT COUNT(*) FROM commands c WHERE c.device_id = d.id AND c.status IN (\'pending\',\'sent\')) AS busy
         FROM devices d ORDER BY d.room IS NULL, d.room, COALESCE(d.name, d.hostname)')->fetchAll();
@@ -26,6 +26,8 @@ case 'devices:GET':
             'label' => device_label($d),
             'hostname' => $d['hostname'],
             'room' => $d['room'] ?? '',
+            'type' => $d['dev_type'] ?: 'board',
+            'type_label' => device_types()[$d['dev_type'] ?: 'board'] ?? 'Diğer',
             'ip' => $d['ip'],
             'user' => $d['logged_user'],
             'os' => $d['os'],
@@ -95,9 +97,10 @@ case 'update_device:POST':
     $id = (int)($in['id'] ?? 0);
     $name = trim(mb_substr((string)($in['name'] ?? ''), 0, 128));
     $room = trim(mb_substr((string)($in['room'] ?? ''), 0, 64));
-    db()->prepare('UPDATE devices SET name = ?, room = ? WHERE id = ?')
-        ->execute([$name ?: null, $room ?: null, $id]);
-    audit('device_update', "#$id ad=$name sınıf=$room");
+    $type = in_array($in['type'] ?? '', array_keys(device_types()), true) ? $in['type'] : 'board';
+    db()->prepare('UPDATE devices SET name = ?, room = ?, dev_type = ? WHERE id = ?')
+        ->execute([$name ?: null, $room ?: null, $type, $id]);
+    audit('device_update', "#$id ad=$name sınıf=$room tür=$type");
     json_out(['ok' => true]);
 
 case 'delete_device:POST':

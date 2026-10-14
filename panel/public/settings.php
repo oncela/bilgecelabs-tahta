@@ -59,7 +59,7 @@ page_header('Ayarlar', 'settings.php');
 
 <div class="col-12"><section class="card"><div class="card-body">
   <h3 class="card-title">Tahtaya kurulum</h3>
-  <p>Kurulum dosyasını tahtada indirip çift tıklayın. Windows yönetici izni isteyecek, kurulum birkaç saniye sürer. Tahta kısa süre içinde <a href="devices.php">Tahtalar</a> sayfasında görünür.</p>
+  <p>Kurulum dosyasını cihazda indirip çift tıklayın. Sihirbaz açılır: cihaz türünü (akıllı tahta, sınıf bilgisayarı, idare, danışma) ve konumunu seçin, kurulum birkaç saniye sürer. Cihaz kısa süre içinde <a href="devices.php">Tahtalar</a> sayfasında görünür.</p>
   <?php if ($hasAgent): ?>
     <p><a class="btn btn-primary" href="download.php">Kurulum dosyasını indir (BilgeceTahtaKurulum.exe)</a></p>
     <p class="text-secondary small">Tahtadan indirmek için tarayıcıda bu panele giriş yapıp bu sayfayı açın. Dosyanın adında okulun kayıt anahtarı bulunur; dosya adını değiştirmeyin ve panel dışında paylaşmayın.</p>

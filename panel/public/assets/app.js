@@ -77,8 +77,10 @@ const Devices = {
 
   visible() {
     const room = document.getElementById('room-filter').value;
+    const type = document.getElementById('type-filter').value;
     const q = document.getElementById('search').value.trim().toLocaleLowerCase('tr');
     return this.list.filter((d) => {
+      if (type && d.type !== type) return false;
       if (room && d.room !== room) return false;
       if (!q) return true;
       return [d.label, d.hostname, d.user, d.ip, d.room].join(' ').toLocaleLowerCase('tr').includes(q);
@@ -176,6 +178,7 @@ const Devices = {
     tr.append(
       tdChk,
       tdName,
+      el('td', '', d.type_label || '—'),
       el('td', '', d.room || '—'),
       tdState,
       el('td', '', d.user || '—'),
@@ -199,6 +202,7 @@ const Devices = {
 
   init() {
     document.getElementById('room-filter').addEventListener('change', () => this.render());
+    document.getElementById('type-filter').addEventListener('change', () => this.render());
     document.getElementById('search').addEventListener('input', () => this.render());
     document.getElementById('select-all').addEventListener('change', (e) => {
       for (const d of this.visible()) {
@@ -469,6 +473,7 @@ const DeviceDialog = {
         id: this.device.id,
         name: document.getElementById('dev-name').value,
         room: document.getElementById('dev-room').value,
+        type: document.getElementById('dev-type').value,
       });
       document.getElementById('device-dialog').close();
       Devices.load();

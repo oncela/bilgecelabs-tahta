@@ -52,7 +52,7 @@ func installDir() string {
 	return filepath.Join(pf, "BilgeceLabs", "Tahta")
 }
 
-func install(server, key string) error {
+func install(server, key, devType, room, name string) error {
 	if err := os.MkdirAll(installDir(), 0755); err != nil {
 		return err
 	}
@@ -97,8 +97,15 @@ func install(server, key string) error {
 	if old := migrateLegacy(m); old != nil && cfg.Token == "" {
 		cfg.DeviceID, cfg.Token = old.DeviceID, old.Token
 	}
-	if cfg.Server != server || cfg.EnrollKey != key {
-		cfg.Server, cfg.EnrollKey = server, key
+	cfg.Server, cfg.EnrollKey = server, key
+	if devType != "" {
+		cfg.DevType = devType
+	}
+	if room != "" {
+		cfg.Room = room
+	}
+	if name != "" {
+		cfg.DevName = name
 	}
 	if err := cfg.save(); err != nil {
 		return err

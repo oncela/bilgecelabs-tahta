@@ -49,7 +49,7 @@ func installFromSetup(c *setupConfig) {
 		msgBox("Kurulum için yönetici izni gerekiyor. Dosyaya sağ tıklayıp \"Yönetici olarak çalıştır\" deyin.", true)
 		return
 	}
-	if err := install(c.Server, c.Key); err != nil {
+	if err := install(c.Server, c.Key, "", "", ""); err != nil {
 		msgBox("Kurulum başarısız:\n"+err.Error(), true)
 		return
 	}

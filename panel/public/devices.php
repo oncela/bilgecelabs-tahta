@@ -8,6 +8,7 @@ page_header('Tahtalar', 'devices.php');
 <div data-page="devices">
   <div class="card mb-3">
     <div class="card-body d-flex flex-wrap gap-2 align-items-center">
+      <select id="type-filter" class="form-select w-auto" aria-label="Tür"><option value="">Tüm türler</option><option value="board">Akıllı tahta</option><option value="classroom">Sınıf bilgisayarı</option><option value="office">İdare</option><option value="desk">Danışma</option><option value="other">Diğer</option></select>
       <select id="room-filter" class="form-select w-auto" aria-label="Sınıf"><option value="">Tüm sınıflar</option></select>
       <input id="search" type="search" class="form-control w-auto" placeholder="Tahta, kullanıcı veya IP ara" aria-label="Ara" value="<?= h($_GET['q'] ?? '') ?>">
       <span class="text-secondary ms-auto" id="counts"></span>
@@ -35,9 +36,9 @@ page_header('Tahtalar', 'devices.php');
       <table class="table table-vcenter card-table">
         <thead><tr>
           <th class="w-1"><input type="checkbox" class="form-check-input" id="select-all" aria-label="Görünen tüm tahtaları seç"></th>
-          <th>Tahta</th><th>Sınıf</th><th>Durum</th><th>Oturum</th><th>Virüs koruması</th><th>Uzaktan erişim</th><th>IP</th><th>Açık kalma</th>
+          <th>Cihaz</th><th>Tür</th><th>Sınıf</th><th>Durum</th><th>Oturum</th><th>Virüs koruması</th><th>Uzaktan erişim</th><th>IP</th><th>Açık kalma</th>
         </tr></thead>
-        <tbody id="rows"><tr class="empty-row"><td colspan="9">Yükleniyor…</td></tr></tbody>
+        <tbody id="rows"><tr class="empty-row"><td colspan="10">Yükleniyor…</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -56,8 +57,16 @@ page_header('Tahtalar', 'devices.php');
       </div>
       <dl class="row mb-3" id="dev-facts"></dl>
       <div class="row g-3">
-        <div class="col-md-6"><label class="form-label" for="dev-name">Ad</label><input id="dev-name" class="form-control" maxlength="128" placeholder="7-B Tahta"></div>
-        <div class="col-md-6"><label class="form-label" for="dev-room">Sınıf</label><input id="dev-room" class="form-control" maxlength="64" list="room-list" placeholder="7-B"></div>
+        <div class="col-md-4"><label class="form-label" for="dev-type">Tür</label>
+          <select id="dev-type" class="form-select">
+            <option value="board">Akıllı tahta</option>
+            <option value="classroom">Sınıf bilgisayarı</option>
+            <option value="office">İdare</option>
+            <option value="desk">Danışma</option>
+            <option value="other">Diğer</option>
+          </select></div>
+        <div class="col-md-4"><label class="form-label" for="dev-name">Ad</label><input id="dev-name" class="form-control" maxlength="128" placeholder="7-B Tahta"></div>
+        <div class="col-md-4"><label class="form-label" for="dev-room">Konum / sınıf</label><input id="dev-room" class="form-control" maxlength="64" list="room-list" placeholder="7-B"></div>
       </div>
       <datalist id="room-list"></datalist>
       <h4 class="mt-4 mb-2">Son işlemler</h4>
