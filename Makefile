@@ -2,7 +2,7 @@
 GO      ?= $(HOME)/.local/go/bin/go
 VERSION := $(shell cat VERSION)
 
-.PHONY: agent lint migrate release clean theme theme-deploy
+.PHONY: agent lint migrate release clean theme theme-deploy check
 
 agent: ## Windows ajanını derle
 	cd agent && GOOS=windows GOARCH=amd64 $(GO) build -trimpath \
@@ -33,3 +33,7 @@ theme-deploy: theme ## MeshCentral temasını sunucuya kopyala
 	sudo mkdir -p /opt/meshcentral/meshcentral-data/theme-pack/aci
 	sudo cp -r theme/meshcentral/public /opt/meshcentral/meshcentral-data/theme-pack/aci/
 	sudo chown -R meshcentral:meshcentral /opt/meshcentral/meshcentral-data/theme-pack
+
+check: lint ## Sözdizimi + uçtan uca duman testi (ACI_TEST_* ortam değişkenleri gerekli)
+	/opt/node/bin/node --check panel/public/assets/app.js
+	bash panel/tests/smoke.sh

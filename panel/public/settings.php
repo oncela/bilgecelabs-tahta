@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/../src/bootstrap.php';
 require __DIR__ . '/../views/layout.php';
+require_once __DIR__ . '/../src/health.php';
 require_login();
 
 $msg = $err = '';
@@ -35,6 +36,26 @@ page_header('Ayarlar', 'settings.php');
 <?php if ($msg): ?><div class="alert alert-success"><?= h($msg) ?></div><?php endif; ?>
 <?php if ($err): ?><div class="alert alert-danger"><?= h($err) ?></div><?php endif; ?>
 <div class="row row-cards">
+<?php $checks = health_checks(); $problems = count(array_filter($checks, fn($c) => $c['level'] === 'bad')); ?>
+<div class="col-12"><section class="card">
+  <div class="card-header">
+    <h3 class="card-title">Sistem durumu</h3>
+    <span class="badge ms-auto <?= $problems ? 'bg-danger-lt' : 'bg-success-lt' ?>"><?= $problems ? $problems . ' sorun' : 'Her şey çalışıyor' ?></span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-vcenter card-table">
+      <tbody>
+      <?php foreach ($checks as $c): ?>
+        <tr>
+          <td class="w-1"><i class="ti <?= ['ok' => 'ti-circle-check text-success', 'warn' => 'ti-alert-triangle text-warning', 'bad' => 'ti-circle-x text-danger'][$c['level']] ?>"></i></td>
+          <td class="fw-medium text-nowrap"><?= h($c['name']) ?></td>
+          <td class="text-secondary"><?= h($c['detail']) ?></td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+</section></div>
 
 <div class="col-12"><section class="card"><div class="card-body">
   <h3 class="card-title">Tahtaya kurulum</h3>

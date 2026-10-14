@@ -2,8 +2,8 @@
 // Panel ekranlarının kullandığı JSON uç noktaları (oturum + CSRF korumalı).
 declare(strict_types=1);
 require __DIR__ . '/../src/bootstrap.php';
-require __DIR__ . '/../src/status.php';
-require __DIR__ . '/../src/meshctl.php';
+require_once __DIR__ . '/../src/status.php';
+require_once __DIR__ . '/../src/meshctl.php';
 require_login();
 
 $action = (string)($_GET['action'] ?? '');

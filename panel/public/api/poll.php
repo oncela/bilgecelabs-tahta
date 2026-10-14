@@ -3,7 +3,7 @@
 // bekleyen komutları alır.
 declare(strict_types=1);
 require __DIR__ . '/../../src/bootstrap.php';
-require __DIR__ . '/../../src/mesh.php';
+require_once __DIR__ . '/../../src/mesh.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_out(['error' => 'POST gerekli'], 405);
 

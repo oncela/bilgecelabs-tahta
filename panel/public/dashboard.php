@@ -2,7 +2,7 @@
 // Genel bakış: okulun durumu tek ekranda, dikkat gerekenler önce.
 declare(strict_types=1);
 require __DIR__ . '/../src/bootstrap.php';
-require __DIR__ . '/../src/status.php';
+require_once __DIR__ . '/../src/status.php';
 require __DIR__ . '/../views/layout.php';
 require_login();
 

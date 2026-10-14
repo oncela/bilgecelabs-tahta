@@ -3,7 +3,7 @@
 // alınıp önbellekte tutulur; tahtalar sadece panelle konuşur.
 declare(strict_types=1);
 require __DIR__ . '/../../src/bootstrap.php';
-require __DIR__ . '/../../src/mesh.php';
+require_once __DIR__ . '/../../src/mesh.php';
 
 device_from_token(); // sadece kayıtlı tahtalar indirebilir
 if (!mesh_enabled() || cfg('ACI_MESH_GROUP') === '') json_out(['error' => 'uzaktan erişim kapalı'], 404);
