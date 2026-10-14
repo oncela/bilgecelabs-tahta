@@ -62,7 +62,9 @@ page_header('Ayarlar', 'settings.php');
   <p>Kurulum dosyasını tahtada indirip çift tıklayın. Windows yönetici izni isteyecek, kurulum birkaç saniye sürer. Tahta kısa süre içinde <a href="devices.php">Tahtalar</a> sayfasında görünür.</p>
   <?php if ($hasAgent): ?>
     <p><a class="btn btn-primary" href="download.php">Kurulum dosyasını indir (AciTahtaKurulum.exe)</a></p>
-    <p class="text-secondary small">Tahtadan indirmek için tarayıcıda bu panele giriş yapıp bu sayfayı açın. Dosyanın içinde okulun kayıt anahtarı bulunur; panel dışında paylaşmayın.</p>
+    <p class="text-secondary small">Tahtadan indirmek için tarayıcıda bu panele giriş yapıp bu sayfayı açın. Dosyanın adında okulun kayıt anahtarı bulunur; dosya adını değiştirmeyin ve panel dışında paylaşmayın.</p>
+    <p class="mb-0"><a class="btn" href="download.php?tool=kaldir"><i class="ti ti-trash me-1"></i>Kaldırma aracını indir (AciTahtaKaldir.exe)</a></p>
+    <p class="text-secondary small mt-2 mb-0">Ajanı ve uzaktan erişimi o bilgisayardan kaldırır. Panelden uzaktan kaldırmak için tahtaya tıklayıp "Tahtadan kaldır" deyin.</p>
   <?php else: ?>
     <div class="alert alert-warning">Sunucuda ajan dosyası yok: <code>storage/aci-ajan.exe</code> yüklenmeli.</div>
   <?php endif; ?>

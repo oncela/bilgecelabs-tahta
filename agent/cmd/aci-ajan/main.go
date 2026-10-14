@@ -30,12 +30,16 @@ func main() {
 		return
 	}
 	if len(os.Args) < 2 {
-		// Panelden indirilen kurulum dosyası: çift tıklayınca kur.
-		if c, err := readEmbedded(); err == nil {
-			installFromEmbedded(c)
+		if isUninstallTool() {
+			runUninstallTool()
 			return
 		}
-		usage()
+		// Panelden indirilen kurulum dosyası (adında kayıt anahtarı var): çift tıklayınca kur.
+		if c, err := setupFromFilename(); err == nil {
+			installFromSetup(c)
+			return
+		}
+		msgBox("Bu dosya kurulum için uygun değil.\nKurulum dosyasını panelin Ayarlar sayfasından indirin.", true)
 		os.Exit(2)
 	}
 	switch os.Args[1] {
@@ -53,13 +57,6 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Println("Kuruldu ve başlatıldı.")
-	case "install-embedded":
-		c, err := readEmbedded()
-		if err != nil {
-			msgBox("Kurulum dosyası bozuk: "+err.Error(), true)
-			os.Exit(1)
-		}
-		installFromEmbedded(c)
 	case "uninstall":
 		if err := uninstall(); err != nil {
 			fmt.Println("HATA:", err)

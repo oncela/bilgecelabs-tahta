@@ -1,0 +1,43 @@
+{
+  "RT_MANIFEST": {
+    "#1": {
+      "0409": {
+        "identity": { "name": "AciOkullari.TahtaAjani", "version": "" },
+        "description": "Acı Okulları akıllı tahta yönetim ajanı",
+        "minimum-os": "win10",
+        "execution-level": "requireAdministrator",
+        "ui-access": false,
+        "auto-elevate": false,
+        "dpi-awareness": "system",
+        "disable-theming": false,
+        "disable-window-filtering": false,
+        "high-resolution-scrolling-aware": false,
+        "ultra-high-resolution-scrolling-aware": false,
+        "long-path-aware": true,
+        "printer-driver-isolation": false,
+        "gdi-scaling": false,
+        "segment-heap": false,
+        "use-common-controls-v6": true
+      }
+    }
+  },
+  "RT_VERSION": {
+    "#1": {
+      "0000": {
+        "fixed": { "file_version": "0.0.0.0", "product_version": "0.0.0.0" },
+        "info": {
+          "041f": {
+            "CompanyName": "Acı Okulları",
+            "FileDescription": "Acı Okulları Tahta Ajanı",
+            "InternalName": "aci-ajan",
+            "LegalCopyright": "© 2026 Acı Okulları",
+            "OriginalFilename": "aci-ajan.exe",
+            "ProductName": "Acı Tahta",
+            "FileVersion": "0.0.0",
+            "ProductVersion": "0.0.0"
+          }
+        }
+      }
+    }
+  }
+}

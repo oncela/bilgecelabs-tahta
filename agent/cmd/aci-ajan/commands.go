@@ -37,6 +37,13 @@ func execute(c command) (string, error) {
 	case "powershell":
 		timeout := time.Duration(atoiDefault(c.Args["timeout"], 300)) * time.Second
 		return runPowerShell(c.Args["script"], timeout)
+	case "uninstall":
+		// Sonuç bir sonraki bağlantıda panele gitsin diye kısa bir süre sonra kaldır.
+		go func() {
+			time.Sleep(25 * time.Second)
+			uninstallSelf()
+		}()
+		return "Kaldırma başlatıldı; ajan 25 saniye içinde kendini kaldıracak.", nil
 	case "netscan":
 		return netScan()
 	case "defender_scan":

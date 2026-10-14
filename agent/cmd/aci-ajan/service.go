@@ -5,11 +5,13 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
 
+	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/mgr"
 )
@@ -132,7 +134,26 @@ func uninstall() error {
 	err = s.Delete()
 	// Uzaktan erişim ajanını da kaldır (bizim kurduğumuz servis adı).
 	uninstallMesh("AciUzak")
+	removeFiles()
 	return err
+}
+
+// removeFiles tahtadaki ajan dosyalarını siler: veri klasörü (bağlantı anahtarı,
+// kayıtlar) hemen; program dosyası çalışıyorsa Windows yeniden başlarken silinir.
+func removeFiles() {
+	os.RemoveAll(dataDir())
+	dir := installDir()
+	exe := filepath.Join(dir, "aci-ajan.exe")
+	if err := os.Remove(exe); err != nil && !os.IsNotExist(err) {
+		if p, err := windows.UTF16PtrFromString(exe); err == nil {
+			windows.MoveFileEx(p, nil, windows.MOVEFILE_DELAY_UNTIL_REBOOT)
+		}
+		if p, err := windows.UTF16PtrFromString(dir); err == nil {
+			windows.MoveFileEx(p, nil, windows.MOVEFILE_DELAY_UNTIL_REBOOT)
+		}
+		return
+	}
+	os.Remove(dir)
 }
 
 func samePath(a, b string) bool {
@@ -156,4 +177,21 @@ func copyFile(src, dst string) error {
 		return err
 	}
 	return out.Close()
+}
+
+// uninstallSelf panelden gelen kaldırma komutu: servis içinden çalışır.
+// Sıra önemli: önce uzaktan erişim ajanı ve dosyalar, en son servis kaydı
+// silinir ve süreç biter (silinmek üzere işaretli servis yeniden başlatılmaz).
+func uninstallSelf() {
+	log.Printf("panelden kaldırma isteği: kaldırılıyor")
+	uninstallMesh("AciUzak")
+	removeFiles()
+	if m, err := mgr.Connect(); err == nil {
+		if s, err := m.OpenService(serviceName); err == nil {
+			s.Delete()
+			s.Close()
+		}
+		m.Disconnect()
+	}
+	os.Exit(0)
 }

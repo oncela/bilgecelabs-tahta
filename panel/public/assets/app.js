@@ -235,6 +235,11 @@ const COMMANDS = {
     fields: [{ k: 'delay', label: 'Kaç saniye sonra', type: 'number', value: '60' }],
   },
   cancel_shutdown: { title: 'Kapatmayı iptal et', fields: [] },
+  uninstall: {
+    title: 'Tahtadan kaldır',
+    note: 'Ajan ve uzaktan erişim bu tahtadan kaldırılır; tahta artık panele bağlanmaz. Geri almak için kurulum dosyasını yeniden çalıştırmak gerekir. Kaldırma tamamlanınca tahtayı panelden de silebilirsiniz.',
+    fields: [],
+  },
   wol_prepare: {
     title: 'Uzaktan açmaya hazırla',
     note: 'Ağ kartında Wake-on-LAN açılır, Windows hızlı başlatma kapatılır ve her tahta için hazır olup olmadığı raporlanır. BIOS ayarı ayrıca elle yapılmalıdır.',
@@ -484,6 +489,10 @@ const DeviceDialog = {
   init() {
     document.getElementById('device-form').addEventListener('submit', (e) => this.save(e));
     document.getElementById('dev-delete').addEventListener('click', () => this.remove());
+    document.getElementById('dev-uninstall').addEventListener('click', () => {
+      document.getElementById('device-dialog').close();
+      CommandDialog.open('uninstall', [this.device.id], () => Devices.load());
+    });
     document.getElementById('device-dialog').addEventListener('close', () => {
       const btn = document.getElementById('dev-delete');
       delete btn.dataset.confirm;

@@ -63,6 +63,7 @@ page_header('Tahtalar', 'devices.php');
       <div id="dev-history" class="d-grid gap-2"></div>
     </div>
     <div class="card-footer d-flex gap-2">
+      <button type="button" class="btn btn-ghost-danger" id="dev-uninstall"><i class="ti ti-trash me-1"></i>Tahtadan kaldır</button>
       <button type="button" class="btn btn-ghost-danger" id="dev-delete">Panelden sil</button>
       <span class="ms-auto"></span>
       <button type="button" class="btn" data-close>Kapat</button>
