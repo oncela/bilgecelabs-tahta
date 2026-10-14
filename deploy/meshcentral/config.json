@@ -1,0 +1,32 @@
+{
+  "settings": {
+    "cert": "192.168.1.105",
+    "port": 4430,
+    "redirPort": 0,
+    "aliasPort": 4430,
+    "selfUpdate": false,
+    "agentPong": 60,
+    "allowLoginToken": true,
+    "allowFraming": true
+  },
+  "domains": {
+    "": {
+      "title": "Acı Tahta",
+      "title2": "Uzaktan Erişim",
+      "newAccounts": false,
+      "userConsentFlags": { "desktopnotify": true, "terminalnotify": true, "filenotify": true },
+      "consentMessages": {
+        "title": "Acı Okulları",
+        "desktop": "Bu tahta şu anda {0} tarafından uzaktan izleniyor.",
+        "terminal": "{0} bu tahtada komut satırına bağlandı.",
+        "files": "{0} bu tahtanın dosyalarına erişiyor."
+      },
+      "agentCustomization": {
+        "displayName": "Acı Okulları Uzaktan Destek",
+        "description": "Acı Okulları akıllı tahta uzaktan erişim ajanı",
+        "companyName": "Acı Okulları",
+        "serviceName": "AciUzak"
+      }
+    }
+  }
+}

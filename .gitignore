@@ -1,0 +1,11 @@
+# Gizli bilgiler
+.env
+*.env
+.meshcentral-sifre.txt
+# Derleme çıktıları
+agent/build/
+panel/storage/
+*.exe
+# Editör / sistem
+.DS_Store
+*.swp

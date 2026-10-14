@@ -1,0 +1,17 @@
+[Unit]
+Description=Acı Tahta - MeshCentral (uzaktan erişim)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=meshcentral
+WorkingDirectory=/opt/meshcentral
+ExecStart=/opt/node/bin/node /opt/meshcentral/node_modules/meshcentral
+Environment=NODE_ENV=production
+Restart=always
+RestartSec=10
+MemoryMax=600M
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

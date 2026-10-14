@@ -1,0 +1,280 @@
+<title>Acı Okulları Tahta Yönetimi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Düzen: tek sütun rapor, 760px okuma genişliği; tablolar kendi kutusunda kayar. Vurgu: kara tahta yeşili. */
+:root {
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --fg: #1d2421;
+  --muted: #5b6862;
+  --line: #dde3df;
+  --accent: #2c6b55;
+  --accent-soft: #e3efe9;
+  --ok: #217a4b;   --ok-bg: #e2f3e9;
+  --wip: #8a5a00;  --wip-bg: #fbf0d9;
+  --todo: #4f5b66; --todo-bg: #eceff2;
+  --risk: #a63a2e; --risk-bg: #f8e4e1;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131816; --surface: #1a201d; --fg: #e4ebe7; --muted: #9aa8a1; --line: #2c3531;
+    --accent: #6cc3a0; --accent-soft: #1f3129;
+    --ok: #6fd39b; --ok-bg: #1b3326; --wip: #e8b85a; --wip-bg: #382c14;
+    --todo: #aab6c0; --todo-bg: #262d33; --risk: #f08a7c; --risk-bg: #3a2220;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131816; --surface: #1a201d; --fg: #e4ebe7; --muted: #9aa8a1; --line: #2c3531;
+  --accent: #6cc3a0; --accent-soft: #1f3129;
+  --ok: #6fd39b; --ok-bg: #1b3326; --wip: #e8b85a; --wip-bg: #382c14;
+  --todo: #aab6c0; --todo-bg: #262d33; --risk: #f08a7c; --risk-bg: #3a2220;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 16px/1.6 var(--font-body); padding-inline: 16px; padding-block: 0 64px; }
+main { max-width: 760px; margin: 0 auto; display: grid; gap: 48px; }
+header { padding-block: 48px 8px; border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+.eyebrow { font: 500 12px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font: 700 clamp(30px, 6vw, 44px)/1.1 var(--font-display); margin: 0; text-wrap: balance; }
+h2 { font: 600 24px/1.25 var(--font-display); margin: 0 0 14px; text-wrap: balance; }
+h3 { font: 600 17px/1.3 var(--font-body); margin: 22px 0 8px; }
+p { margin: 0 0 12px; max-width: 68ch; }
+.meta { color: var(--muted); font-size: 14px; display: flex; flex-wrap: wrap; gap: 6px 18px; padding-bottom: 20px; }
+.lead { font-size: 18px; }
+section { min-width: 0; }
+ul, ol { margin: 0 0 12px; padding-left: 22px; }
+li { margin: 4px 0; }
+code, .mono { font-family: var(--font-mono); font-size: .9em; }
+code { background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+th { font: 600 12px/1.3 var(--font-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 500; }
+.pill { display: inline-block; font: 500 12px/1 var(--font-mono); padding: 5px 8px; border-radius: 999px; white-space: nowrap; }
+.ok { color: var(--ok); background: var(--ok-bg); }
+.wip { color: var(--wip); background: var(--wip-bg); }
+.todo { color: var(--todo); background: var(--todo-bg); }
+.risk { color: var(--risk); background: var(--risk-bg); }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 4px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 4px; }
+.stat b { font: 700 28px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 14px; }
+.callout { border-left: 3px solid var(--risk); background: var(--risk-bg); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 12px 0; }
+.callout p:last-child { margin: 0; }
+.diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; overflow-x: auto; }
+.diagram svg { display: block; min-width: 620px; width: 100%; height: auto; }
+.diagram text { font-family: var(--font-body); fill: var(--fg); }
+.diagram .sub { fill: var(--muted); font-size: 12px; }
+.diagram .box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.diagram .box-acc { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.diagram .wire { stroke: var(--accent); stroke-width: 2; fill: none; }
+.diagram .wlabel { fill: var(--accent); font-family: var(--font-mono); font-size: 12px; }
+.steps { counter-reset: s; list-style: none; padding: 0; display: grid; gap: 10px; }
+.steps li { counter-increment: s; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px 12px 52px; position: relative; margin: 0; }
+.steps li::before { content: counter(s); position: absolute; left: 14px; top: 12px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--surface); font: 600 13px/26px var(--font-mono); text-align: center; }
+.steps b { display: block; }
+.decisions li { margin: 8px 0; }
+footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; }
+@media (max-width: 480px) { body { font-size: 15px; } .lead { font-size: 16px; } }
+</style>
+
+<main>
+<header>
+  <div class="eyebrow">Geliştirme raporu · v0.1</div>
+  <h1>Acı Okulları Akıllı Tahta Yönetimi</h1>
+  <div class="meta"><span>14 Ekim 2026</span><span>Panel: tahta.bilgecelabs.com</span><span>Kapsam: ~30 HNC tahta</span></div>
+</header>
+
+<section>
+  <h2>Özet</h2>
+  <p class="lead">Okuldaki akıllı tahtaları tek bir web panelinden yönetmek için bir sistem geliştiriyoruz. Panelden uzaktan bağlanma, kilitleme, internet kesme, virüs kontrolü, yazılım yükleme ve ağdaki cihazları görme yapılacak. Okulda sunucu ve MikroTik olmadığı için her şey tahtaya kurulan küçük bir ajan ve internetteki panel üzerinden çalışıyor.</p>
+  <div class="summary">
+    <div class="stat"><b>9</b><span>özellik kodlandı (test bekliyor)</span></div>
+    <div class="stat"><b>0</b><span>gerçek tahtada denendi</span></div>
+    <div class="stat"><b>14</b><span>özellik planlandı</span></div>
+    <div class="stat"><b>~6 hafta</b><span>temel sürüme kadar</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Ortam ve kısıtlar</h2>
+  <ul>
+    <li><b>Tahtalar:</b> ~30 adet HNC (65", 75", 86"). Her tahtada iki ayrı sistem var: dahili <b>Android</b> ve OPS modülde <b>Windows Pro</b>. Ön panelde NFC okuyucu ve tek tuşla kurtarma tuşu bulunuyor.</li>
+    <li><b>Okul ağı:</b> MikroTik yok. Servis sağlayıcı modemi var, yönetim şifresi bizde.</li>
+    <li><b>Okul sunucusu:</b> Kullanılamaz. Muhasebe programı çalışıyor ve ayrı ağda. Ona hiç dokunulmayacak.</li>
+    <li><b>Merkez sunucu:</b> Otel portalının çalıştığı bu sunucu (Ubuntu, PHP 8.1, MariaDB, nginx). İç ağda (192.168.1.105), internete açık değil. 2.2 GB RAM, diskte 4.6 GB boş yer var.</li>
+    <li><b>Windows Pro sınırı:</b> Deep Freeze benzeri yerleşik koruma (UWF) Pro sürümde yok. Geri alma işi başka yolla çözülecek.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Mimari</h2>
+  <p>Bağlantıyı her zaman tahta başlatıyor. Bu yüzden okulda port açmak ya da sunucu kurmak gerekmiyor. Kurallar tahtanın içinde de saklanıyor, internet kopsa bile çalışmaya devam ediyor.</p>
+  <div class="diagram" role="img" aria-label="Tahtadaki ajanlar HTTPS ile Cloudflare Tunnel üzerinden merkez sunucudaki panel, MeshCentral ve AdGuard Home'a bağlanır.">
+    <svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
+      <rect class="box" x="10" y="20" width="200" height="260" rx="8"/>
+      <text x="26" y="48" font-weight="600" font-size="15">Akıllı tahta (×30)</text>
+      <text class="sub" x="26" y="66">Windows Pro · OPS</text>
+      <rect class="box-acc" x="26" y="84" width="168" height="48" rx="6"/>
+      <text x="38" y="106" font-size="14" font-weight="600">Acı Ajan</text>
+      <text class="sub" x="38" y="123">Go · Windows servisi</text>
+      <rect class="box" x="26" y="144" width="168" height="48" rx="6"/>
+      <text x="38" y="166" font-size="14" font-weight="600">MeshCentral ajanı</text>
+      <text class="sub" x="38" y="183">uzak masaüstü</text>
+      <rect class="box" x="26" y="204" width="168" height="56" rx="6"/>
+      <text x="38" y="226" font-size="14" font-weight="600">Güvenli DNS</text>
+      <text class="sub" x="38" y="244">DoH + tahta kimliği</text>
+
+      <rect class="box" x="262" y="110" width="150" height="80" rx="8"/>
+      <text x="278" y="142" font-weight="600" font-size="14">Cloudflare Tunnel</text>
+      <text class="sub" x="278" y="162">port açmadan HTTPS</text>
+
+      <rect class="box" x="470" y="20" width="220" height="260" rx="8"/>
+      <text x="486" y="48" font-weight="600" font-size="15">Merkez sunucu</text>
+      <text class="sub" x="486" y="66">tahta.bilgecelabs.com</text>
+      <rect class="box-acc" x="486" y="84" width="188" height="48" rx="6"/>
+      <text x="498" y="106" font-size="14" font-weight="600">Okul paneli</text>
+      <text class="sub" x="498" y="123">PHP + MariaDB</text>
+      <rect class="box" x="486" y="144" width="188" height="48" rx="6"/>
+      <text x="498" y="166" font-size="14" font-weight="600">MeshCentral</text>
+      <text class="sub" x="498" y="183">uzaktan erişim sunucusu</text>
+      <rect class="box" x="486" y="204" width="188" height="56" rx="6"/>
+      <text x="498" y="226" font-size="14" font-weight="600">AdGuard Home</text>
+      <text class="sub" x="498" y="244">internet filtresi + log</text>
+
+      <path class="wire" d="M194 108 H228 V150 H262"/>
+      <path class="wire" d="M194 168 H262"/>
+      <path class="wire" d="M194 232 H228 V170 H262"/>
+      <path class="wire" d="M412 150 H449 V108 H486"/>
+      <path class="wire" d="M412 160 H486"/>
+      <path class="wire" d="M412 170 H449 V232 H486"/>
+      <text class="wlabel" x="420" y="96">HTTPS / WSS</text>
+    </svg>
+  </div>
+</section>
+
+<section>
+  <h2>Seçilen yazılımlar</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Alan</th><th>Seçim</th><th>Neden / elenenler</th></tr></thead>
+    <tbody>
+      <tr><td>Uzaktan erişim</td><td>MeshCentral (açık kaynak)</td><td>HTTPS üzerinden çalışıyor ve tünelden geçiyor. RustDesk elendi: ücretsiz sunucusu ayrı TCP/UDP portları istiyor ve yönetim paneli yok, panel ücretli sürümde.</td></tr>
+      <tr><td>Tahta yönetimi</td><td>Acı Ajan + Panel (bizim)</td><td>Ders çizelgesi, kilit, toplu komutlar, Defender gibi okula özel ihtiyaçlar için. Tactical RMM fazla ağır ve lisansı standart değil.</td></tr>
+      <tr><td>İnternet filtresi</td><td>AdGuard Home (açık kaynak)</td><td>Tahta bazında filtre ve log tutuyor, her tahta DoH üzerinden kendi kimliğiyle bağlanıyor. Okul modeminin DNS'i de buraya yönlendirilirse telefonlar da filtreye girer.</td></tr>
+      <tr><td>Ağdaki cihazlar</td><td>Ajanın ağ tarama özelliği</td><td>NetAlertX ve GLPI ajanı okulda sürekli açık bir bilgisayar istiyor. Bizde bu işi çevrimiçi bir tahta yapıyor.</td></tr>
+      <tr><td>Virüs</td><td>Windows Defender (merkezden yönetilen)</td><td>Ek lisans gerekmiyor. Ajan Defender'ın durumunu raporluyor, panelden toplu tarama ve güncelleme başlatılabiliyor.</td></tr>
+      <tr><td>İleride</td><td>GLPI</td><td>Envanter ve öğretmenlerin arıza bildirmesi için. Temel sürümden sonra değerlendirilecek.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>Özellik durumu</h2>
+  <p>Ajan Windows için derleniyor ama henüz gerçek bir tahtada çalıştırılmadı. <span class="pill wip">Kodlandı</span> etiketli her şey ilk tahta testinde doğrulanacak.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Özellik</th><th>Durum</th><th>Not</th></tr></thead>
+    <tbody>
+      <tr><td>Servis olarak kurulum, çökerse yeniden başlama</td><td><span class="pill wip">Kodlandı</span></td><td>SYSTEM yetkisiyle çalışıyor, öğrenci durduramıyor</td></tr>
+      <tr><td>İnternetten indirilen tek .exe kurulum</td><td><span class="pill wip">Kodlandı</span></td><td>Kayıt anahtarı dosyanın içine gömülü, çift tıklayınca yönetici izni istiyor</td></tr>
+      <tr><td>Panele kayıt ve 10 saniyede bir durum bildirimi</td><td><span class="pill wip">Kodlandı</span></td><td>Bildirilenler: kullanıcı, açık kalma süresi, Windows sürümü</td></tr>
+      <tr><td>Defender durumu (15 dakikada bir)</td><td><span class="pill wip">Kodlandı</span></td><td>Koruma açık mı, imza yaşı, bulunan tehdit sayısı</td></tr>
+      <tr><td>Defender toplu tarama ve güncelleme</td><td><span class="pill wip">Kodlandı</span></td><td></td></tr>
+      <tr><td>Ekrana mesaj gönderme</td><td><span class="pill wip">Kodlandı</span></td><td></td></tr>
+      <tr><td>Kapatma, yeniden başlatma, iptal</td><td><span class="pill wip">Kodlandı</span></td><td>Varsayılan olarak 60 saniye uyarı verip kapatıyor</td></tr>
+      <tr><td>Uzaktan PowerShell çalıştırma</td><td><span class="pill wip">Kodlandı</span></td><td>Çıktı panele dönüyor</td></tr>
+      <tr><td>Ağ taraması (IP, MAC, ad)</td><td><span class="pill wip">Kodlandı</span></td><td>Tahtanın bağlı olduğu yerel ağı tarıyor</td></tr>
+      <tr><td>Okul paneli</td><td><span class="pill todo">Sırada</span></td><td>Giriş, tahta listesi, sınıflar, toplu işlemler</td></tr>
+      <tr><td>Sunucu kurulumu (tünel, veritabanı, nginx)</td><td><span class="pill todo">Sudo bekliyor</span></td><td></td></tr>
+      <tr><td>MeshCentral uzak masaüstü</td><td><span class="pill todo">Planlandı</span></td><td>Kurulum paketine eklenecek</td></tr>
+      <tr><td>Kilit ekranı + çevrimdışı PIN</td><td><span class="pill todo">Planlandı</span></td><td>Tasarımı aşağıda</td></tr>
+      <tr><td>Ders ve teneffüs çizelgesi</td><td><span class="pill todo">Planlandı</span></td><td>Kilit ve internet kesme otomatik çalışacak</td></tr>
+      <tr><td>Teneffüste internet kesme</td><td><span class="pill todo">Planlandı</span></td><td>Windows Güvenlik Duvarı ile; panel bağlantısı açık kalacak</td></tr>
+      <tr><td>Akşam otomatik kapatma</td><td><span class="pill todo">Planlandı</span></td><td>Tahtadaki yerel çizelgeye göre</td></tr>
+      <tr><td>İnternet filtresi (AdGuard Home)</td><td><span class="pill todo">Planlandı</span></td><td></td></tr>
+      <tr><td>Uzaktan yazılım yükleme</td><td><span class="pill todo">Planlandı</span></td><td>winget, msi veya exe; hedef tek tahta, sınıf ya da okul</td></tr>
+      <tr><td>Ortak klasör</td><td><span class="pill todo">Planlandı</span></td><td>Panele yüklenen dosyalar <code>C:\Ortak\&lt;sınıf&gt;</code> klasörüne iner</td></tr>
+      <tr><td>Yasaklı uygulamalar</td><td><span class="pill todo">Planlandı</span></td><td></td></tr>
+      <tr><td>Öğrenci hesabını her açılışta sıfırlama</td><td><span class="pill todo">Planlandı</span></td><td>Deep Freeze'in yerini tutacak</td></tr>
+      <tr><td>USB koruması</td><td><span class="pill todo">Planlandı</span></td><td>USB'den otomatik çalıştırma kapalı; istenirse USB bellek tamamen kapalı</td></tr>
+      <tr><td>Yeni cihaz uyarısı</td><td><span class="pill todo">Planlandı</span></td><td>Ağ taraması sonuçlarından</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>Kilit ekranı ve internetsiz PIN ile açma</h2>
+  <p>İnternet koptuğunda panel tahtaya ulaşamaz. Kilitli bir tahtanın yine de açılabilmesi için iki yol öneriyorum:</p>
+  <h3>1. Tahtaya özel, kendi kendine değişen PIN (önerilen)</h3>
+  <ul>
+    <li>Her tahta kurulumda panelden gizli bir anahtar alıyor. Bu anahtardan bankaların SMS kodları gibi <b>zamana bağlı 6 haneli bir PIN</b> üretiliyor (TOTP, RFC 6238).</li>
+    <li>Aynı PIN'i panel ve tahta internete ihtiyaç duymadan hesaplıyor. Yetkili kişi telefonundan panele girip "Tahta 7-B → PIN göster" diyor ve kodu tahtaya yazıyor.</li>
+    <li>Panele de ulaşılamıyorsa: aynı anahtar, telefondaki bir doğrulayıcı uygulamaya (Google Authenticator gibi) QR kodla eklenebilir. Kod tamamen çevrimdışı üretilir.</li>
+    <li>Kod birkaç dakika geçerli kalıyor. Görülen bir kod sonradan işe yaramıyor.</li>
+  </ul>
+  <h3>2. Okul acil durum PIN'i (yedek yol)</h3>
+  <ul>
+    <li>Sadece idarenin bildiği sabit bir PIN. Tahtada açık hali değil, sadece şifrelenmiş özeti saklanıyor.</li>
+    <li>Panelden periyodik olarak değiştirilebiliyor. Tahtalara bir sonraki bağlantıda iletiliyor.</li>
+  </ul>
+  <h3>Her iki yol için ortak kurallar</h3>
+  <ul>
+    <li>5 yanlış denemeden sonra 5 dakika bekleme süresi başlıyor.</li>
+    <li>Her PIN ile açılış tahtada kayda geçiyor. İnternet gelince panele "7-B, 10:42'de PIN ile açıldı" diye bildiriliyor.</li>
+    <li>PIN ile açılış sadece o anki kilidi kaldırıyor. Bir sonraki teneffüs kilidi yine çizelgeye göre devreye giriyor.</li>
+  </ul>
+  <p>Kilit ekranı tahtanın kullanımını doğrudan etkilediği için ilk sürümden itibaren bir test tahtasında dikkatle denenmesi gerekiyor. Dokunmatik ekran, ekran klavyesi ve Windows kenar kaydırma hareketleri ayrıca test edilecek.</p>
+</section>
+
+<section>
+  <h2>Riskler</h2>
+  <div class="callout"><p><b>Android'e geçiş, en büyük açık.</b> Öğrenci giriş kaynağını Android'e geçirirse Windows'taki bütün kurallar devre dışı kalır. Tahtada açılış kaynağının OPS'e sabitlenip sabitlenemediğine, ayar menüsüne şifre konup konamadığına ve Android Wi‑Fi'sinin kapatılıp kapatılamadığına bakılmalı.</p></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Risk</th><th>Etki</th><th>Önlem</th></tr></thead>
+    <tbody>
+      <tr><td>Öğrencide yönetici yetkisi</td><td><span class="pill risk">Yüksek</span></td><td>Öğrenciler sadece standart hesap kullanacak. Kurulum paketi bunu ayarlayacak.</td></tr>
+      <tr><td>Aynı sunucuda otel portalı</td><td><span class="pill risk">Orta</span></td><td>Ayrı veritabanı kullanıcısı, ayrı nginx sitesi ve ayrı klasör. Sunucu kapanırsa iki sistem birden durur. İleride ayrı sunucuya taşınabilir.</td></tr>
+      <tr><td>Disk alanı (4.6 GB boş)</td><td><span class="pill risk">Orta</span></td><td>Yazılım deposu ve ortak klasör hızla dolabilir. Dosya boyutuna sınır konacak, disk büyütülmeli.</td></tr>
+      <tr><td>İmzasız ajan</td><td><span class="pill wip">Orta</span></td><td>SmartScreen ve Defender uyarı verebilir. Okul sayısı artınca kod imzalama sertifikası alınmalı. İmzalı sürümde anahtar dosya adına taşınacak, çünkü dosyanın sonuna eklenen veri imzayı bozuyor.</td></tr>
+      <tr><td>Kurtarma tuşu Windows'u sıfırlarsa</td><td><span class="pill wip">Orta</span></td><td>Ajan da silinir. Tahta panelde "çevrimdışı" görünür, kurulum dosyası yeniden çalıştırılır.</td></tr>
+      <tr><td>KVKK</td><td><span class="pill wip">Orta</span></td><td>Ekran izleme ve loglar öğrenci verisi sayılıyor. Yetkiler sınırlanacak, aydınlatma metni hazırlanacak, loglar belirli bir süre sonra silinecek.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>Yol haritası</h2>
+  <ol class="steps">
+    <li><b>Sunucu ve panel (1–2. hafta)</b>Cloudflare Tunnel, veritabanı, panel girişi, tahta listesi, toplu komutlar, kurulum dosyasını indirme sayfası. İlk tahtada test.</li>
+    <li><b>Uzaktan erişim ve kilit (3. hafta)</b>MeshCentral kurulumu, kilit ekranı, çevrimdışı PIN.</li>
+    <li><b>Çizelge ve internet (4. hafta)</b>Ders ve teneffüs saatleri, otomatik kilit, internet kesme, akşam kapatma, AdGuard Home.</li>
+    <li><b>Koruma (5. hafta)</b>Öğrenci hesabı sıfırlama, USB koruması, yasaklı uygulamalar, Defender paneli.</li>
+    <li><b>Dağıtım ve ağ (6. hafta)</b>Uzaktan yazılım yükleme, ortak klasör, ağ cihaz listesi ve yeni cihaz uyarısı. 30 tahtanın tamamına kurulum.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Sizden beklenenler ve önerilerim</h2>
+  <p>Görüşlerinizi bu maddelere göre yazarsanız sırayla ilerleyebilirim.</p>
+  <ol class="decisions">
+    <li><b>Şifresiz sudo:</b> Sunucu kurulumu buna bağlı.</li>
+    <li><b>bilgecelabs.com Cloudflare'de mi?</b> Tünel için alan adının Cloudflare'de yönetiliyor olması gerekiyor.</li>
+    <li><b>Test tahtası:</b> Okulda ilk denemeyi yapacağımız bir tahta ve o sırada tahtanın başında bir kişi.</li>
+    <li><b>Ders saatleri:</b> Okulun ders ve teneffüs çizelgesi, akşam kapatma saati.</li>
+    <li><b>PIN yöntemi:</b> Önerim, tahtaya özel değişen PIN ile okul acil PIN'ini birlikte kullanmak. Uygun mu?</li>
+    <li><b>Öğrenci hesabı:</b> Tahtalarda şu an hangi hesap kullanılıyor ve yönetici mi? Standart "Öğrenci" hesabına geçmeyi öneriyorum.</li>
+    <li><b>USB bellek:</b> Tamamen kapatılsın mı, yoksa sadece otomatik çalıştırma mı kapatılsın? Öğretmenler sunum getiriyorsa ikincisini öneriyorum.</li>
+    <li><b>Disk:</b> Sunucunun diskinin büyütülmesini öneriyorum.</li>
+    <li><b>Modem:</b> Okul modeminin marka ve modeli (DNS yönlendirmesi için).</li>
+  </ol>
+</section>
+
+<footer>Kaynak kod: <span class="mono">~/aci-okullari</span> (agent/ ajan, panel/ panel, PLAN.md). Ajan sürümü 0.1.0.</footer>
+</main>
