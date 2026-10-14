@@ -15,7 +15,7 @@ function page_header(string $title, string $active = ''): void {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="csrf" content="<?= h(csrf_token()) ?>">
 <title><?= h($title) ?> · Acı Tahta</title>
-<link rel="stylesheet" href="assets/app.css?v=1">
+<link rel="stylesheet" href="assets/app.css?v=2">
 </head>
 <body>
 <header class="top">
@@ -34,7 +34,7 @@ function page_header(string $title, string $active = ''): void {
 function page_footer(): void {
     ?>
 </main>
-<script src="assets/app.js?v=1"></script>
+<script src="assets/app.js?v=2"></script>
 </body>
 </html>
 <?php

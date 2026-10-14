@@ -7,14 +7,20 @@
     "selfUpdate": false,
     "agentPong": 60,
     "allowLoginToken": true,
-    "allowFraming": true
+    "allowFraming": true,
+    "loginCookieEncryptionKey": "BURAYA: openssl rand -hex 80 (panel .env ACI_MESH_LOGIN_KEY ile aynı)",
+    "mpsPort": 0
   },
   "domains": {
     "": {
       "title": "Acı Tahta",
       "title2": "Uzaktan Erişim",
       "newAccounts": false,
-      "userConsentFlags": { "desktopnotify": true, "terminalnotify": true, "filenotify": true },
+      "userConsentFlags": {
+        "desktopnotify": true,
+        "terminalnotify": true,
+        "filenotify": true
+      },
       "consentMessages": {
         "title": "Acı Okulları",
         "desktop": "Bu tahta şu anda {0} tarafından uzaktan izleniyor.",

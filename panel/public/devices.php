@@ -64,6 +64,11 @@ page_header('Tahtalar', 'devices.php');
 <dialog id="device-dialog" class="wide">
   <form id="device-form">
     <h2 id="dev-title"></h2>
+    <div class="remote-links" id="dev-remote">
+      <a class="btn primary" data-view="desktop">Ekranı aç</a>
+      <a class="btn" data-view="files">Dosyalar</a>
+      <a class="btn" data-view="terminal">Komut satırı</a>
+    </div>
     <dl class="facts" id="dev-facts"></dl>
     <div class="row2">
       <div><label for="dev-name">Ad</label><input id="dev-name" maxlength="128" placeholder="ör. 7-B Tahta"></div>

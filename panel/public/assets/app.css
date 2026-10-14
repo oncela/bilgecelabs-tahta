@@ -138,3 +138,11 @@ dialog::backdrop { background: rgb(0 0 0 / .4); }
   .filters { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Uzaktan erişim sayfası */
+.remote { display: grid; gap: 10px; }
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.tabs a { padding: 6px 12px; border-radius: 6px; text-decoration: none; color: var(--muted); border: 1px solid var(--line); background: var(--surface); }
+.tabs a.on { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.remote-frame { width: 100%; height: calc(100vh - 190px); min-height: 480px; border: 1px solid var(--line); border-radius: var(--radius); background: #000; }
+.remote-links { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 14px; }

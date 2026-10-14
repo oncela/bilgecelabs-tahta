@@ -357,6 +357,9 @@ const DeviceDialog = {
     this.device = d;
     document.getElementById('dev-title').textContent = d.label;
     document.getElementById('dev-name').value = d.label === d.hostname ? '' : d.label;
+    document.querySelectorAll('#dev-remote [data-view]').forEach((a) => {
+      a.href = 'remote.php?id=' + d.id + '&view=' + a.dataset.view;
+    });
     document.getElementById('dev-room').value = d.room || '';
     const facts = document.getElementById('dev-facts');
     facts.replaceChildren();
