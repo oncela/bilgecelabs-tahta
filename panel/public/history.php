@@ -14,7 +14,7 @@ $names = [
     'device_delete' => 'Tahta silme', 'netscan' => 'Ağ taraması', 'enroll_key' => 'Kayıt anahtarı',
     'download' => 'İndirme', 'password' => 'Şifre değişikliği',
     'mesh_wake' => 'Uzaktan açma', 'mesh_sleep' => 'Uyku', 'mesh_off' => 'Kapatma (uzaktan)', 'mesh_reset' => 'Yeniden başlatma (uzaktan)',
-    'mesh_open_url' => 'Web adresi açma', 'mesh_toast' => 'Bildirim',
+    'mesh_open_url' => 'Web adresi açma', 'mesh_toast' => 'Bildirim', 'shared_upload' => 'Dosya yükleme', 'shared_send' => 'Dosya gönderme', 'shared_delete' => 'Dosya silme',
     'remote_desktop' => 'Ekran açıldı', 'remote_files' => 'Dosyalar açıldı', 'remote_terminal' => 'Komut satırı açıldı',
 ];
 page_header('İşlem geçmişi', 'history.php');

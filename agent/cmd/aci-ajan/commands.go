@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	"golang.org/x/sys/windows"
 	"time"
 )
 
@@ -39,6 +41,8 @@ func (a *agent) execute(c command) (string, error) {
 		return runPowerShell(c.Args["script"], timeout)
 	case "fetch_file":
 		return fetchFile(a, c.Args)
+	case "run_app":
+		return runApp(c.Args)
 	case "uninstall":
 		// Sonuç bir sonraki bağlantıda panele gitsin diye kısa bir süre sonra kaldır.
 		go func() {
@@ -80,4 +84,33 @@ func atoiDefault(s string, d int) int {
 		return n
 	}
 	return d
+}
+
+// runApp bir programı, belgeyi veya adresi tahtanın ekranında (oturumdaki
+// kullanıcının masaüstünde) açar. Toplu "aynı anda uygulama çalıştır" için.
+func runApp(args map[string]string) (string, error) {
+	path := strings.TrimSpace(args["path"])
+	if path == "" {
+		return "", fmt.Errorf("çalıştırılacak program/adres boş")
+	}
+	// Doğrudan .exe değilse (belge, kısayol, http adresi) explorer ile aç.
+	var cmdline string
+	low := strings.ToLower(path)
+	if strings.HasPrefix(low, "http://") || strings.HasPrefix(low, "https://") ||
+		!strings.HasSuffix(low, ".exe") {
+		cmdline = `C:\Windows\explorer.exe ` + syscall.EscapeArg(path)
+	} else {
+		cmdline = syscall.EscapeArg(path)
+		if ex := strings.TrimSpace(args["args"]); ex != "" {
+			cmdline += " " + ex
+		}
+	}
+	h, err := startInSessionAsSystem(cmdline)
+	if err != nil {
+		return "", err
+	}
+	if h != 0 {
+		windows.CloseHandle(h)
+	}
+	return "başlatıldı: " + path, nil
 }

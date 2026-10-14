@@ -240,6 +240,14 @@ const COMMANDS = {
     note: 'Ajan ve uzaktan erişim bu tahtadan kaldırılır; tahta artık panele bağlanmaz. Geri almak için kurulum dosyasını yeniden çalıştırmak gerekir. Kaldırma tamamlanınca tahtayı panelden de silebilirsiniz.',
     fields: [],
   },
+  run_app: {
+    title: 'Uygulama veya adres aç',
+    note: 'Seçili tahtaların ekranında açılır. Program yolu (C:\\...\\program.exe), belge ya da web adresi girebilirsiniz.',
+    fields: [
+      { k: 'path', label: 'Program / belge / adres', type: 'text', required: true },
+      { k: 'args', label: 'Ek parametre (isteğe bağlı)', type: 'text' },
+    ],
+  },
   wol_prepare: {
     title: 'Uzaktan açmaya hazırla',
     note: 'Ağ kartında Wake-on-LAN açılır, Windows hızlı başlatma kapatılır ve her tahta için hazır olup olmadığı raporlanır. BIOS ayarı ayrıca elle yapılmalıdır.',

@@ -180,6 +180,7 @@ function command_types(): array {
         'defender_scan'   => ['Virüs taraması', []],
         'defender_update' => ['Virüs imzası güncelle', []],
         'netscan'         => ['Ağ taraması', []],
+        'run_app'         => ['Uygulama/adres aç', ['path', 'args']],
         'uninstall'       => ['Tahtadan kaldır', []],
         // Panelde tanımlı hazır betikler: tahtaya PowerShell olarak gider (bkz. preset_script)
         'wol_prepare'     => ['Uzaktan açmaya hazırla', []],

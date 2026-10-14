@@ -60,6 +60,26 @@ body { background: var(--bs-body-bg); color: var(--bs-body-color); }
 /* Tahtalarda RDP kullanılmaz */
 #connectbutton1rspan, #cxrdp, #cxwebrdp { display: none !important; }
 
+/* Dosya/komut satırı araç çubuğu düğmeleri de panelin rengine uysun */
+.btn-primary {
+  --bs-btn-bg: var(--aci-accent); --bs-btn-border-color: var(--aci-accent);
+  --bs-btn-hover-bg: var(--aci-accent-dark); --bs-btn-hover-border-color: var(--aci-accent-dark);
+  --bs-btn-active-bg: var(--aci-accent-text); --bs-btn-active-border-color: var(--aci-accent-text);
+  --bs-btn-disabled-bg: var(--aci-accent); --bs-btn-disabled-border-color: var(--aci-accent);
+}
+.btn-danger {
+  --bs-btn-bg: var(--aci-bad); --bs-btn-border-color: var(--aci-bad);
+  --bs-btn-hover-bg: #933; --bs-btn-hover-border-color: #933;
+}
+/* Araç çubukları: düz, panel yüzeyi, ince kenar */
+.bl-embedded #p13toolbar, .bl-embedded #p13toolbarBottom, .bl-embedded #termarea3x {
+  background: var(--aci-surface); border-bottom: 1px solid var(--aci-line); padding: .4rem .5rem;
+}
+.bl-embedded #p13toolbar .btn, .bl-embedded #termarea3x .btn { border-radius: 6px; font-weight: 400; }
+/* Dosya listesi okunaklı: panel yazı/çizgi renkleri */
+.bl-embedded #p13files, .bl-embedded #p13filetable { color: var(--aci-fg); }
+.bl-embedded #p13filetable tr { border-color: var(--aci-line); }
+
 /* Panelin içinde (bl-embedded): MeshCentral'ın kendi çubukları yerine panelin çubuğu kullanılır */
 .bl-embedded .bl-hidden,
 .bl-embedded #deskarea4,

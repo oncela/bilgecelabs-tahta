@@ -25,6 +25,7 @@ page_header('Tahtalar', 'devices.php');
       <button class="btn btn-sm" data-cmd="wol_prepare"><i class="ti ti-plug-connected me-1"></i>Uzaktan açmaya hazırla</button>
       <button class="btn btn-sm" data-cmd="wake"><i class="ti ti-player-play me-1"></i>Uzaktan aç</button>
       <button class="btn btn-sm" data-cmd="open_url"><i class="ti ti-world me-1"></i>Web adresi aç</button>
+      <button class="btn btn-sm" data-cmd="run_app"><i class="ti ti-player-play me-1"></i>Uygulama aç</button>
       <button class="btn btn-sm" data-cmd="toast"><i class="ti ti-bell me-1"></i>Bildirim</button>
     </div>
   </div>

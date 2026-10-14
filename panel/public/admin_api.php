@@ -51,6 +51,7 @@ case 'send:POST':
         if (isset($in['args'][$k]) && $in['args'][$k] !== '') $args[$k] = mb_substr((string)$in['args'][$k], 0, 20000);
     }
     if ($type === 'message' && ($args['text'] ?? '') === '') json_out(['error' => 'Mesaj metni boş olamaz.'], 400);
+    if ($type === 'run_app' && trim($args['path'] ?? '') === '') json_out(['error' => 'Program veya adres boş olamaz.'], 400);
     if ($type === 'powershell' && trim($args['script'] ?? '') === '') json_out(['error' => 'Komut boş olamaz.'], 400);
 
     // Hazır betik: tahtaya PowerShell olarak gider, geçmişte kendi adıyla görünür
