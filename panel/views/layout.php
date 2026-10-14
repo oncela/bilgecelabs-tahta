@@ -12,7 +12,7 @@ function menu_items(): array {
         ],
         'Yönetim' => [
             ['software.php', 'Yazılımlar', 'apps', false],
-            ['shared.php', 'Ortak alan', 'folder', false],
+            ['shared.php', 'Ortak alan', 'folder', true],
             ['security.php', 'Güvenlik', 'shield-check', false],
             ['network.php', 'Ağ', 'network', true],
         ],

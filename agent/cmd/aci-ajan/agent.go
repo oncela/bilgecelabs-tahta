@@ -125,7 +125,7 @@ func sleepOrStop(stop <-chan struct{}, d time.Duration) bool {
 
 func (a *agent) run(c command) {
 	log.Printf("komut #%d: %s", c.ID, c.Type)
-	out, err := execute(c)
+	out, err := a.execute(c)
 	r := cmdResult{ID: c.ID, OK: err == nil, Output: out}
 	if err != nil {
 		if r.Output != "" {

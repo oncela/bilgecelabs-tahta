@@ -790,6 +790,135 @@ const Remote = {
   },
 };
 
+// ---------------- Ortak alan ----------------
+
+const Shared = {
+  files: [],
+  current: null,
+  devices: [],
+
+  fmtSize(b) {
+    if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
+    if (b >= 1024) return Math.round(b / 1024) + ' KB';
+    return b + ' B';
+  },
+
+  async load() {
+    try {
+      const data = await api('shared_list');
+      this.files = data.files;
+      this.render();
+    } catch (err) {
+      document.getElementById('shared-rows').replaceChildren(
+        (() => { const tr = el('tr', 'empty-row'); const td = el('td', '', err.message); td.colSpan = 5; tr.append(td); return tr; })());
+    }
+    try { this.devices = (await api('devices')).devices; this.renderRooms(); } catch (e) {}
+  },
+
+  renderRooms() {
+    const rooms = [...new Set(this.devices.map((d) => d.room).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'tr', { numeric: true }));
+    document.getElementById('subdir-list').replaceChildren(...rooms.map((r) => new Option(r)));
+    const sel = document.getElementById('send-room');
+    sel.replaceChildren(new Option('Tüm tahtalar', ''));
+    for (const r of rooms) sel.append(new Option(r, r));
+  },
+
+  render() {
+    const tbody = document.getElementById('shared-rows');
+    if (!this.files.length) {
+      const tr = el('tr', 'empty-row'); const td = el('td', '', 'Henüz dosya yok.'); td.colSpan = 5; tr.append(td);
+      tbody.replaceChildren(tr); return;
+    }
+    tbody.replaceChildren(...this.files.map((f) => {
+      const tr = el('tr');
+      tr.append(
+        el('td', 'fw-medium', f.orig_name),
+        el('td', 'text-nowrap', this.fmtSize(f.size)),
+        el('td', '', f.subdir || '—'),
+        el('td', 'text-nowrap', fmtTime(f.created_at)));
+      const act = el('td', 'text-nowrap');
+      const send = el('button', 'btn btn-sm btn-primary me-1'); send.type = 'button';
+      send.append(el('i', 'ti ti-send me-1'), 'Gönder');
+      send.addEventListener('click', () => this.openSend(f));
+      const del = el('button', 'btn btn-sm btn-ghost-danger'); del.type = 'button';
+      del.append(el('i', 'ti ti-trash'));
+      del.addEventListener('click', async () => {
+        if (del.dataset.c) { try { await api('shared_delete', { id: f.id }); this.load(); } catch (e) { alert(e.message); } }
+        else { del.dataset.c = '1'; del.title = 'Tekrar tıklayın'; }
+      });
+      act.append(send, del);
+      tr.append(act);
+      return tr;
+    }));
+  },
+
+  openSend(f) {
+    this.current = f;
+    document.getElementById('send-info').textContent = f.orig_name + ' · ' + this.fmtSize(f.size);
+    document.getElementById('send-room').value = f.subdir && this.devices.some((d) => d.room === f.subdir) ? f.subdir : '';
+    document.getElementById('send-error').hidden = true;
+    this.updateCount();
+    document.getElementById('send-dialog').showModal();
+  },
+
+  targetIds() {
+    const room = document.getElementById('send-room').value;
+    return this.devices.filter((d) => !room || d.room === room).map((d) => d.id);
+  },
+
+  updateCount() {
+    const n = this.targetIds().length;
+    document.getElementById('send-count').textContent = n + ' tahtaya gönderilecek. Tahta açıldığında dosyayı indirir.';
+  },
+
+  async submitSend(e) {
+    e.preventDefault();
+    const ids = this.targetIds();
+    const err = document.getElementById('send-error');
+    if (!ids.length) { err.textContent = 'Seçime uyan tahta yok.'; err.hidden = false; return; }
+    try {
+      const r = await api('shared_send', { file_id: this.current.id, device_ids: ids });
+      document.getElementById('send-dialog').close();
+      ResultDialog.open(r.batch_id, 'Ortak alan: ' + this.current.orig_name);
+    } catch (ex) { err.textContent = ex.message; err.hidden = false; }
+  },
+
+  async submitUpload(e) {
+    e.preventDefault();
+    const file = document.getElementById('up-file').files[0];
+    const err = document.getElementById('up-error'); err.hidden = true;
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('subdir', document.getElementById('up-subdir').value);
+    fd.append('csrf', CSRF);
+    const btn = document.getElementById('up-btn');
+    const prog = document.getElementById('up-progress');
+    const bar = document.getElementById('up-bar');
+    btn.disabled = true; prog.hidden = false;
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'admin_api.php?action=shared_upload');
+    xhr.upload.onprogress = (ev) => { if (ev.lengthComputable) bar.style.width = Math.round(ev.loaded / ev.total * 100) + '%'; };
+    xhr.onload = () => {
+      btn.disabled = false; prog.hidden = true; bar.style.width = '0%';
+      let d = {}; try { d = JSON.parse(xhr.responseText); } catch (e) {}
+      if (xhr.status === 200 && d.ok) {
+        document.getElementById('upload-form').reset();
+        this.load();
+      } else { err.textContent = d.error || ('Yükleme başarısız (' + xhr.status + ').'); err.hidden = false; }
+    };
+    xhr.onerror = () => { btn.disabled = false; prog.hidden = true; err.textContent = 'Bağlantı hatası.'; err.hidden = false; };
+    xhr.send(fd);
+  },
+
+  init() {
+    document.getElementById('upload-form').addEventListener('submit', (e) => this.submitUpload(e));
+    document.getElementById('send-form').addEventListener('submit', (e) => this.submitSend(e));
+    document.getElementById('send-room').addEventListener('change', () => this.updateCount());
+    this.load();
+  },
+};
+
 // ---------------- Başlatma ----------------
 
 const page = document.querySelector('[data-page]')?.dataset.page;
@@ -804,4 +933,6 @@ if (page === 'devices') {
   Network.init();
 } else if (page === 'remote') {
   Remote.init();
+} else if (page === 'shared') {
+  Shared.init();
 }

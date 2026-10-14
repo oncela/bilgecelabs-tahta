@@ -168,6 +168,64 @@ case 'mesh_action:POST':
     audit('mesh_' . $action, count($hex) . ' tahta' . ($action === 'open_url' ? ': ' . mb_substr((string)($args['url'] ?? ''), 0, 300) : '') . ($r['ok'] ? '' : ' (hata)'));
     json_out(['ok' => $r['ok'], 'output' => $r['out'], 'sent' => count($hex), 'missing' => $missing]);
 
+case 'shared_list:GET':
+    $rows = db()->query('SELECT s.id, s.orig_name, s.size, s.subdir, s.created_at, a.username
+        FROM shared_files s LEFT JOIN admins a ON a.id = s.created_by ORDER BY s.id DESC')->fetchAll();
+    json_out(['files' => $rows]);
+
+case 'shared_upload:POST':
+    // CSRF başlığı üstte kontrol edildi ($_POST['csrf'] formda gelir)
+    if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+        json_out(['error' => 'Dosya yüklenemedi (boyut sınırı ' . ini_get('upload_max_filesize') . ' olabilir).'], 400);
+    }
+    $orig = mb_substr((string)$_FILES['file']['name'], 0, 255);
+    if ($orig === '' || preg_match('#[/\\]#', $orig)) json_out(['error' => 'Geçersiz dosya adı.'], 400);
+    $subdir = preg_replace('#[^\p{L}\p{N} _-]#u', '', trim((string)($_POST['subdir'] ?? '')));
+    $subdir = mb_substr((string)$subdir, 0, 64);
+    $stored = bin2hex(random_bytes(16));
+    $dir = ACI_ROOT . '/storage/shared';
+    @mkdir($dir, 0750, true);
+    $dest = $dir . '/' . $stored;
+    if (!move_uploaded_file($_FILES['file']['tmp_name'], $dest)) json_out(['error' => 'Dosya kaydedilemedi.'], 500);
+    $sha = hash_file('sha256', $dest);
+    db()->prepare('INSERT INTO shared_files (orig_name, stored_name, size, sha256, subdir, created_by) VALUES (?, ?, ?, ?, ?, ?)')
+        ->execute([$orig, $stored, filesize($dest), $sha, $subdir, $_SESSION['admin_id']]);
+    audit('shared_upload', $orig . ' (' . round(filesize($dest) / 1048576, 1) . ' MB)');
+    json_out(['ok' => true]);
+
+case 'shared_send:POST':
+    $fid = (int)($in['file_id'] ?? 0);
+    $st = db()->prepare('SELECT orig_name, sha256, subdir FROM shared_files WHERE id = ?');
+    $st->execute([$fid]);
+    $file = $st->fetch();
+    if (!$file) json_out(['error' => 'Dosya bulunamadı.'], 404);
+    $ids = array_values(array_unique(array_map('intval', (array)($in['device_ids'] ?? []))));
+    if (!$ids) json_out(['error' => 'Önce en az bir tahta seçin.'], 400);
+    $args = json_encode([
+        'path' => '/api/shared.php?id=' . $fid,
+        'name' => $file['orig_name'],
+        'sha256' => $file['sha256'],
+        'dir' => $file['subdir'],
+    ], JSON_UNESCAPED_UNICODE);
+    $batch = new_batch_id();
+    $ins = db()->prepare("INSERT INTO commands (device_id, batch_id, type, args, created_by)
+                          SELECT id, ?, 'fetch_file', ?, ? FROM devices WHERE id = ?");
+    $n = 0;
+    foreach ($ids as $id) { $ins->execute([$batch, $args, $_SESSION['admin_id'], $id]); $n += $ins->rowCount(); }
+    audit('shared_send', $file['orig_name'] . ' -> ' . count($ids) . ' tahta');
+    json_out(['batch_id' => $batch, 'count' => $n]);
+
+case 'shared_delete:POST':
+    $fid = (int)($in['id'] ?? 0);
+    $st = db()->prepare('SELECT stored_name, orig_name FROM shared_files WHERE id = ?');
+    $st->execute([$fid]);
+    if ($f = $st->fetch()) {
+        @unlink(ACI_ROOT . '/storage/shared/' . $f['stored_name']);
+        db()->prepare('DELETE FROM shared_files WHERE id = ?')->execute([$fid]);
+        audit('shared_delete', $f['orig_name']);
+    }
+    json_out(['ok' => true]);
+
 case 'stats:GET':
     json_out(dashboard_stats());
 
