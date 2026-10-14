@@ -2,24 +2,33 @@
    bu değişkenleri kullanır. Koyu mod yok (color-scheme: light). */
 :root {
   color-scheme: light;
-  --aci-bg: #f4f6f4;
+  --aci-bg: #f4f6fa;
   --aci-surface: #ffffff;
-  --aci-fg: #1c2420;
-  --aci-muted: #5d6a63;
-  --aci-line: #dce3df;
-  --aci-accent: #2c6b55;
-  --aci-accent-rgb: 44, 107, 85;
-  --aci-accent-dark: #24594a;
-  --aci-accent-soft: #e2efe8;
-  --aci-sidebar: #1d3d33;
-  --aci-sidebar-fg: #c9ded4;
-  --aci-sidebar-active: #2c6b55;
+  --aci-fg: #18202b;
+  --aci-muted: #5b6678;
+  --aci-line: #dde3ec;
+  --aci-accent: #1f63d6;
+  --aci-accent-rgb: 31, 99, 214;
+  --aci-accent-dark: #184fae;
+  --aci-accent-soft: #e6eefb;
+  --aci-sidebar: #102a4c;
+  --aci-sidebar-fg: #c6d4ea;
+  --aci-sidebar-active: #1f63d6;
   --aci-ok: #1f7a4a;
   --aci-ok-rgb: 31, 122, 74;
   --aci-warn: #b77a00;
   --aci-warn-rgb: 183, 122, 0;
   --aci-bad: #b1372b;
   --aci-bad-rgb: 177, 55, 43;
+  --aci-accent-border: #b7cdf3;
+  --aci-accent-text: #123d86;
+  --aci-tertiary: #eef2f8;
+  --aci-sidebar-mark: #6ea8ff;
+  --aci-sidebar-muted: rgba(198, 212, 234, .6);
+  --aci-chart-1: #1f63d6;
+  --aci-chart-2: #3fa7d6;
+  --aci-chart-3: #8fb3ef;
+  --aci-chart-4: #c3d3ea;
   --aci-radius: 8px;
   --aci-font: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif;
 }
@@ -47,15 +56,15 @@
 /* Koyu yeşil yan menü */
 .aci-sidebar { background: var(--aci-sidebar) !important; border-right: 0; }
 .aci-sidebar .navbar-brand { color: #fff; font-weight: 600; letter-spacing: .01em; }
-.aci-sidebar .brand-mark { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #7cc4a5; margin-right: 8px; }
+.aci-sidebar .brand-mark { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: var(--aci-sidebar-mark); margin-right: 8px; }
 .aci-sidebar .nav-link { color: var(--aci-sidebar-fg); border-radius: 6px; margin: 1px 8px; padding: .45rem .75rem; }
 .aci-sidebar .nav-link:hover { color: #fff; background: rgba(255, 255, 255, .06); }
 .aci-sidebar .nav-item.active > .nav-link,
 .aci-sidebar .nav-link.active { color: #fff; background: var(--aci-sidebar-active); }
-.aci-sidebar .nav-link.disabled { color: rgba(201, 222, 212, .45); }
+.aci-sidebar .nav-link.disabled { color: var(--aci-sidebar-muted); opacity: .75; }
 .aci-sidebar .nav-link .nav-link-icon { color: inherit; opacity: .9; }
-.aci-sidebar .menu-group { color: rgba(201, 222, 212, .6); font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; padding: 1rem 1.25rem .35rem; }
-.aci-sidebar .soon { font-size: .65rem; margin-left: auto; color: rgba(201, 222, 212, .6); border: 1px solid rgba(201, 222, 212, .3); border-radius: 4px; padding: 0 .3rem; }
+.aci-sidebar .menu-group { color: var(--aci-sidebar-muted); font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; padding: 1rem 1.25rem .35rem; }
+.aci-sidebar .soon { font-size: .65rem; margin-left: auto; color: var(--aci-sidebar-muted); border: 1px solid var(--aci-sidebar-muted); border-radius: 4px; padding: 0 .3rem; }
 
 /* Panel bileşenleri */
 .empty-row td { text-align: center; color: var(--aci-muted); padding: 2rem !important; }
@@ -66,7 +75,7 @@ tr.selected { background: var(--aci-accent-soft); }
 .result-output { margin: .5rem 0 0; font: 12px/1.45 ui-monospace, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--aci-bg); padding: .5rem; border-radius: 6px; max-height: 240px; overflow-y: auto; }
 dialog.aci-dialog { border: 0; padding: 0; border-radius: var(--aci-radius); width: min(520px, calc(100vw - 32px)); box-shadow: 0 12px 40px rgba(0, 0, 0, .18); }
 dialog.aci-dialog.wide { width: min(780px, calc(100vw - 32px)); }
-dialog.aci-dialog::backdrop { background: rgba(16, 24, 20, .45); }
+dialog.aci-dialog::backdrop { background: rgba(16, 24, 40, .45); }
 dialog.aci-dialog .card { margin: 0; border: 0; }
 .remote-frame { width: 100%; height: calc(100vh - 230px); min-height: 480px; border: 1px solid var(--aci-line); border-radius: var(--aci-radius); background: var(--aci-surface); }
 .room-card .preview { height: 64px; border-radius: 6px; background: var(--aci-bg); display: flex; align-items: center; justify-content: center; color: var(--aci-muted); font-size: .75rem; }

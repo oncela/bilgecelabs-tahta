@@ -22,15 +22,15 @@
 /* Koyu yeşil yan menü */
 .aci-sidebar { background: var(--aci-sidebar) !important; border-right: 0; }
 .aci-sidebar .navbar-brand { color: #fff; font-weight: 600; letter-spacing: .01em; }
-.aci-sidebar .brand-mark { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #7cc4a5; margin-right: 8px; }
+.aci-sidebar .brand-mark { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: var(--aci-sidebar-mark); margin-right: 8px; }
 .aci-sidebar .nav-link { color: var(--aci-sidebar-fg); border-radius: 6px; margin: 1px 8px; padding: .45rem .75rem; }
 .aci-sidebar .nav-link:hover { color: #fff; background: rgba(255, 255, 255, .06); }
 .aci-sidebar .nav-item.active > .nav-link,
 .aci-sidebar .nav-link.active { color: #fff; background: var(--aci-sidebar-active); }
-.aci-sidebar .nav-link.disabled { color: rgba(201, 222, 212, .45); }
+.aci-sidebar .nav-link.disabled { color: var(--aci-sidebar-muted); opacity: .75; }
 .aci-sidebar .nav-link .nav-link-icon { color: inherit; opacity: .9; }
-.aci-sidebar .menu-group { color: rgba(201, 222, 212, .6); font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; padding: 1rem 1.25rem .35rem; }
-.aci-sidebar .soon { font-size: .65rem; margin-left: auto; color: rgba(201, 222, 212, .6); border: 1px solid rgba(201, 222, 212, .3); border-radius: 4px; padding: 0 .3rem; }
+.aci-sidebar .menu-group { color: var(--aci-sidebar-muted); font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; padding: 1rem 1.25rem .35rem; }
+.aci-sidebar .soon { font-size: .65rem; margin-left: auto; color: var(--aci-sidebar-muted); border: 1px solid var(--aci-sidebar-muted); border-radius: 4px; padding: 0 .3rem; }
 
 /* Panel bileşenleri */
 .empty-row td { text-align: center; color: var(--aci-muted); padding: 2rem !important; }
@@ -41,7 +41,7 @@ tr.selected { background: var(--aci-accent-soft); }
 .result-output { margin: .5rem 0 0; font: 12px/1.45 ui-monospace, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--aci-bg); padding: .5rem; border-radius: 6px; max-height: 240px; overflow-y: auto; }
 dialog.aci-dialog { border: 0; padding: 0; border-radius: var(--aci-radius); width: min(520px, calc(100vw - 32px)); box-shadow: 0 12px 40px rgba(0, 0, 0, .18); }
 dialog.aci-dialog.wide { width: min(780px, calc(100vw - 32px)); }
-dialog.aci-dialog::backdrop { background: rgba(16, 24, 20, .45); }
+dialog.aci-dialog::backdrop { background: rgba(16, 24, 40, .45); }
 dialog.aci-dialog .card { margin: 0; border: 0; }
 .remote-frame { width: 100%; height: calc(100vh - 230px); min-height: 480px; border: 1px solid var(--aci-line); border-radius: var(--aci-radius); background: var(--aci-surface); }
 .room-card .preview { height: 64px; border-radius: 6px; background: var(--aci-bg); display: flex; align-items: center; justify-content: center; color: var(--aci-muted); font-size: .75rem; }

@@ -34,6 +34,13 @@ if (isset($in['defender']) && is_array($in['defender'])) {
         ->execute([json_encode($in['defender'], JSON_UNESCAPED_UNICODE), $deviceId]);
 }
 
+// Kullanım kaydı (saatte bir satır) ve eski kayıtların temizliği
+$pdo->prepare("INSERT IGNORE INTO device_activity (device_id, hour) VALUES (?, DATE_FORMAT(NOW(), '%Y-%m-%d %H:00:00'))")
+    ->execute([$deviceId]);
+if (random_int(1, 500) === 1) {
+    $pdo->exec('DELETE FROM device_activity WHERE hour < NOW() - INTERVAL ' . ACI_ACTIVITY_DAYS . ' DAY');
+}
+
 // 2) Komut sonuçları
 $upd = $pdo->prepare("UPDATE commands SET status = ?, output = ?, done_at = NOW()
                       WHERE id = ? AND device_id = ? AND status = 'sent'");

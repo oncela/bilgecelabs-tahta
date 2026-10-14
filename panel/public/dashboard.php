@@ -88,6 +88,39 @@ page_header('Genel bakış', 'dashboard.php');
     </div>
   </div>
 
+  <div class="row row-cards mb-3">
+    <div class="col-lg-8">
+      <div class="card h-100">
+        <div class="card-header"><h3 class="card-title">Son 7 gün kullanım</h3></div>
+        <div class="card-body"><div style="height: 240px"><canvas id="chart-usage" aria-label="Son 7 gün kullanılan tahta sayısı ve toplam açık saat"></canvas></div></div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header"><h3 class="card-title">Tahta durumu</h3></div>
+        <div class="card-body"><div style="height: 240px"><canvas id="chart-state" aria-label="Açık ve kapalı tahta sayısı"></canvas></div></div>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100">
+        <div class="card-header"><h3 class="card-title">Virüs koruması</h3></div>
+        <div class="card-body"><div style="height: 200px"><canvas id="chart-defender" aria-label="Virüs koruması durumlarına göre tahta sayısı"></canvas></div></div>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100">
+        <div class="card-header"><h3 class="card-title">Uzaktan erişim</h3></div>
+        <div class="card-body"><div style="height: 200px"><canvas id="chart-mesh" aria-label="Uzaktan erişim durumlarına göre tahta sayısı"></canvas></div></div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header"><h3 class="card-title">İşlemler (7 gün)</h3></div>
+        <div class="card-body"><div style="height: 200px"><canvas id="chart-commands" aria-label="Son 7 gün tamamlanan ve tamamlanamayan işlemler"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
   <div class="row row-cards">
     <div class="col-lg-7">
       <div class="card">
@@ -146,4 +179,4 @@ page_header('Genel bakış', 'dashboard.php');
     </div>
   </div>
 </div>
-<?php page_footer();
+<?php page_footer(['vendor/chartjs/chart.umd.min.js']);

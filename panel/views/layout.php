@@ -102,13 +102,16 @@ function page_header(string $title, string $active = ''): void {
 <?php
 }
 
-function page_footer(): void {
+/** $scripts: yalnız bu sayfada gereken ek kütüphaneler (app.js'ten önce yüklenir). */
+function page_footer(array $scripts = []): void {
     ?>
       </div>
     </div>
   </div>
 </div>
 <script src="vendor/tabler/js/tabler.min.js"></script>
+<?php foreach ($scripts as $src): ?><script src="<?= h($src) ?>"></script>
+<?php endforeach; ?>
 <script src="assets/app.js?v=<?= h(asset_version()) ?>"></script>
 </body>
 </html>

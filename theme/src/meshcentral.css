@@ -6,16 +6,16 @@
   --bs-body-color: var(--aci-fg);
   --bs-body-color-rgb: 28, 36, 32;
   --bs-secondary-color: var(--aci-muted);
-  --bs-tertiary-bg: #eef2ef;
-  --bs-secondary-bg: #e9eeeb;
+  --bs-tertiary-bg: var(--aci-tertiary);
+  --bs-secondary-bg: var(--aci-tertiary);
   --bs-border-color: var(--aci-line);
   --bs-border-radius: var(--aci-radius);
   --bs-font-sans-serif: var(--aci-font);
   --bs-primary: var(--aci-accent);
   --bs-primary-rgb: var(--aci-accent-rgb);
   --bs-primary-bg-subtle: var(--aci-accent-soft);
-  --bs-primary-border-subtle: #b9d6c8;
-  --bs-primary-text-emphasis: #1d4a3b;
+  --bs-primary-border-subtle: var(--aci-accent-border);
+  --bs-primary-text-emphasis: var(--aci-accent-text);
   --bs-success: var(--aci-ok);
   --bs-success-rgb: 31, 122, 74;
   --bs-warning: var(--aci-warn);
@@ -32,7 +32,7 @@ body { background: var(--bs-body-bg); color: var(--bs-body-color); }
 .btn-primary {
   --bs-btn-bg: var(--aci-accent); --bs-btn-border-color: var(--aci-accent);
   --bs-btn-hover-bg: var(--aci-accent-dark); --bs-btn-hover-border-color: var(--aci-accent-dark);
-  --bs-btn-active-bg: #1f4d40; --bs-btn-active-border-color: #1f4d40;
+  --bs-btn-active-bg: var(--aci-accent-text); --bs-btn-active-border-color: var(--aci-accent-text);
   --bs-btn-disabled-bg: var(--aci-accent); --bs-btn-disabled-border-color: var(--aci-accent);
   --bs-btn-focus-shadow-rgb: var(--aci-accent-rgb);
 }
@@ -46,6 +46,6 @@ body { background: var(--bs-body-bg); color: var(--bs-body-color); }
 .nav-tabs .nav-link.active { color: var(--aci-fg); border-bottom-color: var(--aci-accent); }
 .pagination { --bs-pagination-active-bg: var(--aci-accent); --bs-pagination-active-border-color: var(--aci-accent); --bs-pagination-color: var(--aci-accent); }
 .form-check-input:checked { background-color: var(--aci-accent); border-color: var(--aci-accent); }
-.form-control:focus, .form-select:focus { border-color: #8fbfa9; box-shadow: 0 0 0 .2rem rgba(var(--aci-accent-rgb), .2); }
+.form-control:focus, .form-select:focus { border-color: var(--aci-accent-border); box-shadow: 0 0 0 .2rem rgba(var(--aci-accent-rgb), .2); }
 .progress { --bs-progress-bar-bg: var(--aci-accent); }
-.navbar.bg-dark, .bg-dark { background-color: #1d4a3b !important; }
+.navbar.bg-dark, .bg-dark { background-color: var(--aci-sidebar) !important; }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 const ACI_ONLINE_SECONDS = 35;     // bu süre içinde bağlanan tahta "çevrimiçi"
 const ACI_POLL_INTERVAL = 10;      // ajanın kaç saniyede bir bağlanacağı
 const ACI_COMMAND_TTL_MIN = 15;    // bu süre içinde alınmayan komut iptal olur
+const ACI_ACTIVITY_DAYS = 180;    // kullanım kaydı saklama süresi (KVKK)
 const ACI_ROOT = __DIR__ . '/..';
 
 date_default_timezone_set('Europe/Istanbul');
