@@ -88,7 +88,7 @@ function mesh_toast(array $hexIds, string $title, string $msg): array {
     $results = [];
     $ok = true;
     foreach (array_filter(array_map('mesh_node_ref', $hexIds)) as $ref) {
-        $r = meshctl(['devicetoast', '--id', $ref, '--title', $title ?: 'Acı Okulları', '--msg', $msg]);
+        $r = meshctl(['devicetoast', '--id', $ref, '--title', $title ?: school_name(), '--msg', $msg]);
         $ok = $ok && $r['ok'];
         $results[] = $r['out'];
     }

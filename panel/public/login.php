@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Giriş · Acı Tahta</title>
+<title>Giriş · <?= h(ACI_PRODUCT) ?></title>
 <link rel="stylesheet" href="vendor/tabler/css/tabler.min.css">
 <link rel="stylesheet" href="assets/aci.css?v=<?= h(substr(md5((string)@filemtime(__DIR__ . '/assets/aci.css')), 0, 8)) ?>">
 </head>
@@ -37,8 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="page page-center">
   <div class="container container-tight py-4">
     <div class="text-center mb-4">
-      <span class="h2"><span class="login-brand"></span>Acı Tahta</span>
-      <div class="text-secondary">Akıllı tahta yönetim paneli</div>
+      <span class="h2"><span class="login-brand"></span><?= h(ACI_PRODUCT) ?></span>
+      <div class="text-secondary"><?= h(school_name()) ?> · Akıllı tahta yönetim paneli</div>
     </div>
     <form method="post" class="card card-md" autocomplete="on">
       <div class="card-body">

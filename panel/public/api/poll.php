@@ -84,7 +84,7 @@ $pdo->commit();
 $resp = ['commands' => $cmds, 'interval' => ACI_POLL_INTERVAL];
 if (mesh_enabled() && cfg('ACI_MESH_GROUP') !== '') {
     // Ajan bu servisi kontrol eder; yoksa aşağıdaki adresten indirip kurar.
-    $resp['mesh'] = ['service' => 'AciUzak', 'url' => '/api/meshagent.php'];
+    $resp['mesh'] = ['service' => 'BilgeceUzak', 'url' => '/api/meshagent.php'];
 }
 json_out($resp);
 

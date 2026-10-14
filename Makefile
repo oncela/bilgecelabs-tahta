@@ -8,7 +8,7 @@ agent: ## Windows ajanını derle (sürüm bilgisi ve manifest dahil)
 	cd agent/cmd/aci-ajan && $(HOME)/go/bin/go-winres make --arch amd64 \
 		--product-version $(VERSION).0 --file-version $(VERSION).0
 	cd agent && GOOS=windows GOARCH=amd64 $(GO) build -trimpath \
-		-ldflags "-X main.version=$(VERSION)" -o build/aci-ajan.exe ./cmd/aci-ajan
+		-ldflags "-X main.version=$(VERSION)" -o build/bilgece-tahta.exe ./cmd/aci-ajan
 
 lint: ## Go ve PHP sözdizimi kontrolü
 	cd agent && GOOS=windows $(GO) vet ./...
@@ -19,7 +19,7 @@ migrate: ## Veritabanı güncellemelerini uygula
 
 release: lint agent ## Ajanı panele kopyala (indirme sayfası bunu kullanır)
 	mkdir -p panel/storage
-	cp agent/build/aci-ajan.exe panel/storage/aci-ajan.exe
+	cp agent/build/bilgece-tahta.exe panel/storage/aci-ajan.exe
 	echo "$(VERSION)" > panel/storage/aci-ajan.version
 	sha256sum panel/storage/aci-ajan.exe
 

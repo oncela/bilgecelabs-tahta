@@ -15,7 +15,7 @@
   },
   "domains": {
     "": {
-      "title": "Acı Tahta",
+      "title": "BilgeceLabs Tahta",
       "title2": "Uzaktan Erişim",
       "newAccounts": false,
       "userConsentFlags": {
@@ -25,22 +25,33 @@
         "desktopprivacybar": true
       },
       "consentMessages": {
-        "title": "Acı Okulları",
+        "title": "BilgeceLabs Tahta",
         "desktop": "Bu tahta şu anda {0} tarafından uzaktan izleniyor.",
         "terminal": "{0} bu tahtada komut satırına bağlandı.",
         "files": "{0} bu tahtanın dosyalarına erişiyor."
       },
       "agentCustomization": {
-        "displayName": "Acı Okulları Uzaktan Destek",
-        "description": "Acı Okulları akıllı tahta uzaktan erişim ajanı",
-        "companyName": "Acı Okulları",
-        "serviceName": "AciUzak"
+        "displayName": "BilgeceLabs Uzaktan Destek",
+        "description": "BilgeceLabs Tahta uzaktan erişim ajanı",
+        "companyName": "BilgeceLabs",
+        "serviceName": "BilgeceUzak"
       },
       "siteStyle": 3,
       "nightMode": 2,
       "themepack": "aci",
       "showModernUIToggle": false,
-      "desktopPrivacyBarText": "Uzaktan bağlantı: {0}"
+      "desktopPrivacyBarText": "Uzaktan bağlantı: {0}",
+      "agentFileInfo": {
+        "filedescription": "BilgeceLabs Uzaktan Destek",
+        "productname": "BilgeceLabs Tahta",
+        "legalcopyright": "© 2026 BilgeceLabs",
+        "internalname": "bilgece-uzak",
+        "originalfilename": "bilgece-uzak.exe",
+        "fileversion": "1.0.0.0",
+        "productversion": "1.0.0.0"
+      },
+      "unknownUserRootRedirect": "https://tahta.bilgecelabs.com/",
+      "hide": 4
     }
   }
 }

@@ -2,8 +2,11 @@
   "RT_MANIFEST": {
     "#1": {
       "0409": {
-        "identity": { "name": "AciOkullari.TahtaAjani", "version": "" },
-        "description": "Acı Okulları akıllı tahta yönetim ajanı",
+        "identity": {
+          "name": "BilgeceLabs.Tahta.Ajan",
+          "version": ""
+        },
+        "description": "BilgeceLabs Tahta ajanı",
         "minimum-os": "win10",
         "execution-level": "requireAdministrator",
         "ui-access": false,
@@ -24,15 +27,18 @@
   "RT_VERSION": {
     "#1": {
       "0000": {
-        "fixed": { "file_version": "0.0.0.0", "product_version": "0.0.0.0" },
+        "fixed": {
+          "file_version": "0.0.0.0",
+          "product_version": "0.0.0.0"
+        },
         "info": {
           "041f": {
-            "CompanyName": "Acı Okulları",
-            "FileDescription": "Acı Okulları Tahta Ajanı",
-            "InternalName": "aci-ajan",
-            "LegalCopyright": "© 2026 Acı Okulları",
-            "OriginalFilename": "aci-ajan.exe",
-            "ProductName": "Acı Tahta",
+            "CompanyName": "BilgeceLabs",
+            "FileDescription": "BilgeceLabs Tahta Ajanı",
+            "InternalName": "bilgece-tahta",
+            "LegalCopyright": "© 2026 BilgeceLabs",
+            "OriginalFilename": "bilgece-tahta.exe",
+            "ProductName": "BilgeceLabs Tahta",
             "FileVersion": "0.0.0",
             "ProductVersion": "0.0.0"
           }

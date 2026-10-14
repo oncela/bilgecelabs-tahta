@@ -31,7 +31,7 @@ function page_header(string $title, string $active = ''): void {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="csrf" content="<?= h(csrf_token()) ?>">
-<title><?= h($title) ?> · Acı Tahta</title>
+<title><?= h($title) ?> · <?= h(ACI_PRODUCT) ?></title>
 <link rel="stylesheet" href="vendor/tabler/css/tabler.min.css">
 <link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.min.css">
 <link rel="stylesheet" href="assets/aci.css?v=<?= h(asset_version()) ?>">
@@ -43,7 +43,10 @@ function page_header(string $title, string $active = ''): void {
       <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu" aria-controls="sidebar-menu" aria-expanded="false" aria-label="Menüyü aç">
         <i class="ti ti-menu-2"></i>
       </button>
-      <a class="navbar-brand navbar-brand-autodark" href="dashboard.php"><span class="brand-mark"></span>Acı Tahta</a>
+      <a class="navbar-brand navbar-brand-autodark flex-column align-items-start" href="dashboard.php">
+        <span><span class="brand-mark"></span><?= h(ACI_PRODUCT) ?></span>
+        <span class="brand-school"><?= h(school_name()) ?></span>
+      </a>
       <div class="collapse navbar-collapse" id="sidebar-menu">
         <ul class="navbar-nav pt-lg-2">
           <?php foreach (menu_items() as $group => $items): ?>

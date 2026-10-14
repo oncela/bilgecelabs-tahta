@@ -213,7 +213,7 @@ func installMesh(a *agent, info *meshInfo) error {
 		return err
 	}
 	req.Header.Set("Authorization", "Bearer "+a.cfg.Token)
-	req.Header.Set("User-Agent", "AciAjan/"+version)
+	req.Header.Set("User-Agent", "BilgeceTahta/"+version)
 	client := &http.Client{Timeout: 5 * time.Minute}
 	res, err := client.Do(req)
 	if err != nil {

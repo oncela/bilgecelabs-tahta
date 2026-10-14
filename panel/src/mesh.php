@@ -40,6 +40,7 @@ function mesh_device_url(string $meshUser, array $device, string $view): string 
     $target = ($device['mesh_node_id'] ?? '') !== ''
         ? ['gotonode' => $device['mesh_node_id']]
         : ['gotodevicename' => $device['hostname']];
-    return rtrim(cfg('ACI_MESH_URL'), '/') . '/?' . http_build_query(['login' => mesh_login_token($meshUser)]
+    // /login: giriş yapmamış ziyaretçiyi panele yönlendiren kural (unknownUserRootRedirect) bu yolu muaf tutar
+    return rtrim(cfg('ACI_MESH_URL'), '/') . '/login?' . http_build_query(['login' => mesh_login_token($meshUser)]
         + $target + ['viewmode' => $mode, 'hide' => 31]);
 }

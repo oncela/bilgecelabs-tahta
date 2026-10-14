@@ -215,7 +215,7 @@ func (a *agent) post(path string, body, out any) error {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "AciAjan/"+version)
+	req.Header.Set("User-Agent", "BilgeceTahta/"+version)
 	if a.cfg.Token != "" {
 		req.Header.Set("Authorization", "Bearer "+a.cfg.Token)
 	}

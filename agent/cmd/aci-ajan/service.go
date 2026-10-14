@@ -3,6 +3,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -48,7 +49,7 @@ func installDir() string {
 	if pf == "" {
 		pf = `C:\Program Files`
 	}
-	return filepath.Join(pf, "AciAjan")
+	return filepath.Join(pf, "BilgeceLabs", "Tahta")
 }
 
 func install(server, key string) error {
@@ -66,7 +67,7 @@ func install(server, key string) error {
 	if err != nil {
 		return err
 	}
-	dst := filepath.Join(installDir(), "aci-ajan.exe")
+	dst := filepath.Join(installDir(), exeName)
 
 	m, err := mgr.Connect()
 	if err != nil {
@@ -91,6 +92,11 @@ func install(server, key string) error {
 	if err != nil {
 		cfg = &Config{}
 	}
+	// Eski adla kurulmuş ajan varsa: kimliğini devral, kendisini ve eski
+	// uzaktan erişim ajanını kaldır (aynı tahta panelde iki kez görünmesin).
+	if old := migrateLegacy(m); old != nil && cfg.Token == "" {
+		cfg.DeviceID, cfg.Token = old.DeviceID, old.Token
+	}
 	if cfg.Server != server || cfg.EnrollKey != key {
 		cfg.Server, cfg.EnrollKey = server, key
 	}
@@ -102,7 +108,7 @@ func install(server, key string) error {
 	if err != nil {
 		s, err = m.CreateService(serviceName, dst, mgr.Config{
 			DisplayName: displayName,
-			Description: "Acı Okulları akıllı tahta yönetimi",
+			Description: "BilgeceLabs Tahta: akıllı tahta yönetimi",
 			StartType:   mgr.StartAutomatic,
 		})
 		if err != nil {
@@ -133,7 +139,7 @@ func uninstall() error {
 	s.Control(svc.Stop)
 	err = s.Delete()
 	// Uzaktan erişim ajanını da kaldır (bizim kurduğumuz servis adı).
-	uninstallMesh("AciUzak")
+	uninstallMesh(meshService)
 	removeFiles()
 	return err
 }
@@ -143,7 +149,7 @@ func uninstall() error {
 func removeFiles() {
 	os.RemoveAll(dataDir())
 	dir := installDir()
-	exe := filepath.Join(dir, "aci-ajan.exe")
+	exe := filepath.Join(dir, exeName)
 	if err := os.Remove(exe); err != nil && !os.IsNotExist(err) {
 		if p, err := windows.UTF16PtrFromString(exe); err == nil {
 			windows.MoveFileEx(p, nil, windows.MOVEFILE_DELAY_UNTIL_REBOOT)
@@ -184,7 +190,7 @@ func copyFile(src, dst string) error {
 // silinir ve süreç biter (silinmek üzere işaretli servis yeniden başlatılmaz).
 func uninstallSelf() {
 	log.Printf("panelden kaldırma isteği: kaldırılıyor")
-	uninstallMesh("AciUzak")
+	uninstallMesh(meshService)
 	removeFiles()
 	if m, err := mgr.Connect(); err == nil {
 		if s, err := m.OpenService(serviceName); err == nil {
@@ -194,4 +200,38 @@ func uninstallSelf() {
 		m.Disconnect()
 	}
 	os.Exit(0)
+}
+
+// migrateLegacy eski markalamayla (servis "AciAjan") kurulmuş ajanı kaldırır ve
+// varsa eski bağlantı kimliğini döner.
+func migrateLegacy(m *mgr.Mgr) *Config {
+	s, err := m.OpenService(legacyServiceName)
+	if err != nil {
+		return nil // eski kurulum yok
+	}
+	s.Control(svc.Stop)
+	time.Sleep(2 * time.Second)
+	s.Delete()
+	s.Close()
+
+	pd := os.Getenv("ProgramData")
+	if pd == "" {
+		pd = `C:\ProgramData`
+	}
+	oldData := filepath.Join(pd, "AciAjan")
+	var old *Config
+	if b, err := os.ReadFile(filepath.Join(oldData, "config.json")); err == nil {
+		var c Config
+		if json.Unmarshal(b, &c) == nil && c.Token != "" {
+			old = &c
+		}
+	}
+	uninstallMesh(legacyMeshService)
+	os.RemoveAll(oldData)
+	pf := os.Getenv("ProgramFiles")
+	if pf == "" {
+		pf = `C:\Program Files`
+	}
+	os.RemoveAll(filepath.Join(pf, "AciAjan"))
+	return old
 }

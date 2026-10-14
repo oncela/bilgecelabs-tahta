@@ -18,7 +18,7 @@ func execute(c command) (string, error) {
 	case "message":
 		title := c.Args["title"]
 		if title == "" {
-			title = "Acı Okulları"
+			title = productName
 		}
 		return "", sendMessage(title, c.Args["text"], atoiDefault(c.Args["timeout"], 0))
 	case "shutdown", "restart":

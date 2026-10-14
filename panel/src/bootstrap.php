@@ -1,5 +1,5 @@
 <?php
-// Acı Okulları tahta paneli: ortak ayarlar ve yardımcılar.
+// BilgeceLabs Tahta paneli: ortak ayarlar ve yardımcılar.
 declare(strict_types=1);
 
 const ACI_ONLINE_SECONDS = 35;     // bu süre içinde bağlanan tahta "çevrimiçi"
@@ -7,6 +7,12 @@ const ACI_POLL_INTERVAL = 10;      // ajanın kaç saniyede bir bağlanacağı
 const ACI_COMMAND_TTL_MIN = 15;    // bu süre içinde alınmayan komut iptal olur
 const ACI_ACTIVITY_DAYS = 180;    // kullanım kaydı saklama süresi (KVKK)
 const ACI_ROOT = __DIR__ . '/..';
+const ACI_PRODUCT = 'BilgeceLabs Tahta';
+
+/** Panelde müşteri (okul) adı olarak görünür. */
+function school_name(): string {
+    return cfg('ACI_SCHOOL_NAME', 'Acı Okulları');
+}
 
 date_default_timezone_set('Europe/Istanbul');
 

@@ -55,7 +55,8 @@
 
 /* Koyu yeşil yan menü */
 .aci-sidebar { background: var(--aci-sidebar) !important; border-right: 0; }
-.aci-sidebar .navbar-brand { color: #fff; font-weight: 600; letter-spacing: .01em; }
+.aci-sidebar .navbar-brand { color: #fff; font-weight: 600; letter-spacing: .01em; gap: .1rem; }
+.aci-sidebar .brand-school { font-size: .72rem; font-weight: 400; color: var(--aci-sidebar-muted); padding-left: 20px; }
 .aci-sidebar .brand-mark { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: var(--aci-sidebar-mark); margin-right: 8px; }
 .aci-sidebar .nav-link { color: var(--aci-sidebar-fg); border-radius: 6px; margin: 1px 8px; padding: .45rem .75rem; }
 .aci-sidebar .nav-link:hover { color: #fff; background: rgba(255, 255, 255, .06); }

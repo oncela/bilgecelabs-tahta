@@ -18,9 +18,16 @@ import (
 var version = "dev"
 
 const (
-	serviceName   = "AciAjan"
-	displayName   = "Acı Okulları Tahta Ajanı"
-	defaultServer = "https://tahta.bilgecelabs.com"
+	productName = "BilgeceLabs Tahta"
+	serviceName = "BilgeceTahta"
+	displayName = "BilgeceLabs Tahta Ajanı"
+	exeName     = "bilgece-tahta.exe"
+	meshService = "BilgeceUzak" // MeshCentral agentCustomization.serviceName
+
+	// Eski adla (0.1.0 öncesi markalama) kurulmuş ajanlar; yeni kurulum bunları kaldırır.
+	legacyServiceName = "AciAjan"
+	legacyMeshService = "AciUzak"
+	defaultServer     = "https://tahta.bilgecelabs.com"
 )
 
 func main() {
@@ -84,8 +91,8 @@ func main() {
 
 func usage() {
 	fmt.Println(`Kullanım:
-  aci-ajan.exe install --key ANAHTAR [--server https://tahta.bilgecelabs.com]
-  aci-ajan.exe uninstall
-  aci-ajan.exe debug
-  aci-ajan.exe version`)
+  bilgece-tahta.exe install --key ANAHTAR [--server https://tahta.bilgecelabs.com]
+  bilgece-tahta.exe uninstall
+  bilgece-tahta.exe debug
+  bilgece-tahta.exe version`)
 }

@@ -28,7 +28,7 @@ func dataDir() string {
 	if pd == "" {
 		pd = `C:\ProgramData`
 	}
-	return filepath.Join(pd, "AciAjan")
+	return filepath.Join(pd, "BilgeceLabs", "Tahta")
 }
 
 func configPath() string { return filepath.Join(dataDir(), "config.json") }

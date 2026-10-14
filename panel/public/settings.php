@@ -61,9 +61,9 @@ page_header('Ayarlar', 'settings.php');
   <h3 class="card-title">Tahtaya kurulum</h3>
   <p>Kurulum dosyasını tahtada indirip çift tıklayın. Windows yönetici izni isteyecek, kurulum birkaç saniye sürer. Tahta kısa süre içinde <a href="devices.php">Tahtalar</a> sayfasında görünür.</p>
   <?php if ($hasAgent): ?>
-    <p><a class="btn btn-primary" href="download.php">Kurulum dosyasını indir (AciTahtaKurulum.exe)</a></p>
+    <p><a class="btn btn-primary" href="download.php">Kurulum dosyasını indir (BilgeceTahtaKurulum.exe)</a></p>
     <p class="text-secondary small">Tahtadan indirmek için tarayıcıda bu panele giriş yapıp bu sayfayı açın. Dosyanın adında okulun kayıt anahtarı bulunur; dosya adını değiştirmeyin ve panel dışında paylaşmayın.</p>
-    <p class="mb-0"><a class="btn" href="download.php?tool=kaldir"><i class="ti ti-trash me-1"></i>Kaldırma aracını indir (AciTahtaKaldir.exe)</a></p>
+    <p class="mb-0"><a class="btn" href="download.php?tool=kaldir"><i class="ti ti-trash me-1"></i>Kaldırma aracını indir (BilgeceTahtaKaldir.exe)</a></p>
     <p class="text-secondary small mt-2 mb-0">Ajanı ve uzaktan erişimi o bilgisayardan kaldırır. Panelden uzaktan kaldırmak için tahtaya tıklayıp "Tahtadan kaldır" deyin.</p>
   <?php else: ?>
     <div class="alert alert-warning">Sunucuda ajan dosyası yok: <code>storage/aci-ajan.exe</code> yüklenmeli.</div>
@@ -94,4 +94,5 @@ page_header('Ayarlar', 'settings.php');
   </form>
 </div></section></div>
 </div>
+<p class="text-secondary small mt-3"><?= h(ACI_PRODUCT) ?> <?= h(trim((string)@file_get_contents(ACI_ROOT . '/storage/aci-ajan.version')) ?: '') ?> · <a href="licenses.php" class="text-secondary">Üçüncü taraf lisansları</a></p>
 <?php page_footer();

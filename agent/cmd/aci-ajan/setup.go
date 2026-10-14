@@ -15,8 +15,8 @@ import (
 // Kurulum dosyasının adı kayıt anahtarını taşır; exe'nin kendisi her okul için
 // aynıdır (değiştirilmez, imzalanabilir):
 //
-//	AciTahtaKurulum_<32 hane anahtar>.exe         -> varsayılan sunucu
-//	AciTahtaKurulum_<anahtar>@<alan adı>.exe      -> başka bir sunucu (https)
+//	BilgeceTahtaKurulum_<32 hane anahtar>.exe     -> varsayılan sunucu
+//	BilgeceTahtaKurulum_<anahtar>@<alan adı>.exe  -> başka bir sunucu (https)
 //
 // Tarayıcı aynı dosyayı tekrar indirince sona " (1)" ekleyebilir; yok sayılır.
 var setupNameRe = regexp.MustCompile(`(?i)_([0-9a-f]{32})(?:@([a-z0-9.-]+(?::[0-9]{1,5})?))?(?:\s*\(\d+\))?\.exe$`)
@@ -53,24 +53,25 @@ func installFromSetup(c *setupConfig) {
 		msgBox("Kurulum başarısız:\n"+err.Error(), true)
 		return
 	}
-	msgBox("Acı Okulları tahta ajanı kuruldu.\nTahta birkaç saniye içinde panelde görünecek.", false)
+	msgBox(productName+" ajanı kuruldu.\nTahta birkaç saniye içinde panelde görünecek.", false)
 }
 
-// isUninstallTool kaldırma aracı mı? (panelden "AciTahtaKaldir.exe" adıyla indirilir)
+// isUninstallTool kaldırma aracı mı? (panelden "BilgeceTahtaKaldir.exe" adıyla indirilir)
 func isUninstallTool() bool {
 	exe, err := os.Executable()
 	if err != nil {
 		return false
 	}
-	return strings.HasPrefix(strings.ToLower(filepath.Base(exe)), "acitahtakaldir")
+	name := strings.ToLower(filepath.Base(exe))
+	return strings.HasPrefix(name, "bilgecetahtakaldir") || strings.HasPrefix(name, "acitahtakaldir")
 }
 
 // runUninstallTool onay alıp ajanı, uzaktan erişim ajanını ve verileri kaldırır.
 func runUninstallTool() {
 	const idYes = 6
 	r, _ := windows.MessageBox(0,
-		windows.StringToUTF16Ptr("Acı Okulları tahta ajanı ve uzaktan erişim bu bilgisayardan kaldırılacak.\nDevam edilsin mi?"),
-		windows.StringToUTF16Ptr("Acı Okulları Kaldırma"), windows.MB_YESNO|windows.MB_ICONQUESTION)
+		windows.StringToUTF16Ptr(productName+" ajanı ve uzaktan erişim bu bilgisayardan kaldırılacak.\nDevam edilsin mi?"),
+		windows.StringToUTF16Ptr(productName+" Kaldırma"), windows.MB_YESNO|windows.MB_ICONQUESTION)
 	if r != idYes {
 		return
 	}
@@ -78,7 +79,7 @@ func runUninstallTool() {
 		msgBox("Kaldırma tamamlanamadı:\n"+err.Error(), true)
 		return
 	}
-	msgBox("Acı Okulları tahta ajanı kaldırıldı.\nTahtayı panelden de silebilirsiniz.", false)
+	msgBox(productName+" ajanı kaldırıldı.\nTahtayı panelden de silebilirsiniz.", false)
 }
 
 func msgBox(text string, isErr bool) {
@@ -87,5 +88,5 @@ func msgBox(text string, isErr bool) {
 		style = windows.MB_OK | windows.MB_ICONERROR
 	}
 	windows.MessageBox(0, windows.StringToUTF16Ptr(text),
-		windows.StringToUTF16Ptr("Acı Okulları Kurulum"), style)
+		windows.StringToUTF16Ptr(productName), style)
 }
