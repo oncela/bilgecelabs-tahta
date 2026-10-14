@@ -3,21 +3,19 @@
 // bekleyen komutları alır.
 declare(strict_types=1);
 require __DIR__ . '/../../src/bootstrap.php';
+require __DIR__ . '/../../src/mesh.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_out(['error' => 'POST gerekli'], 405);
 
-$auth = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-if (!preg_match('/^Bearer ([0-9a-f]{64})$/', $auth, $m)) json_out(['error' => 'token yok'], 401);
-$st = db()->prepare('SELECT id FROM devices WHERE token_hash = ?');
-$st->execute([hash('sha256', $m[1])]);
-$deviceId = (int)$st->fetchColumn();
-if (!$deviceId) json_out(['error' => 'token geçersiz'], 401);
+$deviceId = device_from_token();
 
 $in = json_in();
 $pdo = db();
 
 // 1) Durum
-$pdo->prepare('UPDATE devices SET hostname = ?, logged_user = ?, uptime_s = ?, agent_version = ?, os = ?, ip = ?, last_seen = NOW() WHERE id = ?')
+// Boş gelen alanlar mevcut değeri silmesin.
+$pdo->prepare("UPDATE devices SET hostname = COALESCE(NULLIF(?, ''), hostname), logged_user = ?, uptime_s = ?,
+        agent_version = COALESCE(NULLIF(?, ''), agent_version), os = COALESCE(NULLIF(?, ''), os), ip = ?, last_seen = NOW() WHERE id = ?")
     ->execute([
         mb_substr((string)($in['hostname'] ?? ''), 0, 128),
         mb_substr((string)($in['user'] ?? ''), 0, 128),
@@ -27,6 +25,10 @@ $pdo->prepare('UPDATE devices SET hostname = ?, logged_user = ?, uptime_s = ?, a
         client_ip(),
         $deviceId,
     ]);
+if (isset($in['mesh_state'])) {
+    $pdo->prepare('UPDATE devices SET mesh_state = ? WHERE id = ?')
+        ->execute([mb_substr((string)$in['mesh_state'], 0, 160), $deviceId]);
+}
 if (isset($in['defender']) && is_array($in['defender'])) {
     $pdo->prepare('UPDATE devices SET defender = ?, defender_at = NOW() WHERE id = ?')
         ->execute([json_encode($in['defender'], JSON_UNESCAPED_UNICODE), $deviceId]);
@@ -69,7 +71,12 @@ if ($ids) {
 }
 $pdo->commit();
 
-json_out(['commands' => $cmds, 'interval' => ACI_POLL_INTERVAL]);
+$resp = ['commands' => $cmds, 'interval' => ACI_POLL_INTERVAL];
+if (mesh_enabled() && cfg('ACI_MESH_GROUP') !== '') {
+    // Ajan bu servisi kontrol eder; yoksa aşağıdaki adresten indirip kurar.
+    $resp['mesh'] = ['service' => 'AciUzak', 'url' => '/api/meshagent.php'];
+}
+json_out($resp);
 
 function ingest_netscan(string $json, int $deviceId): void {
     $data = json_decode($json, true);

@@ -1,0 +1,3 @@
+-- Tahtadaki MeshCentral ajanının durumu (ajan bildirir):
+-- running / stopped / missing / installing / error: ...
+ALTER TABLE devices ADD COLUMN IF NOT EXISTS mesh_state VARCHAR(160) NOT NULL DEFAULT '' AFTER defender_at;

@@ -360,6 +360,7 @@ const DeviceDialog = {
     document.querySelectorAll('#dev-remote [data-view]').forEach((a) => {
       a.href = 'remote.php?id=' + d.id + '&view=' + a.dataset.view;
     });
+    document.getElementById('dev-remote').hidden = d.mesh.state !== 'ok';
     document.getElementById('dev-room').value = d.room || '';
     const facts = document.getElementById('dev-facts');
     facts.replaceChildren();
@@ -370,6 +371,7 @@ const DeviceDialog = {
     add('Oturum', d.user);
     add('IP', d.ip);
     add('Virüs koruması', d.defender.text);
+    add('Uzaktan erişim', d.mesh.text);
     add('Ajan sürümü', d.version);
     const hist = document.getElementById('dev-history');
     hist.replaceChildren(el('p', 'muted', 'Yükleniyor…'));

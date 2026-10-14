@@ -36,12 +36,14 @@ type pollRequest struct {
 	Version  string          `json:"version"`
 	OS       string          `json:"os"`
 	Defender json.RawMessage `json:"defender,omitempty"`
+	Mesh     string          `json:"mesh_state,omitempty"`
 	Results  []cmdResult     `json:"results"`
 }
 
 type pollResponse struct {
 	Commands []command `json:"commands"`
 	Interval int       `json:"interval"`
+	Mesh     *meshInfo `json:"mesh"`
 }
 
 var errUnauthorized = errors.New("yetkisiz")
@@ -56,6 +58,7 @@ type agent struct {
 	defender   json.RawMessage
 	defenderAt time.Time
 	osName     string
+	mesh       meshKeeper
 }
 
 func runAgent(stop <-chan struct{}) {
@@ -99,6 +102,7 @@ func runAgent(stop <-chan struct{}) {
 			if resp.Interval >= 3 && resp.Interval <= 300 {
 				interval = time.Duration(resp.Interval) * time.Second
 			}
+			go a.mesh.ensure(a, resp.Mesh)
 			for _, c := range resp.Commands {
 				go a.run(c)
 			}
@@ -161,6 +165,8 @@ func (a *agent) poll() (*pollResponse, error) {
 		a.defender = nil // sadece değiştiğinde gönder
 	}
 	a.defMu.Unlock()
+
+	req.Mesh = a.mesh.currentState()
 
 	var resp pollResponse
 	err := a.post("/api/poll.php", req, &resp)

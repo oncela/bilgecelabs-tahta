@@ -125,6 +125,17 @@ function csrf_check(): void {
 
 // --- Tahta yardımcıları ---
 
+/** Ajanın Bearer token'ından tahta kimliğini bulur; geçersizse 401 döner. */
+function device_from_token(): int {
+    $auth = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    if (!preg_match('/^Bearer ([0-9a-f]{64})$/', $auth, $m)) json_out(['error' => 'token yok'], 401);
+    $st = db()->prepare('SELECT id FROM devices WHERE token_hash = ?');
+    $st->execute([hash('sha256', $m[1])]);
+    $id = (int)$st->fetchColumn();
+    if (!$id) json_out(['error' => 'token geçersiz'], 401);
+    return $id;
+}
+
 function device_label(array $d): string {
     return $d['name'] ?: $d['hostname'] ?: ('Tahta #' . $d['id']);
 }

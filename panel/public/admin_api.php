@@ -13,7 +13,7 @@ switch ("$action:" . ($isPost ? 'POST' : 'GET')) {
 
 case 'devices:GET':
     $rows = db()->query('SELECT d.id, d.hostname, d.name, d.room, d.mac, d.os, d.agent_version, d.ip,
-            d.logged_user, d.uptime_s, d.defender, d.defender_at, d.last_seen,
+            d.logged_user, d.uptime_s, d.defender, d.defender_at, d.last_seen, d.mesh_state,
             (SELECT COUNT(*) FROM commands c WHERE c.device_id = d.id AND c.status IN (\'pending\',\'sent\')) AS busy
         FROM devices d ORDER BY d.room IS NULL, d.room, COALESCE(d.name, d.hostname)')->fetchAll();
     $out = [];
@@ -32,6 +32,7 @@ case 'devices:GET':
             'last_seen' => $d['last_seen'],
             'defender' => defender_summary($d['defender']),
             'busy' => (int)$d['busy'],
+            'mesh' => mesh_summary($d['mesh_state']),
         ];
     }
     json_out(['devices' => $out, 'now' => date('c')]);
@@ -136,6 +137,17 @@ case 'net_scan:POST':
 
 default:
     json_out(['error' => 'Geçersiz istek.'], 404);
+}
+
+/** Uzaktan erişim (MeshCentral ajanı) durumu. */
+function mesh_summary(string $s): array {
+    return match (true) {
+        $s === 'running' => ['state' => 'ok', 'text' => 'Hazır'],
+        $s === 'installing' => ['state' => 'warn', 'text' => 'Kuruluyor'],
+        $s === 'stopped' => ['state' => 'warn', 'text' => 'Durmuş, başlatılıyor'],
+        str_starts_with($s, 'error') => ['state' => 'bad', 'text' => 'Kurulamadı: ' . mb_substr($s, 7, 120)],
+        default => ['state' => 'off', 'text' => 'Kurulu değil'],
+    };
 }
 
 /** Defender durumunu tek bir göstergeye indirger. */
