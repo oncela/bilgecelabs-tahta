@@ -29,8 +29,10 @@ function el(tagName, className, text) {
   return e;
 }
 
+// Durum rozeti (Tabler badge). state: ok / warn / bad / off / new
+const BADGE = { ok: 'bg-success-lt', warn: 'bg-warning-lt', bad: 'bg-danger-lt', off: 'bg-secondary-lt', new: 'bg-warning-lt' };
 function tag(state, text) {
-  return el('span', 'tag ' + state, text);
+  return el('span', 'badge ' + (BADGE[state] || BADGE.off), text);
 }
 
 function fmtUptime(s) {
@@ -100,9 +102,9 @@ const Devices = {
   showEmpty(text) {
     const tbody = document.getElementById('rows');
     tbody.replaceChildren();
-    const tr = el('tr');
-    const td = el('td', 'empty', text);
-    td.colSpan = 8;
+    const tr = el('tr', 'empty-row');
+    const td = el('td', '', text);
+    td.colSpan = 9;
     tr.append(td);
     tbody.append(tr);
   },
@@ -140,26 +142,27 @@ const Devices = {
   },
 
   row(d) {
-    const tr = el('tr', 'clickable' + (this.selected.has(d.id) ? ' sel' : ''));
+    const tr = el('tr', 'clickable' + (this.selected.has(d.id) ? ' selected' : ''));
     tr.dataset.id = d.id;
 
-    const tdChk = el('td', 'chk');
+    const tdChk = el('td');
     const chk = document.createElement('input');
     chk.type = 'checkbox';
+    chk.className = 'form-check-input';
     chk.checked = this.selected.has(d.id);
     chk.setAttribute('aria-label', d.label + ' seç');
     chk.addEventListener('click', (e) => {
       e.stopPropagation();
       if (chk.checked) this.selected.add(d.id);
       else this.selected.delete(d.id);
-      tr.classList.toggle('sel', chk.checked);
+      tr.classList.toggle('selected', chk.checked);
       this.updateSelection();
     });
     tdChk.append(chk);
 
     const tdName = el('td');
-    tdName.append(el('div', 'dev-name', d.label));
-    if (d.label !== d.hostname) tdName.append(el('div', 'dev-sub', d.hostname));
+    tdName.append(el('div', 'fw-medium', d.label));
+    if (d.label !== d.hostname) tdName.append(el('div', 'text-secondary small', d.hostname));
 
     const tdState = el('td');
     tdState.append(d.online ? tag('ok', 'Çevrimiçi') : tag('off', 'Kapalı · ' + fmtTime(d.last_seen)));
@@ -167,6 +170,8 @@ const Devices = {
 
     const tdDef = el('td');
     tdDef.append(tag(d.defender.state === 'unknown' ? 'off' : d.defender.state, d.defender.text));
+    const tdMesh = el('td');
+    tdMesh.append(tag(d.mesh.state, d.mesh.text));
 
     tr.append(
       tdChk,
@@ -175,6 +180,7 @@ const Devices = {
       tdState,
       el('td', '', d.user || '—'),
       tdDef,
+      tdMesh,
       el('td', 'mono', d.ip || '—'),
       el('td', 'nowrap', d.online ? fmtUptime(d.uptime_s) : '—'),
     );
@@ -202,7 +208,7 @@ const Devices = {
       this.render();
     });
     document.querySelectorAll('[data-cmd]').forEach((b) => {
-      b.addEventListener('click', () => CommandDialog.open(b.dataset.cmd));
+      b.addEventListener('click', () => CommandDialog.open(b.dataset.cmd, [...this.selected], () => this.load()));
     });
     this.load();
     setInterval(() => { if (!document.hidden) this.load(); }, 10000);
@@ -243,12 +249,17 @@ const COMMANDS = {
 
 const CommandDialog = {
   type: null,
+  ids: [],
+  onDone: null,
 
-  open(type) {
+  // ids: hedef tahtalar; onDone: gönderimden sonra sayfayı yenilemek için
+  open(type, ids, onDone) {
     const def = COMMANDS[type];
-    if (!def) return;
+    if (!def || !ids.length) return;
     this.type = type;
-    const n = Devices.selected.size;
+    this.ids = ids;
+    this.onDone = onDone || null;
+    const n = ids.length;
     document.getElementById('cmd-title').textContent = def.title;
     document.getElementById('cmd-target').textContent =
       n + ' tahtaya gönderilecek.' + (def.note ? ' ' + def.note : '');
@@ -256,16 +267,20 @@ const CommandDialog = {
     box.replaceChildren();
     for (const f of def.fields) {
       const id = 'cmd-' + f.k;
-      const label = el('label', '', f.label);
+      const wrap = el('div', 'mb-3');
+      const label = el('label', 'form-label', f.label);
       label.htmlFor = id;
       const input = document.createElement(f.type === 'textarea' ? 'textarea' : 'input');
+      input.className = 'form-control' + (f.type === 'textarea' ? ' mono' : '');
+      if (f.type === 'textarea') input.rows = 6;
       if (f.type !== 'textarea') input.type = f.type;
       input.id = id;
       input.name = f.k;
       if (f.value) input.value = f.value;
       if (f.required) input.required = true;
       if (f.type === 'number') input.min = '0';
-      box.append(label, input);
+      wrap.append(label, input);
+      box.append(wrap);
     }
     document.getElementById('cmd-error').hidden = true;
     document.getElementById('cmd-submit').disabled = false;
@@ -282,10 +297,10 @@ const CommandDialog = {
     const errBox = document.getElementById('cmd-error');
     btn.disabled = true;
     try {
-      const res = await api('send', { type: this.type, device_ids: [...Devices.selected], args });
+      const res = await api('send', { type: this.type, device_ids: this.ids, args });
       document.getElementById('cmd-dialog').close();
       ResultDialog.open(res.batch_id, COMMANDS[this.type].title);
-      Devices.load();
+      if (this.onDone) this.onDone();
     } catch (err) {
       errBox.textContent = err.message;
       errBox.hidden = false;
@@ -340,11 +355,11 @@ const ResultDialog = {
 
 function resultItem(title, status, output) {
   const [state, text] = STATUS[status] || ['off', status];
-  const box = el('div', 'result');
-  const head = el('div', 'rhead');
+  const box = el('div', 'border rounded p-2');
+  const head = el('div', 'd-flex justify-content-between align-items-center gap-2');
   head.append(el('span', '', title), tag(state, text));
   box.append(head);
-  if (output) box.append(el('pre', '', output));
+  if (output) box.append(el('pre', 'result-output', output));
   return box;
 }
 
@@ -364,7 +379,7 @@ const DeviceDialog = {
     document.getElementById('dev-room').value = d.room || '';
     const facts = document.getElementById('dev-facts');
     facts.replaceChildren();
-    const add = (k, v) => facts.append(el('dt', '', k), el('dd', '', v || '—'));
+    const add = (k, v) => facts.append(el('dt', 'col-sm-4 text-secondary fw-normal', k), el('dd', 'col-sm-8 mb-1', v || '—'));
     add('Bilgisayar adı', d.hostname);
     add('Durum', d.online ? 'Çevrimiçi' : 'Kapalı (son bağlantı ' + fmtTime(d.last_seen) + ')');
     add('Windows', d.os);
@@ -374,7 +389,7 @@ const DeviceDialog = {
     add('Uzaktan erişim', d.mesh.text);
     add('Ajan sürümü', d.version);
     const hist = document.getElementById('dev-history');
-    hist.replaceChildren(el('p', 'muted', 'Yükleniyor…'));
+    hist.replaceChildren(el('p', 'text-secondary', 'Yükleniyor…'));
     document.getElementById('device-dialog').showModal();
     try {
       const data = await api('device_commands', undefined, '&id=' + d.id);
@@ -384,9 +399,9 @@ const DeviceDialog = {
         ? data.commands.map((c) => resultItem(
             (names[c.type] || c.type) + ' · ' + fmtTime(c.created_at) + (c.username ? ' · ' + c.username : ''),
             c.status, c.output))
-        : [el('p', 'muted', 'Bu tahtaya henüz işlem gönderilmedi.')]));
+        : [el('p', 'text-secondary', 'Bu tahtaya henüz işlem gönderilmedi.')]));
     } catch (err) {
-      hist.replaceChildren(el('p', 'alert', err.message));
+      hist.replaceChildren(el('div', 'alert alert-danger', err.message));
     }
   },
 
@@ -466,8 +481,8 @@ const Network = {
 
     const tbody = document.getElementById('net-rows');
     if (!rows.length) {
-      const tr = el('tr');
-      const td = el('td', 'empty', this.list.length ? 'Yeni cihaz yok.' : 'Cihaz listesi boş. "Ağı şimdi tara" ile başlayın.');
+      const tr = el('tr', 'empty-row');
+      const td = el('td', '', this.list.length ? 'Yeni cihaz yok.' : 'Cihaz listesi boş. "Ağı şimdi tara" ile başlayın.');
       td.colSpan = 7;
       tr.append(td);
       tbody.replaceChildren(tr);
@@ -476,15 +491,15 @@ const Network = {
     tbody.replaceChildren(...rows.map((n) => {
       const tr = el('tr');
       const name = el('td');
-      name.append(el('div', 'dev-name', n.label || n.hostname || 'Adsız cihaz'));
-      if (n.label && n.hostname) name.append(el('div', 'dev-sub', n.hostname));
+      name.append(el('div', 'fw-medium', n.label || n.hostname || 'Adsız cihaz'));
+      if (n.label && n.hostname) name.append(el('div', 'text-secondary small', n.hostname));
       const kind = el('td');
       if (n.is_board) kind.append(tag('ok', 'Tahta'));
       else if (n.new) kind.append(tag('new', 'Yeni'));
       else if (n.known) kind.append(tag('ok', 'Tanıdık'));
       else kind.append(tag('off', 'Bilinmiyor'));
       const act = el('td');
-      const btn = el('button', 'btn', 'Düzenle');
+      const btn = el('button', 'btn btn-sm', 'Düzenle');
       btn.type = 'button';
       btn.addEventListener('click', () => this.edit(n));
       act.append(btn);
@@ -541,6 +556,100 @@ const Network = {
   },
 };
 
+// ---------------- Sınıflar sayfası ----------------
+
+const Rooms = {
+  list: [],
+
+  async load() {
+    try {
+      const data = await api('devices');
+      this.list = data.devices;
+      this.render();
+    } catch (err) {
+      const grid = document.getElementById('room-grid');
+      grid.replaceChildren(el('div', 'col-12 alert alert-danger', err.message));
+    }
+  },
+
+  groups() {
+    const map = new Map();
+    for (const d of this.list) {
+      const key = d.room || 'Sınıfı atanmamış';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(d);
+    }
+    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0], 'tr', { numeric: true }));
+  },
+
+  render() {
+    const grid = document.getElementById('room-grid');
+    const groups = this.groups();
+    const online = this.list.filter((d) => d.online).length;
+    document.getElementById('room-counts').textContent =
+      groups.length + ' sınıf · ' + online + ' / ' + this.list.length + ' tahta açık';
+    if (!groups.length) {
+      grid.replaceChildren(el('div', 'col-12 text-secondary', 'Henüz tahta yok. Ayarlar sayfasından kurulum dosyasını indirip bir tahtaya kurun.'));
+      return;
+    }
+    grid.replaceChildren(...groups.map(([room, boards]) => this.card(room, boards)));
+    if (location.hash) {
+      const target = document.getElementById('room-' + decodeURIComponent(location.hash.slice(1)));
+      if (target) target.scrollIntoView({ block: 'center' });
+    }
+  },
+
+  card(room, boards) {
+    const col = el('div', 'col-sm-6 col-xl-4');
+    col.id = 'room-' + room;
+    const card = el('div', 'card h-100');
+    const head = el('div', 'card-header');
+    const on = boards.filter((d) => d.online).length;
+    head.append(el('h3', 'card-title', room));
+    const badge = tag(on ? 'ok' : 'off', on + ' / ' + boards.length + ' açık');
+    badge.classList.add('ms-auto');
+    head.append(badge);
+
+    const list = el('div', 'list-group list-group-flush flex-fill');
+    for (const d of boards) {
+      const item = el('div', 'list-group-item d-flex align-items-center gap-2');
+      const info = el('div', 'flex-fill');
+      info.append(el('div', 'fw-medium', d.label));
+      const sub = el('div', 'd-flex flex-wrap gap-1 mt-1');
+      sub.append(d.online ? tag('ok', 'Çevrimiçi') : tag('off', 'Kapalı'));
+      if (d.defender.state === 'bad' || d.defender.state === 'warn') sub.append(tag(d.defender.state, d.defender.text));
+      info.append(sub);
+      item.append(info);
+      if (d.online && d.mesh.state === 'ok') {
+        const a = el('a', 'btn btn-sm btn-primary', 'Ekran');
+        a.href = 'remote.php?id=' + d.id + '&view=desktop';
+        item.append(a);
+      }
+      item.addEventListener('dblclick', () => { location.href = 'devices.php?q=' + encodeURIComponent(d.hostname); });
+      list.append(item);
+    }
+
+    const foot = el('div', 'card-footer d-flex flex-wrap gap-2');
+    const ids = boards.map((d) => d.id);
+    for (const [type, label, icon] of [['message', 'Mesaj', 'message'], ['restart', 'Yeniden başlat', 'refresh'], ['shutdown', 'Kapat', 'power']]) {
+      const b = el('button', 'btn btn-sm');
+      b.type = 'button';
+      const i = el('i', 'ti ti-' + icon + ' me-1');
+      b.append(i, label);
+      b.addEventListener('click', () => CommandDialog.open(type, ids, () => this.load()));
+      foot.append(b);
+    }
+    card.append(head, list, foot);
+    col.append(card);
+    return col;
+  },
+
+  init() {
+    this.load();
+    setInterval(() => { if (!document.hidden) this.load(); }, 15000);
+  },
+};
+
 // ---------------- Başlatma ----------------
 
 const page = document.querySelector('[data-page]')?.dataset.page;
@@ -548,6 +657,9 @@ if (page === 'devices') {
   Devices.init();
   CommandDialog.init();
   DeviceDialog.init();
+} else if (page === 'rooms') {
+  Rooms.init();
+  CommandDialog.init();
 } else if (page === 'network') {
   Network.init();
 }

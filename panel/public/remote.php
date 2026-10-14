@@ -27,20 +27,19 @@ if (!$error) {
 }
 page_header(($d ? device_label($d) : 'Tahta') . ' · ' . MESH_VIEWS[$view][1], 'devices.php');
 ?>
-<div class="remote">
-  <div class="head">
-    <h1><?= h($d ? device_label($d) : 'Tahta') ?></h1>
-    <nav class="tabs">
+<div class="d-grid gap-3">
+  <div class="d-flex flex-wrap gap-2 align-items-center">
+    <ul class="nav nav-pills">
       <?php foreach (MESH_VIEWS as $k => [, $label]): ?>
-        <a href="remote.php?id=<?= $id ?>&amp;view=<?= $k ?>" class="<?= $k === $view ? 'on' : '' ?>"><?= h($label) ?></a>
+        <li class="nav-item"><a href="remote.php?id=<?= $id ?>&amp;view=<?= $k ?>" class="nav-link <?= $k === $view ? 'active' : '' ?>"><?= h($label) ?></a></li>
       <?php endforeach; ?>
-      <a href="devices.php">← Tahtalar</a>
-    </nav>
+    </ul>
+    <a class="btn btn-ghost-secondary ms-auto" href="devices.php"><i class="ti ti-arrow-left me-1"></i>Tahtalar</a>
   </div>
   <?php if ($error): ?>
-    <p class="alert"><?= h($error) ?></p>
+    <div class="alert alert-danger"><?= h($error) ?></div>
   <?php else: ?>
-    <p class="muted small">Bağlandığınızda tahtanın ekranında “uzaktan izleniyor” bildirimi görünür ve bu işlem geçmişe kaydedilir.
+    <p class="text-secondary small mb-0">Bağlandığınızda tahtanın ekranında “uzaktan izleniyor” bildirimi görünür ve bu işlem geçmişe kaydedilir.
       Ekran aşağıda açılmazsa <a href="<?= h($url) ?>" target="_blank" rel="noopener">yeni sekmede açın</a>.</p>
     <iframe class="remote-frame" src="<?= h($url) ?>" title="Tahta uzaktan erişim" allow="clipboard-read; clipboard-write; fullscreen"></iframe>
   <?php endif; ?>

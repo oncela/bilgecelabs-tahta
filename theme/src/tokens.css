@@ -1,0 +1,25 @@
+/* Acı Tahta: tek tema kaynağı. Tüm renkler burada; panel ve MeshCentral
+   bu değişkenleri kullanır. Koyu mod yok (color-scheme: light). */
+:root {
+  color-scheme: light;
+  --aci-bg: #f4f6f4;
+  --aci-surface: #ffffff;
+  --aci-fg: #1c2420;
+  --aci-muted: #5d6a63;
+  --aci-line: #dce3df;
+  --aci-accent: #2c6b55;
+  --aci-accent-rgb: 44, 107, 85;
+  --aci-accent-dark: #24594a;
+  --aci-accent-soft: #e2efe8;
+  --aci-sidebar: #1d3d33;
+  --aci-sidebar-fg: #c9ded4;
+  --aci-sidebar-active: #2c6b55;
+  --aci-ok: #1f7a4a;
+  --aci-ok-rgb: 31, 122, 74;
+  --aci-warn: #b77a00;
+  --aci-warn-rgb: 183, 122, 0;
+  --aci-bad: #b1372b;
+  --aci-bad-rgb: 177, 55, 43;
+  --aci-radius: 8px;
+  --aci-font: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif;
+}

@@ -2,7 +2,7 @@
 GO      ?= $(HOME)/.local/go/bin/go
 VERSION := $(shell cat VERSION)
 
-.PHONY: agent lint migrate release clean
+.PHONY: agent lint migrate release clean theme theme-deploy
 
 agent: ## Windows ajanını derle
 	cd agent && GOOS=windows GOARCH=amd64 $(GO) build -trimpath \
@@ -22,3 +22,13 @@ release: lint agent ## Ajanı panele kopyala (indirme sayfası bunu kullanır)
 
 clean:
 	rm -rf agent/build
+
+theme: ## Tema dosyalarını tek kaynaktan (theme/src) üret
+	cat theme/src/tokens.css theme/src/panel.css > panel/public/assets/aci.css
+	mkdir -p theme/meshcentral/public/styles
+	cat theme/src/tokens.css theme/src/meshcentral.css > theme/meshcentral/public/styles/theme.css
+
+theme-deploy: theme ## MeshCentral temasını sunucuya kopyala
+	sudo mkdir -p /opt/meshcentral/meshcentral-data/theme-pack/aci
+	sudo cp -r theme/meshcentral/public /opt/meshcentral/meshcentral-data/theme-pack/aci/
+	sudo chown -R meshcentral:meshcentral /opt/meshcentral/meshcentral-data/theme-pack

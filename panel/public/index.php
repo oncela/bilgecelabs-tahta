@@ -1,2 +1,2 @@
 <?php
-header('Location: devices.php');
+header('Location: dashboard.php');

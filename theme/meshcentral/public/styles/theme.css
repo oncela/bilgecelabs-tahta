@@ -1,52 +1,76 @@
-/* Acı Tahta teması: MeshCentral yeni arayüzü (Bootstrap 5) için.
-   Renkler theme/README.md ile aynıdır. Koyu mod yok. */
+/* Acı Tahta: tek tema kaynağı. Tüm renkler burada; panel ve MeshCentral
+   bu değişkenleri kullanır. Koyu mod yok (color-scheme: light). */
+:root {
+  color-scheme: light;
+  --aci-bg: #f4f6f4;
+  --aci-surface: #ffffff;
+  --aci-fg: #1c2420;
+  --aci-muted: #5d6a63;
+  --aci-line: #dce3df;
+  --aci-accent: #2c6b55;
+  --aci-accent-rgb: 44, 107, 85;
+  --aci-accent-dark: #24594a;
+  --aci-accent-soft: #e2efe8;
+  --aci-sidebar: #1d3d33;
+  --aci-sidebar-fg: #c9ded4;
+  --aci-sidebar-active: #2c6b55;
+  --aci-ok: #1f7a4a;
+  --aci-ok-rgb: 31, 122, 74;
+  --aci-warn: #b77a00;
+  --aci-warn-rgb: 183, 122, 0;
+  --aci-bad: #b1372b;
+  --aci-bad-rgb: 177, 55, 43;
+  --aci-radius: 8px;
+  --aci-font: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif;
+}
+/* MeshCentral (Bootstrap 5): Bootstrap değişkenlerini Acı renklerine bağlar. */
 :root, [data-bs-theme], [data-bs-theme="dark"] {
   color-scheme: light;
-  --bs-body-bg: #f4f6f4;
+  --bs-body-bg: var(--aci-bg);
   --bs-body-bg-rgb: 244, 246, 244;
-  --bs-body-color: #1c2420;
+  --bs-body-color: var(--aci-fg);
   --bs-body-color-rgb: 28, 36, 32;
-  --bs-secondary-color: #5d6a63;
+  --bs-secondary-color: var(--aci-muted);
   --bs-tertiary-bg: #eef2ef;
   --bs-secondary-bg: #e9eeeb;
-  --bs-border-color: #dce3df;
-  --bs-border-radius: 8px;
-  --bs-font-sans-serif: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
-  --bs-primary: #2c6b55;
-  --bs-primary-rgb: 44, 107, 85;
-  --bs-primary-bg-subtle: #e2efe8;
+  --bs-border-color: var(--aci-line);
+  --bs-border-radius: var(--aci-radius);
+  --bs-font-sans-serif: var(--aci-font);
+  --bs-primary: var(--aci-accent);
+  --bs-primary-rgb: var(--aci-accent-rgb);
+  --bs-primary-bg-subtle: var(--aci-accent-soft);
   --bs-primary-border-subtle: #b9d6c8;
   --bs-primary-text-emphasis: #1d4a3b;
-  --bs-success: #1f7a4a;
+  --bs-success: var(--aci-ok);
   --bs-success-rgb: 31, 122, 74;
-  --bs-warning: #b77a00;
-  --bs-danger: #b1372b;
+  --bs-warning: var(--aci-warn);
+  --bs-danger: var(--aci-bad);
   --bs-danger-rgb: 177, 55, 43;
-  --bs-link-color: #2c6b55;
-  --bs-link-color-rgb: 44, 107, 85;
-  --bs-link-hover-color: #24594a;
+  --bs-link-color: var(--aci-accent);
+  --bs-link-color-rgb: var(--aci-accent-rgb);
+  --bs-link-hover-color: var(--aci-accent-dark);
   --bs-link-hover-color-rgb: 36, 89, 74;
-  --bs-focus-ring-color: rgba(44, 107, 85, .25);
+  --bs-focus-ring-color: rgba(var(--aci-accent-rgb), .25);
 }
 body { background: var(--bs-body-bg); color: var(--bs-body-color); }
-.card, .modal-content, .dropdown-menu, .list-group-item { background-color: #ffffff; border-color: var(--bs-border-color); }
+.card, .modal-content, .dropdown-menu, .list-group-item { background-color: var(--aci-surface); border-color: var(--bs-border-color); }
 .btn-primary {
-  --bs-btn-bg: #2c6b55; --bs-btn-border-color: #2c6b55;
-  --bs-btn-hover-bg: #24594a; --bs-btn-hover-border-color: #24594a;
+  --bs-btn-bg: var(--aci-accent); --bs-btn-border-color: var(--aci-accent);
+  --bs-btn-hover-bg: var(--aci-accent-dark); --bs-btn-hover-border-color: var(--aci-accent-dark);
   --bs-btn-active-bg: #1f4d40; --bs-btn-active-border-color: #1f4d40;
-  --bs-btn-disabled-bg: #2c6b55; --bs-btn-disabled-border-color: #2c6b55;
-  --bs-btn-focus-shadow-rgb: 44, 107, 85;
+  --bs-btn-disabled-bg: var(--aci-accent); --bs-btn-disabled-border-color: var(--aci-accent);
+  --bs-btn-focus-shadow-rgb: var(--aci-accent-rgb);
 }
 .btn-outline-primary {
-  --bs-btn-color: #2c6b55; --bs-btn-border-color: #2c6b55;
-  --bs-btn-hover-bg: #2c6b55; --bs-btn-hover-border-color: #2c6b55;
-  --bs-btn-active-bg: #24594a; --bs-btn-active-border-color: #24594a;
+  --bs-btn-color: var(--aci-accent); --bs-btn-border-color: var(--aci-accent);
+  --bs-btn-hover-bg: var(--aci-accent); --bs-btn-hover-border-color: var(--aci-accent);
+  --bs-btn-active-bg: var(--aci-accent-dark); --bs-btn-active-border-color: var(--aci-accent-dark);
 }
-.nav-pills { --bs-nav-pills-link-active-bg: #2c6b55; }
+.nav-pills { --bs-nav-pills-link-active-bg: var(--aci-accent); }
 .nav-link { color: var(--bs-link-color); }
-.nav-tabs .nav-link.active { color: #1c2420; border-bottom-color: #2c6b55; }
-.pagination { --bs-pagination-active-bg: #2c6b55; --bs-pagination-active-border-color: #2c6b55; --bs-pagination-color: #2c6b55; }
-.form-check-input:checked { background-color: #2c6b55; border-color: #2c6b55; }
-.form-control:focus, .form-select:focus { border-color: #8fbfa9; box-shadow: 0 0 0 .2rem rgba(44, 107, 85, .2); }
-.progress { --bs-progress-bar-bg: #2c6b55; }
+.nav-tabs .nav-link.active { color: var(--aci-fg); border-bottom-color: var(--aci-accent); }
+.pagination { --bs-pagination-active-bg: var(--aci-accent); --bs-pagination-active-border-color: var(--aci-accent); --bs-pagination-color: var(--aci-accent); }
+.form-check-input:checked { background-color: var(--aci-accent); border-color: var(--aci-accent); }
+.form-control:focus, .form-select:focus { border-color: #8fbfa9; box-shadow: 0 0 0 .2rem rgba(var(--aci-accent-rgb), .2); }
+.progress { --bs-progress-bar-bg: var(--aci-accent); }
 .navbar.bg-dark, .bg-dark { background-color: #1d4a3b !important; }

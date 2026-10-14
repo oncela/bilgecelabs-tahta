@@ -32,42 +32,43 @@ $key = setting('enroll_key') ?? '';
 $hasAgent = is_file(ACI_ROOT . '/storage/aci-ajan.exe');
 page_header('Ayarlar', 'settings.php');
 ?>
-<div class="head"><h1>Ayarlar</h1></div>
-<?php if ($msg): ?><p class="notice"><?= h($msg) ?></p><?php endif; ?>
-<?php if ($err): ?><p class="alert"><?= h($err) ?></p><?php endif; ?>
+<?php if ($msg): ?><div class="alert alert-success"><?= h($msg) ?></div><?php endif; ?>
+<?php if ($err): ?><div class="alert alert-danger"><?= h($err) ?></div><?php endif; ?>
+<div class="row row-cards">
 
-<section class="card pad">
-  <h2>Tahtaya kurulum</h2>
+<div class="col-12"><section class="card"><div class="card-body">
+  <h3 class="card-title">Tahtaya kurulum</h3>
   <p>Kurulum dosyasını tahtada indirip çift tıklayın. Windows yönetici izni isteyecek, kurulum birkaç saniye sürer. Tahta kısa süre içinde <a href="devices.php">Tahtalar</a> sayfasında görünür.</p>
   <?php if ($hasAgent): ?>
-    <p><a class="btn primary" href="download.php">Kurulum dosyasını indir (AciTahtaKurulum.exe)</a></p>
-    <p class="muted small">Tahtadan indirmek için tarayıcıda bu panele giriş yapıp bu sayfayı açın. Dosyanın içinde okulun kayıt anahtarı bulunur; panel dışında paylaşmayın.</p>
+    <p><a class="btn btn-primary" href="download.php">Kurulum dosyasını indir (AciTahtaKurulum.exe)</a></p>
+    <p class="text-secondary small">Tahtadan indirmek için tarayıcıda bu panele giriş yapıp bu sayfayı açın. Dosyanın içinde okulun kayıt anahtarı bulunur; panel dışında paylaşmayın.</p>
   <?php else: ?>
-    <p class="alert">Sunucuda ajan dosyası yok: <code>storage/aci-ajan.exe</code> yüklenmeli.</p>
+    <div class="alert alert-warning">Sunucuda ajan dosyası yok: <code>storage/aci-ajan.exe</code> yüklenmeli.</div>
   <?php endif; ?>
-</section>
+</div></section></div>
 
-<section class="card pad">
-  <h2>Kayıt anahtarı</h2>
-  <p class="muted">Yeni tahtaların panele kaydolması için kullanılır. Kurulum dosyası sızdırıldıysa yenileyin.</p>
-  <p><code class="key"><?= h(substr($key, 0, 6)) ?>…<?= h(substr($key, -4)) ?></code></p>
+<div class="col-12"><section class="card"><div class="card-body">
+  <h3 class="card-title">Kayıt anahtarı</h3>
+  <p class="text-secondary">Yeni tahtaların panele kaydolması için kullanılır. Kurulum dosyası sızdırıldıysa yenileyin.</p>
+  <p><code><?= h(substr($key, 0, 6)) ?>…<?= h(substr($key, -4)) ?></code></p>
   <form method="post">
     <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
     <input type="hidden" name="do" value="rotate_key">
     <button class="btn">Anahtarı yenile</button>
   </form>
-</section>
+</div></section></div>
 
-<section class="card pad">
-  <h2>Şifre değiştir</h2>
-  <form method="post" class="narrow">
+<div class="col-12"><section class="card"><div class="card-body">
+  <h3 class="card-title">Şifre değiştir</h3>
+  <form method="post" style="max-width: 360px">
     <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
     <input type="hidden" name="do" value="password">
-    <label for="current">Mevcut şifre</label>
-    <input id="current" name="current" type="password" autocomplete="current-password" required>
-    <label for="new">Yeni şifre (en az 10 karakter)</label>
-    <input id="new" name="new" type="password" autocomplete="new-password" minlength="10" required>
-    <button class="btn primary">Şifreyi değiştir</button>
+    <label class="form-label" for="current">Mevcut şifre</label>
+    <input class="form-control" id="current" name="current" type="password" autocomplete="current-password" required>
+    <label class="form-label mt-2" for="new">Yeni şifre (en az 10 karakter)</label>
+    <input class="form-control" id="new" name="new" type="password" autocomplete="new-password" minlength="10" required>
+    <button class="btn btn-primary mt-3">Şifreyi değiştir</button>
   </form>
-</section>
+</div></section></div>
+</div>
 <?php page_footer();

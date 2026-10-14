@@ -1,0 +1,6 @@
+@tabler/core 1.6.1 (MIT) - dist/css/tabler.min.css, dist/js/tabler.min.js
+@tabler/icons-webfont 3.47.0 (MIT) - dist/tabler-icons.min.css, dist/fonts/tabler-icons.woff2
+370a2d4e608ae518351d10528fc7dbe19b354ae5062c51b2a9cb294850d65403  tabler/css/tabler.min.css
+9d26ca1aa061a0c647305654e32efc2c8838e348b2423e9d1f4593869868e09b  tabler/js/tabler.min.js
+43968bcdf4a2254b8f2f70a939b8488c90b71b1c03e7f2c4dd77b5aeb80d2c93  tabler-icons/tabler-icons.min.css
+e6b5baf5b1bbd4d9e47ad95cb5b7540a84ffe427ca45a525a8c864e3632e7336  tabler-icons/fonts/tabler-icons.woff2

@@ -1,0 +1,3 @@
+MIT License
+@tabler/core 1.6.1 - lisans: MIT (package.json). Kaynak: https://github.com/tabler/tabler
+Paket içinde ayrı LICENSE dosyası bulunmuyor.
