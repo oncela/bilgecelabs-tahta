@@ -59,6 +59,12 @@ function setting_set(string $k, string $v): void {
         ->execute([$k, $v]);
 }
 
+/** Ortak alan dosyalarının saklandığı klasör (NAS'a taşınabilir: ACI_SHARED_DIR). */
+function shared_dir(): string {
+    $d = cfg('ACI_SHARED_DIR');
+    return $d !== '' ? rtrim($d, '/') : ACI_ROOT . '/storage/shared';
+}
+
 function h(?string $s): string {
     return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8');
 }

@@ -10,7 +10,7 @@ $st->execute([$id]);
 $f = $st->fetch();
 if (!$f) { http_response_code(404); exit('yok'); }
 
-$path = ACI_ROOT . '/storage/shared/' . $f['stored_name'];
+$path = shared_dir() . '/' . $f['stored_name'];
 if (!is_file($path)) { http_response_code(404); exit('dosya yok'); }
 
 header('Content-Type: application/octet-stream');

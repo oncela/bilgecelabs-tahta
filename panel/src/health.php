@@ -72,6 +72,14 @@ function health_checks(): array {
         else $add('Uzaktan erişim komut kanalı', 'bad', 'MeshCentral\'a bağlanılamadı: ' . mb_substr($r['out'], 0, 120));
     }
 
+    // Ortak alan klasörü (NAS'a taşındıysa bağlı ve yazılabilir mi)
+    $sd = shared_dir();
+    if (cfg('ACI_SHARED_DIR') !== '') {
+        if (!is_dir($sd)) $add('Ortak alan (NAS)', 'bad', "$sd erişilemiyor — NAS bağlı değil olabilir");
+        elseif (!is_writable($sd)) $add('Ortak alan (NAS)', 'bad', "$sd yazılamıyor");
+        else $add('Ortak alan (NAS)', 'ok', "NAS bağlı: $sd");
+    }
+
     // Disk alanı
     $free = @disk_free_space(ACI_ROOT);
     if ($free !== false) {

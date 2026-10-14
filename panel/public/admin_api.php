@@ -183,7 +183,7 @@ case 'shared_upload:POST':
     $subdir = preg_replace('#[^\p{L}\p{N} _-]#u', '', trim((string)($_POST['subdir'] ?? '')));
     $subdir = mb_substr((string)$subdir, 0, 64);
     $stored = bin2hex(random_bytes(16));
-    $dir = ACI_ROOT . '/storage/shared';
+    $dir = shared_dir();
     @mkdir($dir, 0750, true);
     $dest = $dir . '/' . $stored;
     if (!move_uploaded_file($_FILES['file']['tmp_name'], $dest)) json_out(['error' => 'Dosya kaydedilemedi.'], 500);
@@ -220,7 +220,7 @@ case 'shared_delete:POST':
     $st = db()->prepare('SELECT stored_name, orig_name FROM shared_files WHERE id = ?');
     $st->execute([$fid]);
     if ($f = $st->fetch()) {
-        @unlink(ACI_ROOT . '/storage/shared/' . $f['stored_name']);
+        @unlink(shared_dir() . '/' . $f['stored_name']);
         db()->prepare('DELETE FROM shared_files WHERE id = ?')->execute([$fid]);
         audit('shared_delete', $f['orig_name']);
     }
