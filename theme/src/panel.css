@@ -46,3 +46,13 @@ dialog.aci-dialog .card { margin: 0; border: 0; }
 .remote-frame { width: 100%; height: calc(100vh - 230px); min-height: 480px; border: 1px solid var(--aci-line); border-radius: var(--aci-radius); background: var(--aci-surface); }
 .room-card .preview { height: 64px; border-radius: 6px; background: var(--aci-bg); display: flex; align-items: center; justify-content: center; color: var(--aci-muted); font-size: .75rem; }
 .login-brand { width: 14px; height: 14px; border-radius: 3px; background: var(--aci-accent); display: inline-block; margin-right: 8px; }
+
+/* Sunucuda çizilen grafikler (src/charts.php) */
+.aci-chart { width: 100%; height: auto; display: block; }
+.aci-chart-tick { font-size: 11px; fill: var(--aci-muted); }
+.aci-chart-note { font-size: 11px; font-weight: 600; fill: var(--aci-fg); }
+.aci-donut { width: 150px; height: 150px; flex: none; }
+.aci-donut-total { font-size: 26px; font-weight: 600; fill: var(--aci-fg); }
+.aci-legend { list-style: none; padding: 0; margin: .5rem 0 0; display: flex; flex-wrap: wrap; gap: .25rem 1rem; font-size: .85rem; }
+.aci-legend li { display: flex; align-items: center; gap: .4rem; }
+.aci-swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }

@@ -129,7 +129,7 @@ const Devices = {
     c1.append(el('b', '', online), ' çevrimiçi');
     const c2 = el('span');
     c2.append(el('b', '', this.list.length), ' toplam');
-    counts.append(c1, c2);
+    counts.append(c1, ' · ', c2);
 
     if (!this.list.length) {
       this.showEmpty('Henüz kayıtlı tahta yok. Ayarlar sayfasından kurulum dosyasını indirip bir tahtaya kurun.');
@@ -516,7 +516,7 @@ const Network = {
     a.append(el('b', '', this.list.length), ' cihaz');
     const b = el('span');
     b.append(el('b', '', newCount), ' yeni');
-    counts.append(a, b);
+    counts.append(a, ' · ', b);
 
     const tbody = document.getElementById('net-rows');
     if (!rows.length) {

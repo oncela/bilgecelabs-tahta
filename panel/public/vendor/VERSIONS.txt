@@ -4,5 +4,3 @@
 9d26ca1aa061a0c647305654e32efc2c8838e348b2423e9d1f4593869868e09b  tabler/js/tabler.min.js
 43968bcdf4a2254b8f2f70a939b8488c90b71b1c03e7f2c4dd77b5aeb80d2c93  tabler-icons/tabler-icons.min.css
 e6b5baf5b1bbd4d9e47ad95cb5b7540a84ffe427ca45a525a8c864e3632e7336  tabler-icons/fonts/tabler-icons.woff2
-chart.js 4.5.1 (MIT) - dist/chart.umd.min.js
-48444a82d4edcb5bec0f1965faacdde18d9c17db3063d042abada2f705c9f54a  chartjs/chart.umd.min.js

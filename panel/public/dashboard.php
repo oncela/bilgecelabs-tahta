@@ -4,6 +4,8 @@ declare(strict_types=1);
 require __DIR__ . '/../src/bootstrap.php';
 require_once __DIR__ . '/../src/status.php';
 require __DIR__ . '/../views/layout.php';
+require_once __DIR__ . '/../src/stats.php';
+require_once __DIR__ . '/../src/charts.php';
 require_login();
 
 $devices = db()->query('SELECT id, hostname, name, room, last_seen, defender, mesh_state FROM devices')->fetchAll();
@@ -57,6 +59,7 @@ $actionNames = [
     'download' => 'Kurulum indirme', 'enroll_key' => 'Kayıt anahtarı', 'password' => 'Şifre değişikliği',
 ];
 
+$stats = dashboard_stats();
 page_header('Genel bakış', 'dashboard.php');
 ?>
 <div data-page="dashboard">
@@ -92,31 +95,32 @@ page_header('Genel bakış', 'dashboard.php');
     <div class="col-lg-8">
       <div class="card h-100">
         <div class="card-header"><h3 class="card-title">Son 7 gün kullanım</h3></div>
-        <div class="card-body"><div style="height: 240px"><canvas id="chart-usage" aria-label="Son 7 gün kullanılan tahta sayısı ve toplam açık saat"></canvas></div></div>
+        <div class="card-body"><?= svg_bars($stats['labels'], [['Toplam açık saat', $stats['hours'], '--aci-chart-1']], 'Son 7 gün toplam açık saat ve kullanılan tahta sayısı',
+              array_map(fn($b) => $b ? $b . ' tahta' : '', $stats['boards'])) ?></div>
       </div>
     </div>
     <div class="col-lg-4">
       <div class="card h-100">
         <div class="card-header"><h3 class="card-title">Tahta durumu</h3></div>
-        <div class="card-body"><div style="height: 240px"><canvas id="chart-state" aria-label="Açık ve kapalı tahta sayısı"></canvas></div></div>
+        <div class="card-body"><?= svg_donut([['Açık', $stats['state']['online'], '--aci-chart-1'], ['Kapalı', $stats['state']['offline'], '--aci-chart-4']], 'tahta', 'Açık ve kapalı tahta sayısı') ?></div>
       </div>
     </div>
     <div class="col-md-6 col-lg-4">
       <div class="card h-100">
         <div class="card-header"><h3 class="card-title">Virüs koruması</h3></div>
-        <div class="card-body"><div style="height: 200px"><canvas id="chart-defender" aria-label="Virüs koruması durumlarına göre tahta sayısı"></canvas></div></div>
+        <div class="card-body"><?= svg_donut([['Korumalı', $stats['defender']['ok'], '--aci-ok'], ['Uyarı', $stats['defender']['warn'], '--aci-warn'], ['Tehlike', $stats['defender']['bad'], '--aci-bad'], ['Bilgi yok', $stats['defender']['unknown'], '--aci-chart-4']], 'tahta', 'Virüs koruması durumları') ?></div>
       </div>
     </div>
     <div class="col-md-6 col-lg-4">
       <div class="card h-100">
         <div class="card-header"><h3 class="card-title">Uzaktan erişim</h3></div>
-        <div class="card-body"><div style="height: 200px"><canvas id="chart-mesh" aria-label="Uzaktan erişim durumlarına göre tahta sayısı"></canvas></div></div>
+        <div class="card-body"><?= svg_donut([['Hazır', $stats['mesh']['ok'], '--aci-chart-1'], ['Kuruluyor', $stats['mesh']['warn'], '--aci-chart-2'], ['Hata', $stats['mesh']['bad'], '--aci-bad'], ['Kurulu değil', $stats['mesh']['off'], '--aci-chart-4']], 'tahta', 'Uzaktan erişim durumları') ?></div>
       </div>
     </div>
     <div class="col-lg-4">
       <div class="card h-100">
         <div class="card-header"><h3 class="card-title">İşlemler (7 gün)</h3></div>
-        <div class="card-body"><div style="height: 200px"><canvas id="chart-commands" aria-label="Son 7 gün tamamlanan ve tamamlanamayan işlemler"></canvas></div></div>
+        <div class="card-body"><?= svg_bars($stats['labels'], [['Tamamlanan', $stats['commands_done'], '--aci-chart-1'], ['Tamamlanamayan', $stats['commands_failed'], '--aci-bad']], 'Son 7 gün işlemler', w: 340) ?></div>
       </div>
     </div>
   </div>
@@ -179,4 +183,4 @@ page_header('Genel bakış', 'dashboard.php');
     </div>
   </div>
 </div>
-<?php page_footer(['vendor/chartjs/chart.umd.min.js']);
+<?php page_footer();
