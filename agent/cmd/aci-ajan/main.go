@@ -14,8 +14,10 @@ import (
 	"golang.org/x/sys/windows/svc"
 )
 
+// version derlemede VERSION dosyasından verilir (make agent: -X main.version=...).
+var version = "dev"
+
 const (
-	version       = "0.1.0"
 	serviceName   = "AciAjan"
 	displayName   = "Acı Okulları Tahta Ajanı"
 	defaultServer = "https://tahta.bilgecelabs.com"
