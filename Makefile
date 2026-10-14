@@ -30,6 +30,8 @@ theme: ## Tema dosyalarını tek kaynaktan (theme/src) üret
 	cat theme/src/tokens.css theme/src/panel.css > panel/public/assets/aci.css
 	mkdir -p theme/meshcentral/public/styles
 	cat theme/src/tokens.css theme/src/meshcentral.css > theme/meshcentral/public/styles/theme.css
+	mkdir -p theme/meshcentral/public/scripts
+	cp theme/src/meshcentral.js theme/meshcentral/public/scripts/theme.js
 
 theme-deploy: theme ## MeshCentral temasını sunucuya kopyala
 	sudo mkdir -p /opt/meshcentral/meshcentral-data/theme-pack/aci

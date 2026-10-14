@@ -49,3 +49,13 @@ body { background: var(--bs-body-bg); color: var(--bs-body-color); }
 .form-control:focus, .form-select:focus { border-color: var(--aci-accent-border); box-shadow: 0 0 0 .2rem rgba(var(--aci-accent-rgb), .2); }
 .progress { --bs-progress-bar-bg: var(--aci-accent); }
 .navbar.bg-dark, .bg-dark { background-color: var(--aci-sidebar) !important; }
+
+/* Uzaktan erişim araç çubukları: yeşil "bağlan" düğmeleri panelin vurgu rengiyle */
+.btn-success {
+  --bs-btn-bg: var(--aci-accent); --bs-btn-border-color: var(--aci-accent);
+  --bs-btn-hover-bg: var(--aci-accent-dark); --bs-btn-hover-border-color: var(--aci-accent-dark);
+  --bs-btn-active-bg: var(--aci-accent-text); --bs-btn-active-border-color: var(--aci-accent-text);
+  --bs-btn-disabled-bg: var(--aci-accent); --bs-btn-disabled-border-color: var(--aci-accent);
+}
+/* Tahtalarda RDP kullanılmaz */
+#connectbutton1rspan, #cxrdp, #cxwebrdp { display: none !important; }
