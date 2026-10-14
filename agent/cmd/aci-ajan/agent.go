@@ -37,6 +37,7 @@ type pollRequest struct {
 	OS       string          `json:"os"`
 	Defender json.RawMessage `json:"defender,omitempty"`
 	Mesh     string          `json:"mesh_state,omitempty"`
+	MeshNode string          `json:"mesh_node,omitempty"`
 	Results  []cmdResult     `json:"results"`
 }
 
@@ -167,6 +168,7 @@ func (a *agent) poll() (*pollResponse, error) {
 	a.defMu.Unlock()
 
 	req.Mesh = a.mesh.currentState()
+	req.MeshNode = a.mesh.currentNodeID()
 
 	var resp pollResponse
 	err := a.post("/api/poll.php", req, &resp)

@@ -19,7 +19,8 @@
       "userConsentFlags": {
         "desktopnotify": true,
         "terminalnotify": true,
-        "filenotify": true
+        "filenotify": true,
+        "desktopprivacybar": true
       },
       "consentMessages": {
         "title": "Acı Okulları",
@@ -36,7 +37,8 @@
       "siteStyle": 3,
       "nightMode": 2,
       "themepack": "aci",
-      "showModernUIToggle": false
+      "showModernUIToggle": false,
+      "desktopPrivacyBarText": "Uzaktan bağlantı: {0}"
     }
   }
 }

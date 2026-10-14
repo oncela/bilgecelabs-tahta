@@ -129,7 +129,10 @@ func uninstall() error {
 	}
 	defer s.Close()
 	s.Control(svc.Stop)
-	return s.Delete()
+	err = s.Delete()
+	// Uzaktan erişim ajanını da kaldır (bizim kurduğumuz servis adı).
+	uninstallMesh("AciUzak")
+	return err
 }
 
 func samePath(a, b string) bool {

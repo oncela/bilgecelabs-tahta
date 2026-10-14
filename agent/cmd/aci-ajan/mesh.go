@@ -32,6 +32,13 @@ type meshKeeper struct {
 	busy    bool
 	lastTry time.Time
 	state   string
+	nodeID  string
+}
+
+func (k *meshKeeper) currentNodeID() string {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	return k.nodeID
 }
 
 func (k *meshKeeper) setState(s string) {
@@ -68,6 +75,16 @@ func (k *meshKeeper) ensure(a *agent, info *meshInfo) {
 	switch state {
 	case "running":
 		k.setState("running")
+		k.mu.Lock()
+		need := k.nodeID == ""
+		k.mu.Unlock()
+		if need {
+			if id := meshNodeID(info.Service); id != "" {
+				k.mu.Lock()
+				k.nodeID = id
+				k.mu.Unlock()
+			}
+		}
 		return
 	case "stopped":
 		k.setState("stopped")
@@ -76,7 +93,11 @@ func (k *meshKeeper) ensure(a *agent, info *meshInfo) {
 		}
 		return
 	}
-	// Kurulu değil. Başarısız denemeleri 30 dakikada bir tekrarla.
+	// Kurulu değil (yeniden kurulursa kimliği değişir, eskisini unut).
+	k.mu.Lock()
+	k.nodeID = ""
+	k.mu.Unlock()
+	// Başarısız denemeleri 30 dakikada bir tekrarla.
 	k.mu.Lock()
 	wait := time.Since(k.lastTry) < 30*time.Minute
 	if !wait {
@@ -94,6 +115,61 @@ func (k *meshKeeper) ensure(a *agent, info *meshInfo) {
 	}
 	log.Printf("uzak erişim ajanı kuruldu")
 	k.setState("running")
+}
+
+// meshNodeID kurulu MeshCentral ajanının cihaz kimliğini (96 hane hex) döner.
+// Panel bu kimlikle tahtayı MeshCentral'da kesin olarak açar.
+func meshNodeID(service string) string {
+	m, err := mgr.Connect()
+	if err != nil {
+		return ""
+	}
+	defer m.Disconnect()
+	s, err := m.OpenService(service)
+	if err != nil {
+		return ""
+	}
+	defer s.Close()
+	c, err := s.Config()
+	if err != nil {
+		return ""
+	}
+	exe := strings.Trim(c.BinaryPathName, `"`)
+	if i := strings.Index(strings.ToLower(exe), ".exe"); i > 0 {
+		exe = exe[:i+4]
+	}
+	out, err := runCmd(30*time.Second, exe, "-nodeid")
+	if err != nil {
+		return ""
+	}
+	id := strings.ToUpper(strings.TrimSpace(out))
+	if len(id) != 96 || strings.Trim(id, "0123456789ABCDEF") != "" {
+		return ""
+	}
+	return id
+}
+
+// uninstallMesh tahtadan MeshCentral ajanını kaldırır (ajan kaldırılırken).
+func uninstallMesh(service string) {
+	m, err := mgr.Connect()
+	if err != nil {
+		return
+	}
+	defer m.Disconnect()
+	s, err := m.OpenService(service)
+	if err != nil {
+		return
+	}
+	c, err := s.Config()
+	s.Close()
+	if err != nil {
+		return
+	}
+	exe := strings.Trim(c.BinaryPathName, `"`)
+	if i := strings.Index(strings.ToLower(exe), ".exe"); i > 0 {
+		exe = exe[:i+4]
+	}
+	runCmd(2*time.Minute, exe, "-fulluninstall")
 }
 
 func serviceState(name string) (string, error) {

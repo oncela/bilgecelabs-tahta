@@ -25,6 +25,9 @@ $pdo->prepare("UPDATE devices SET hostname = COALESCE(NULLIF(?, ''), hostname), 
         client_ip(),
         $deviceId,
     ]);
+if (isset($in['mesh_node']) && preg_match('/^[0-9A-F]{96}$/', (string)$in['mesh_node'])) {
+    $pdo->prepare('UPDATE devices SET mesh_node_id = ? WHERE id = ?')->execute([$in['mesh_node'], $deviceId]);
+}
 if (isset($in['mesh_state'])) {
     $pdo->prepare('UPDATE devices SET mesh_state = ? WHERE id = ?')
         ->execute([mb_substr((string)$in['mesh_state'], 0, 160), $deviceId]);

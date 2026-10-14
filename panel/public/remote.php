@@ -3,6 +3,7 @@
 declare(strict_types=1);
 require __DIR__ . '/../src/bootstrap.php';
 require __DIR__ . '/../src/mesh.php';
+require __DIR__ . '/../src/status.php';
 require __DIR__ . '/../views/layout.php';
 require_login();
 
@@ -19,10 +20,12 @@ $error = '';
 if (!$d) $error = 'Tahta bulunamadı.';
 elseif (!mesh_enabled()) $error = 'Uzaktan erişim sunucusu ayarlanmamış.';
 elseif ($meshUser === '') $error = 'Hesabınıza uzaktan erişim yetkisi verilmemiş.';
+elseif ($d['mesh_state'] !== 'running') $error = 'Bu tahtada uzaktan erişim hazır değil (' . mesh_summary($d['mesh_state'])['text'] . '). Tahta açıldığında ajan otomatik kurar.';
+elseif (!is_online($d['last_seen'])) $error = 'Tahta şu an kapalı veya internete bağlı değil (son bağlantı: ' . date('d.m.Y H:i', strtotime((string)$d['last_seen'])) . ').';
 
 $url = '';
 if (!$error) {
-    $url = mesh_device_url($meshUser, $d['hostname'], $view);
+    $url = mesh_device_url($meshUser, $d, $view);
     audit('remote_' . $view, '#' . $d['id'] . ' ' . device_label($d));
 }
 page_header(($d ? device_label($d) : 'Tahta') . ' · ' . MESH_VIEWS[$view][1], 'devices.php');

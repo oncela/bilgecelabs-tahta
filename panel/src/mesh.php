@@ -31,13 +31,15 @@ function mesh_login_token(string $meshUser): string {
     return strtr(base64_encode($iv . $tag . $ct), ['+' => '@', '/' => '$']);
 }
 
-/** Tahtanın MeshCentral sayfası; MeshCentral menüleri gizli (hide=31). */
-function mesh_device_url(string $meshUser, string $hostname, string $view): string {
+/**
+ * Tahtanın MeshCentral sayfası; MeshCentral menüleri gizli (hide=31).
+ * Ajanın bildirdiği cihaz kimliği varsa onunla (kesin), yoksa bilgisayar adıyla açılır.
+ */
+function mesh_device_url(string $meshUser, array $device, string $view): string {
     $mode = MESH_VIEWS[$view][0] ?? 11;
-    return rtrim(cfg('ACI_MESH_URL'), '/') . '/?' . http_build_query([
-        'login' => mesh_login_token($meshUser),
-        'gotodevicename' => $hostname,
-        'viewmode' => $mode,
-        'hide' => 31,
-    ]);
+    $target = ($device['mesh_node_id'] ?? '') !== ''
+        ? ['gotonode' => $device['mesh_node_id']]
+        : ['gotodevicename' => $device['hostname']];
+    return rtrim(cfg('ACI_MESH_URL'), '/') . '/?' . http_build_query(['login' => mesh_login_token($meshUser)]
+        + $target + ['viewmode' => $mode, 'hide' => 31]);
 }
