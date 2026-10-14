@@ -28,6 +28,16 @@ $pdo->prepare("UPDATE devices SET hostname = COALESCE(NULLIF(?, ''), hostname), 
 if (isset($in['mesh_node']) && preg_match('/^[0-9A-F]{96}$/', (string)$in['mesh_node'])) {
     $pdo->prepare('UPDATE devices SET mesh_node_id = ? WHERE id = ?')->execute([$in['mesh_node'], $deviceId]);
 }
+if (isset($in['metrics']) && is_array($in['metrics'])) {
+    $m = $in['metrics'];
+    $clampPct = fn($v) => max(0, min(100, (int)$v));
+    $pdo->prepare('UPDATE devices SET cpu = ?, mem_used = ?, mem_mb = ?, disk_used = ?, disk_free = ?, disk_gb = ? WHERE id = ?')
+        ->execute([
+            $clampPct($m['cpu'] ?? 0), $clampPct($m['mem_used'] ?? 0), max(0, (int)($m['mem_mb'] ?? 0)),
+            $clampPct($m['disk_used'] ?? 0), max(0, (int)($m['disk_free'] ?? 0)), max(0, (int)($m['disk_gb'] ?? 0)),
+            $deviceId,
+        ]);
+}
 if (isset($in['mesh_state'])) {
     $pdo->prepare('UPDATE devices SET mesh_state = ? WHERE id = ?')
         ->execute([mb_substr((string)$in['mesh_state'], 0, 160), $deviceId]);

@@ -448,6 +448,9 @@ const DeviceDialog = {
     add('IP', d.ip);
     add('Virüs koruması', d.defender.text);
     add('Uzaktan erişim', d.mesh.text);
+    if (d.cpu !== null) add('İşlemci (CPU)', d.cpu + '%');
+    if (d.mem_used !== null) add('Bellek (RAM)', d.mem_used + '%' + (d.mem_mb ? ' / ' + (d.mem_mb / 1024).toFixed(1) + ' GB' : ''));
+    if (d.disk_used !== null) add('Disk (C:)', d.disk_used + '% dolu' + (d.disk_gb ? ' · ' + d.disk_free + ' / ' + d.disk_gb + ' GB boş' : ''));
     add('Ajan sürümü', d.version);
     const hist = document.getElementById('dev-history');
     hist.replaceChildren(el('p', 'text-secondary', 'Yükleniyor…'));

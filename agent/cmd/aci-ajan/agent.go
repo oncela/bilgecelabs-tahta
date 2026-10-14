@@ -38,6 +38,7 @@ type pollRequest struct {
 	Defender json.RawMessage `json:"defender,omitempty"`
 	Mesh     string          `json:"mesh_state,omitempty"`
 	MeshNode string          `json:"mesh_node,omitempty"`
+	Metrics  *metrics        `json:"metrics,omitempty"`
 	Results  []cmdResult     `json:"results"`
 }
 
@@ -60,6 +61,8 @@ type agent struct {
 	defenderAt time.Time
 	osName     string
 	mesh       meshKeeper
+	cpuIdle    uint64
+	cpuTotal   uint64
 }
 
 func runAgent(stop <-chan struct{}) {
@@ -169,6 +172,8 @@ func (a *agent) poll() (*pollResponse, error) {
 
 	req.Mesh = a.mesh.currentState()
 	req.MeshNode = a.mesh.currentNodeID()
+	mt := collectMetrics(&a.cpuIdle, &a.cpuTotal)
+	req.Metrics = &mt
 
 	var resp pollResponse
 	err := a.post("/api/poll.php", req, &resp)

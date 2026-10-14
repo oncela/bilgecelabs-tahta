@@ -16,7 +16,7 @@ switch ("$action:" . ($isPost ? 'POST' : 'GET')) {
 
 case 'devices:GET':
     $rows = db()->query('SELECT d.id, d.hostname, d.name, d.room, d.dev_type, d.mac, d.os, d.agent_version, d.ip,
-            d.logged_user, d.uptime_s, d.defender, d.defender_at, d.last_seen, d.mesh_state,
+            d.logged_user, d.uptime_s, d.cpu, d.mem_used, d.mem_mb, d.disk_used, d.disk_free, d.disk_gb, d.defender, d.defender_at, d.last_seen, d.mesh_state,
             (SELECT COUNT(*) FROM commands c WHERE c.device_id = d.id AND c.status IN (\'pending\',\'sent\')) AS busy
         FROM devices d ORDER BY d.room IS NULL, d.room, COALESCE(d.name, d.hostname)')->fetchAll();
     $out = [];
@@ -38,6 +38,12 @@ case 'devices:GET':
             'defender' => defender_summary($d['defender']),
             'busy' => (int)$d['busy'],
             'mesh' => mesh_summary($d['mesh_state']),
+            'cpu' => $d['cpu'] === null ? null : (int)$d['cpu'],
+            'mem_used' => $d['mem_used'] === null ? null : (int)$d['mem_used'],
+            'mem_mb' => (int)$d['mem_mb'],
+            'disk_used' => $d['disk_used'] === null ? null : (int)$d['disk_used'],
+            'disk_free' => (int)$d['disk_free'],
+            'disk_gb' => (int)$d['disk_gb'],
         ];
     }
     json_out(['devices' => $out, 'now' => date('c')]);

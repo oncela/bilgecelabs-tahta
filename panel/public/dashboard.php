@@ -8,7 +8,7 @@ require_once __DIR__ . '/../src/stats.php';
 require_once __DIR__ . '/../src/charts.php';
 require_login();
 
-$devices = db()->query('SELECT id, hostname, name, room, last_seen, defender, mesh_state FROM devices')->fetchAll();
+$devices = db()->query('SELECT id, hostname, name, room, last_seen, defender, mesh_state, disk_used, disk_free, mem_used FROM devices')->fetchAll();
 $total = count($devices);
 $online = 0;
 $alerts = [];   // [seviye, simge, metin, bağlantı]
@@ -31,6 +31,10 @@ foreach ($devices as $d) {
     if ($mesh['state'] === 'ok') $meshReady++;
     elseif ($mesh['state'] === 'bad') $alerts[] = ['warning', 'plug-x', "$label: uzaktan erişim {$mesh['text']}", 'devices.php?q=' . urlencode($d['hostname'])];
 
+    // Öngörücü uyarı: disk dolmak üzere
+    if ($on && $d['disk_used'] !== null && (int)$d['disk_used'] >= 90) {
+        $alerts[] = ['warning', 'database', "$label: disk %{$d['disk_used']} dolu" . ($d['disk_free'] !== null ? " ({$d['disk_free']} GB boş)" : ''), 'devices.php?q=' . urlencode($d['hostname'])];
+    }
     if (!$on && $d['last_seen'] && strtotime($d['last_seen']) < time() - 7 * 86400) {
         $alerts[] = ['secondary', 'power', "$label: 7 günden uzun süredir bağlanmadı", 'devices.php?q=' . urlencode($d['hostname'])];
     }
