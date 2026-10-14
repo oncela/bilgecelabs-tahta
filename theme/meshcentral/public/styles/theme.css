@@ -1,0 +1,52 @@
+/* Acı Tahta teması: MeshCentral yeni arayüzü (Bootstrap 5) için.
+   Renkler theme/README.md ile aynıdır. Koyu mod yok. */
+:root, [data-bs-theme], [data-bs-theme="dark"] {
+  color-scheme: light;
+  --bs-body-bg: #f4f6f4;
+  --bs-body-bg-rgb: 244, 246, 244;
+  --bs-body-color: #1c2420;
+  --bs-body-color-rgb: 28, 36, 32;
+  --bs-secondary-color: #5d6a63;
+  --bs-tertiary-bg: #eef2ef;
+  --bs-secondary-bg: #e9eeeb;
+  --bs-border-color: #dce3df;
+  --bs-border-radius: 8px;
+  --bs-font-sans-serif: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --bs-primary: #2c6b55;
+  --bs-primary-rgb: 44, 107, 85;
+  --bs-primary-bg-subtle: #e2efe8;
+  --bs-primary-border-subtle: #b9d6c8;
+  --bs-primary-text-emphasis: #1d4a3b;
+  --bs-success: #1f7a4a;
+  --bs-success-rgb: 31, 122, 74;
+  --bs-warning: #b77a00;
+  --bs-danger: #b1372b;
+  --bs-danger-rgb: 177, 55, 43;
+  --bs-link-color: #2c6b55;
+  --bs-link-color-rgb: 44, 107, 85;
+  --bs-link-hover-color: #24594a;
+  --bs-link-hover-color-rgb: 36, 89, 74;
+  --bs-focus-ring-color: rgba(44, 107, 85, .25);
+}
+body { background: var(--bs-body-bg); color: var(--bs-body-color); }
+.card, .modal-content, .dropdown-menu, .list-group-item { background-color: #ffffff; border-color: var(--bs-border-color); }
+.btn-primary {
+  --bs-btn-bg: #2c6b55; --bs-btn-border-color: #2c6b55;
+  --bs-btn-hover-bg: #24594a; --bs-btn-hover-border-color: #24594a;
+  --bs-btn-active-bg: #1f4d40; --bs-btn-active-border-color: #1f4d40;
+  --bs-btn-disabled-bg: #2c6b55; --bs-btn-disabled-border-color: #2c6b55;
+  --bs-btn-focus-shadow-rgb: 44, 107, 85;
+}
+.btn-outline-primary {
+  --bs-btn-color: #2c6b55; --bs-btn-border-color: #2c6b55;
+  --bs-btn-hover-bg: #2c6b55; --bs-btn-hover-border-color: #2c6b55;
+  --bs-btn-active-bg: #24594a; --bs-btn-active-border-color: #24594a;
+}
+.nav-pills { --bs-nav-pills-link-active-bg: #2c6b55; }
+.nav-link { color: var(--bs-link-color); }
+.nav-tabs .nav-link.active { color: #1c2420; border-bottom-color: #2c6b55; }
+.pagination { --bs-pagination-active-bg: #2c6b55; --bs-pagination-active-border-color: #2c6b55; --bs-pagination-color: #2c6b55; }
+.form-check-input:checked { background-color: #2c6b55; border-color: #2c6b55; }
+.form-control:focus, .form-select:focus { border-color: #8fbfa9; box-shadow: 0 0 0 .2rem rgba(44, 107, 85, .2); }
+.progress { --bs-progress-bar-bg: #2c6b55; }
+.navbar.bg-dark, .bg-dark { background-color: #1d4a3b !important; }

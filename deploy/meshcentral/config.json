@@ -32,7 +32,11 @@
         "description": "Acı Okulları akıllı tahta uzaktan erişim ajanı",
         "companyName": "Acı Okulları",
         "serviceName": "AciUzak"
-      }
+      },
+      "siteStyle": 3,
+      "nightMode": 2,
+      "themepack": "aci",
+      "showModernUIToggle": false
     }
   }
 }

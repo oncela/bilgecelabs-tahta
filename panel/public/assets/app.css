@@ -1,4 +1,4 @@
-/* Acı Tahta paneli. Vurgu rengi: kara tahta yeşili. */
+/* Acı Tahta paneli. Tek tema (açık), renkler: theme/README.md */
 :root {
   --bg: #f4f6f4;
   --surface: #ffffff;
@@ -16,15 +16,6 @@
   --font: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
   --mono: ui-monospace, Consolas, "SFMono-Regular", monospace;
   color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #121715; --surface: #1a201d; --fg: #e3eae6; --muted: #98a59e; --line: #2c3531;
-    --accent: #5fbb96; --accent-fg: #0f1a15; --accent-soft: #1e3028;
-    --ok: #6fd39b; --ok-bg: #1a3225; --warn: #e8b85a; --warn-bg: #372b13;
-    --bad: #f08a7c; --bad-bg: #3a221f; --off: #87928d; --off-bg: #232a27;
-    color-scheme: dark;
-  }
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -144,5 +135,5 @@ dialog::backdrop { background: rgb(0 0 0 / .4); }
 .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
 .tabs a { padding: 6px 12px; border-radius: 6px; text-decoration: none; color: var(--muted); border: 1px solid var(--line); background: var(--surface); }
 .tabs a.on { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
-.remote-frame { width: 100%; height: calc(100vh - 190px); min-height: 480px; border: 1px solid var(--line); border-radius: var(--radius); background: #000; }
+.remote-frame { width: 100%; height: calc(100vh - 190px); min-height: 480px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
 .remote-links { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 14px; }
