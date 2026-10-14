@@ -11,8 +11,14 @@ if (!mesh_enabled() || cfg('ACI_MESH_GROUP') === '') json_out(['error' => 'uzakt
 $file = ACI_ROOT . '/storage/meshagent64.exe';
 if (!is_file($file) || filemtime($file) < time() - 86400) {
     $meshId = substr(cfg('ACI_MESH_GROUP'), strlen('mesh//'));
-    $url = rtrim(cfg('ACI_MESH_URL'), '/') . '/meshagents?' . http_build_query(['id' => 4, 'meshid' => $meshId, 'installflags' => 0]);
-    $insecure = cfg('ACI_MESH_INSECURE') === '1'; // sadece yerel test (kendinden imzalı sertifika)
+    // MeshCentral aynı sunucuda: yerel adresten al (dışarı çıkıp tünelden dönmeye gerek yok).
+    // Ajanın içine gömülen sunucu adresi isteğe değil MeshCentral ayarına (cert) bağlıdır.
+    $local = str_replace('wss://', 'https://', cfg('ACI_MESH_WSS'));
+    $base = $local !== '' ? $local : cfg('ACI_MESH_URL');
+    $url = rtrim($base, '/') . '/meshagents?' . http_build_query(['id' => 4, 'meshid' => $meshId, 'installflags' => 0]);
+    $host = parse_url($base, PHP_URL_HOST);
+    // Kendinden imzalı sertifika: yalnız yerel adreste (veya açıkça izin verilmişse) doğrulama yapma
+    $insecure = in_array($host, ['127.0.0.1', 'localhost', '::1'], true) || cfg('ACI_MESH_INSECURE') === '1';
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
