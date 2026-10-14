@@ -68,3 +68,14 @@ ya kendi ajanımızla, ya da MeshCentral'ın komut kanalıyla eklenebilir.
 - WDAC/AppLocker önce izleme modunda; güvenlik duvarını varsayılan engelle açmak ajanı koparır
 - KVKK: ekran kaydı ve izleme varsayılan kapalı, bildirim çubuğu açık, saklama süresi tanımlı
 - İmzasız ajan: SmartScreen/Defender uyarısı — kod imzalama kalıcı çözüm
+
+## Güvenlik notları (14.10.2026 incelemesi)
+- Tahtadaki ajanımız HİÇBİR port açmıyor (sadece dışa bağlantı) → dışarıdan tahtaya bağlanılamaz
+- Sunucuda düzeltilecek: MeshCentral *:4430 yerine 127.0.0.1; ufw kapalı; SSH tüm arayüzlerde
+- Test paneli (8099) iş bitince kapatılacak
+
+## Sonradan eklenenler
+- Kurulumda cihaz türü (tahta/sınıf PC/idare/danışma) ve konum otomatik belirlenir, panelde gruplanır
+  - Yöntem önerisi: kurulum dosyası adında tür+konum (ör. _7B, _danisma) veya kurulumda tek soru
+- Güvenlik sertleştirme (Aşama C başı): sunucu (MeshCentral localhost, ufw, fail2ban, SSH),
+  kayıt güvenliği (IP/zaman sınırı, anahtar rotasyonu), kod imzalama
