@@ -711,6 +711,85 @@ const Rooms = {
   },
 };
 
+// ---------------- Uzaktan erişim köprüsü (panel tarafı) ----------------
+// Çerçevedeki uzaktan erişim sayfasıyla postMessage üzerinden konuşur;
+// yalnız kendi uzaktan erişim adresimizden gelen mesajlar kabul edilir.
+
+const Remote = {
+  origin: '',
+  frame: null,
+  state: -1,
+  since: 0,
+  timer: null,
+  heard: false,
+
+  send(cmd, value) {
+    if (this.frame && this.frame.contentWindow) {
+      this.frame.contentWindow.postMessage({ src: 'bilgece-panel', cmd, value }, this.origin);
+    }
+  },
+
+  setState(s, control) {
+    const labels = { 0: ['Bağlantı yok', 'off'], 1: ['Bağlanıyor…', 'warn'], 2: ['Bağlanıyor…', 'warn'], 3: ['Bağlı', 'ok'] };
+    const [text, cls] = labels[s] || labels[0];
+    document.getElementById('remote-state').textContent = text;
+    document.getElementById('remote-dot').className = 'remote-dot ' + cls;
+    if (s === 3 && this.state !== 3) this.since = Date.now();
+    this.state = s;
+    document.querySelectorAll('[data-remote="cad"],[data-remote="screenshot"],[data-remote="control"],[data-remote="disconnect"]')
+      .forEach((b) => { b.disabled = s !== 3; });
+    const ctl = document.getElementById('remote-control');
+    if (ctl && control !== undefined) {
+      ctl.dataset.on = control ? '1' : '0';
+      ctl.querySelector('span').textContent = control ? 'Kontrol açık' : 'Sadece izleme';
+      ctl.classList.toggle('btn-primary', !!control);
+    }
+    this.tick();
+  },
+
+  tick() {
+    const el = document.getElementById('remote-timer');
+    if (this.state !== 3) { el.textContent = ''; return; }
+    const sec = Math.floor((Date.now() - this.since) / 1000);
+    el.textContent = '· ' + String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0');
+  },
+
+  init() {
+    const root = document.querySelector('[data-page="remote"]');
+    this.origin = root.dataset.meshOrigin;
+    this.frame = document.getElementById('remote-frame');
+    window.addEventListener('message', (ev) => {
+      if (ev.origin !== this.origin || !ev.data || ev.data.src !== 'bilgece-remote') return;
+      this.heard = true;
+      if (ev.data.type === 'state') this.setState(ev.data.state, ev.data.control);
+    });
+    document.querySelectorAll('[data-remote]').forEach((b) => {
+      b.addEventListener('click', () => {
+        const cmd = b.dataset.remote;
+        if (cmd === 'fullscreen') {
+          const card = document.getElementById('remote-card');
+          if (document.fullscreenElement) document.exitFullscreen();
+          else if (card.requestFullscreen) card.requestFullscreen().catch(() => {});
+        } else if (cmd === 'control') {
+          this.send('control', b.dataset.on !== '1');
+        } else {
+          this.send(cmd);
+        }
+      });
+    });
+    this.setState(1);
+    this.timer = setInterval(() => this.tick(), 1000);
+    // Köprü yanıt vermezse kullanıcıya yol göster.
+    setTimeout(() => {
+      if (!this.heard) {
+        document.getElementById('remote-state').textContent = 'Yanıt yok';
+        document.getElementById('remote-note').textContent =
+          'Uzaktan erişim yanıt vermedi. Sayfayı yenileyin; sorun sürerse tahtanın açık ve internete bağlı olduğunu kontrol edin.';
+      }
+    }, 20000);
+  },
+};
+
 // ---------------- Başlatma ----------------
 
 const page = document.querySelector('[data-page]')?.dataset.page;
@@ -723,4 +802,6 @@ if (page === 'devices') {
   CommandDialog.init();
 } else if (page === 'network') {
   Network.init();
+} else if (page === 'remote') {
+  Remote.init();
 }

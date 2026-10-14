@@ -93,3 +93,13 @@ body { background: var(--bs-body-bg); color: var(--bs-body-color); }
 }
 /* Tahtalarda RDP kullanılmaz */
 #connectbutton1rspan, #cxrdp, #cxwebrdp { display: none !important; }
+
+/* Panelin içinde (bl-embedded): MeshCentral'ın kendi çubukları yerine panelin çubuğu kullanılır */
+.bl-embedded .bl-hidden,
+.bl-embedded #deskarea4,
+.bl-embedded #p11DeskSessionSelector { display: none !important; }
+.bl-embedded body { background: #0b1220; }
+.bl-embedded .areaHead, .bl-embedded #termarea3x, .bl-embedded #p13toolbar, .bl-embedded #p13toolbarBottom {
+  background: var(--aci-surface); border-color: var(--aci-line);
+}
+.bl-embedded .btn { border-radius: 6px; }

@@ -78,7 +78,16 @@ dialog.aci-dialog { border: 0; padding: 0; border-radius: var(--aci-radius); wid
 dialog.aci-dialog.wide { width: min(780px, calc(100vw - 32px)); }
 dialog.aci-dialog::backdrop { background: rgba(16, 24, 40, .45); }
 dialog.aci-dialog .card { margin: 0; border: 0; }
-.remote-frame { width: 100%; height: calc(100vh - 230px); min-height: 480px; border: 1px solid var(--aci-line); border-radius: var(--aci-radius); background: var(--aci-surface); }
+.remote-card { overflow: hidden; }
+.remote-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; padding: .6rem .75rem; border-bottom: 1px solid var(--aci-line); background: var(--aci-surface); }
+.remote-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--aci-muted); flex: none; }
+.remote-dot.ok { background: var(--aci-ok); box-shadow: 0 0 0 3px rgba(var(--aci-ok-rgb), .18); }
+.remote-dot.warn { background: var(--aci-warn); }
+.remote-stage { background: #0b1220; }
+.remote-frame { display: block; width: 100%; height: calc(100vh - 250px); min-height: 480px; border: 0; background: #0b1220; }
+.remote-card:fullscreen { border-radius: 0; }
+.remote-card:fullscreen .remote-frame { height: calc(100vh - 58px); }
+#remote-timer { font-variant-numeric: tabular-nums; }
 .room-card .preview { height: 64px; border-radius: 6px; background: var(--aci-bg); display: flex; align-items: center; justify-content: center; color: var(--aci-muted); font-size: .75rem; }
 .login-brand { width: 14px; height: 14px; border-radius: 3px; background: var(--aci-accent); display: inline-block; margin-right: 8px; }
 
