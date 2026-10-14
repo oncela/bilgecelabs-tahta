@@ -30,6 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Giriş · <?= h(ACI_PRODUCT) ?></title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/favicon.svg">
+<link rel="icon" href="assets/brand/favicon.ico" sizes="any">
 <link rel="stylesheet" href="vendor/tabler/css/tabler.min.css">
 <link rel="stylesheet" href="assets/aci.css?v=<?= h(substr(md5((string)@filemtime(__DIR__ . '/assets/aci.css')), 0, 8)) ?>">
 </head>
@@ -37,7 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="page page-center">
   <div class="container container-tight py-4">
     <div class="text-center mb-4">
-      <span class="h2"><span class="login-brand"></span><?= h(ACI_PRODUCT) ?></span>
+      <img src="assets/brand/logo.svg" alt="BilgeceLabs" class="login-logo mb-2">
+      <div class="h3 mb-1"><?= h(ACI_PRODUCT) ?></div>
       <div class="text-secondary"><?= h(school_name()) ?> · Akıllı tahta yönetim paneli</div>
     </div>
     <form method="post" class="card card-md" autocomplete="on">

@@ -32,6 +32,9 @@ function page_header(string $title, string $active = ''): void {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="csrf" content="<?= h(csrf_token()) ?>">
 <title><?= h($title) ?> · <?= h(ACI_PRODUCT) ?></title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/favicon.svg">
+<link rel="icon" href="assets/brand/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
 <link rel="stylesheet" href="vendor/tabler/css/tabler.min.css">
 <link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.min.css">
 <link rel="stylesheet" href="assets/aci.css?v=<?= h(asset_version()) ?>">
@@ -44,7 +47,7 @@ function page_header(string $title, string $active = ''): void {
         <i class="ti ti-menu-2"></i>
       </button>
       <a class="navbar-brand navbar-brand-autodark flex-column align-items-start" href="dashboard.php">
-        <span><span class="brand-mark"></span><?= h(ACI_PRODUCT) ?></span>
+        <span class="d-flex align-items-center"><img src="assets/brand/mark-light.svg" alt="" class="brand-logo"><?= h(ACI_PRODUCT) ?></span>
         <span class="brand-school"><?= h(school_name()) ?></span>
       </a>
       <div class="collapse navbar-collapse" id="sidebar-menu">

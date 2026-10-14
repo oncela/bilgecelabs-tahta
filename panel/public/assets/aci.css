@@ -56,8 +56,8 @@
 /* Koyu yeşil yan menü */
 .aci-sidebar { background: var(--aci-sidebar) !important; border-right: 0; }
 .aci-sidebar .navbar-brand { color: #fff; font-weight: 600; letter-spacing: .01em; gap: .1rem; }
-.aci-sidebar .brand-school { font-size: .72rem; font-weight: 400; color: var(--aci-sidebar-muted); padding-left: 20px; }
-.aci-sidebar .brand-mark { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: var(--aci-sidebar-mark); margin-right: 8px; }
+.aci-sidebar .brand-school { font-size: .72rem; font-weight: 400; color: var(--aci-sidebar-muted); padding-left: 26px; }
+.aci-sidebar .brand-logo { width: 22px; height: 22px; margin-right: 8px; margin-left: -4px; }
 .aci-sidebar .nav-link { color: var(--aci-sidebar-fg); border-radius: 6px; margin: 1px 8px; padding: .45rem .75rem; }
 .aci-sidebar .nav-link:hover { color: #fff; background: rgba(255, 255, 255, .06); }
 .aci-sidebar .nav-item.active > .nav-link,
@@ -89,7 +89,7 @@ dialog.aci-dialog .card { margin: 0; border: 0; }
 .remote-card:fullscreen .remote-frame { height: calc(100vh - 58px); }
 #remote-timer { font-variant-numeric: tabular-nums; }
 .room-card .preview { height: 64px; border-radius: 6px; background: var(--aci-bg); display: flex; align-items: center; justify-content: center; color: var(--aci-muted); font-size: .75rem; }
-.login-brand { width: 14px; height: 14px; border-radius: 3px; background: var(--aci-accent); display: inline-block; margin-right: 8px; }
+.login-logo { height: 48px; width: auto; }
 
 /* Sunucuda çizilen grafikler (src/charts.php) */
 .aci-chart { width: 100%; height: auto; display: block; }
