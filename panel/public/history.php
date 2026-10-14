@@ -13,6 +13,8 @@ $names = [
     'command' => 'Komut', 'device_enroll' => 'Tahta kaydı', 'device_update' => 'Tahta düzenleme',
     'device_delete' => 'Tahta silme', 'netscan' => 'Ağ taraması', 'enroll_key' => 'Kayıt anahtarı',
     'download' => 'Kurulum indirme', 'password' => 'Şifre değişikliği',
+    'mesh_wake' => 'Uzaktan açma', 'mesh_sleep' => 'Uyku', 'mesh_off' => 'Kapatma (uzaktan)', 'mesh_reset' => 'Yeniden başlatma (uzaktan)',
+    'mesh_open_url' => 'Web adresi açma', 'mesh_toast' => 'Bildirim',
     'remote_desktop' => 'Ekran açıldı', 'remote_files' => 'Dosyalar açıldı', 'remote_terminal' => 'Komut satırı açıldı',
 ];
 page_header('İşlem geçmişi', 'history.php');

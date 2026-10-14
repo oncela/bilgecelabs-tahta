@@ -21,6 +21,10 @@ page_header('Tahtalar', 'devices.php');
       <button class="btn btn-sm" data-cmd="defender_scan"><i class="ti ti-shield-search me-1"></i>Virüs taraması</button>
       <button class="btn btn-sm" data-cmd="defender_update"><i class="ti ti-shield-up me-1"></i>İmza güncelle</button>
       <button class="btn btn-sm" data-cmd="powershell"><i class="ti ti-terminal-2 me-1"></i>PowerShell</button>
+      <span class="vr mx-1"></span>
+      <button class="btn btn-sm" data-cmd="wake"><i class="ti ti-player-play me-1"></i>Uzaktan aç</button>
+      <button class="btn btn-sm" data-cmd="open_url"><i class="ti ti-world me-1"></i>Web adresi aç</button>
+      <button class="btn btn-sm" data-cmd="toast"><i class="ti ti-bell me-1"></i>Bildirim</button>
     </div>
   </div>
 

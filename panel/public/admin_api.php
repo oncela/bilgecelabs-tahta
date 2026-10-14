@@ -3,6 +3,7 @@
 declare(strict_types=1);
 require __DIR__ . '/../src/bootstrap.php';
 require __DIR__ . '/../src/status.php';
+require __DIR__ . '/../src/meshctl.php';
 require_login();
 
 $action = (string)($_GET['action'] ?? '');
@@ -135,6 +136,29 @@ case 'net_scan:POST':
         ->execute([$id, $batch, $_SESSION['admin_id']]);
     audit('netscan', "#$id");
     json_out(['batch_id' => $batch]);
+
+case 'mesh_action:POST':
+    // MeshCentral üzerinden: uzaktan açma (wake), uyku, kapatma, web adresi açma, bildirim.
+    $action = (string)($in['action'] ?? '');
+    $ids = array_values(array_unique(array_map('intval', (array)($in['device_ids'] ?? []))));
+    if (!$ids) json_out(['error' => 'Önce en az bir tahta seçin.'], 400);
+    $ph = implode(',', array_fill(0, count($ids), '?'));
+    $st = db()->prepare("SELECT id, mesh_node_id FROM devices WHERE id IN ($ph)");
+    $st->execute($ids);
+    $rows = $st->fetchAll();
+    $hex = array_values(array_filter(array_column($rows, 'mesh_node_id')));
+    $missing = count($ids) - count($hex);
+    if (!$hex) json_out(['error' => 'Seçilen tahtalarda uzaktan erişim kimliği yok. Tahtanın en az bir kez açılıp ajanın uzaktan erişimi kurması gerekir.'], 409);
+    $args = (array)($in['args'] ?? []);
+    $r = match ($action) {
+        'wake', 'sleep', 'off', 'reset' => mesh_power($action, $hex),
+        'open_url' => mesh_open_url($hex, trim((string)($args['url'] ?? ''))),
+        'toast' => mesh_toast($hex, mb_substr((string)($args['title'] ?? ''), 0, 100), mb_substr(trim((string)($args['text'] ?? '')), 0, 500)),
+        default => null,
+    };
+    if ($r === null) json_out(['error' => 'Bilinmeyen işlem.'], 400);
+    audit('mesh_' . $action, count($hex) . ' tahta' . ($action === 'open_url' ? ': ' . mb_substr((string)($args['url'] ?? ''), 0, 300) : '') . ($r['ok'] ? '' : ' (hata)'));
+    json_out(['ok' => $r['ok'], 'output' => $r['out'], 'sent' => count($hex), 'missing' => $missing]);
 
 case 'stats:GET':
     // Genel bakış grafikleri: son 7 gün kullanım, işlemler ve anlık durum dağılımları.

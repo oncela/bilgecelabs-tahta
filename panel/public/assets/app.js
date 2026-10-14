@@ -235,6 +235,26 @@ const COMMANDS = {
     fields: [{ k: 'delay', label: 'Kaç saniye sonra', type: 'number', value: '60' }],
   },
   cancel_shutdown: { title: 'Kapatmayı iptal et', fields: [] },
+  // mesh: true olanlar MeshCentral üzerinden gider (tahta kapalıyken de çalışabilir)
+  wake: {
+    title: 'Uzaktan aç',
+    mesh: true,
+    note: 'Aynı ağdaki açık bir tahta üzerinden uyandırma sinyali gönderilir. Tahtanın BIOS ayarlarında Wake-on-LAN açık olmalı.',
+    fields: [],
+  },
+  open_url: {
+    title: 'Web adresi aç',
+    mesh: true,
+    fields: [{ k: 'url', label: 'Adres', type: 'url', required: true }],
+  },
+  toast: {
+    title: 'Bildirim göster',
+    mesh: true,
+    fields: [
+      { k: 'text', label: 'Bildirim metni', type: 'text', required: true },
+      { k: 'title', label: 'Başlık (isteğe bağlı)', type: 'text' },
+    ],
+  },
   defender_scan: { title: 'Virüs taraması başlat', fields: [] },
   defender_update: { title: 'Virüs imzalarını güncelle', fields: [] },
   powershell: {
@@ -297,6 +317,15 @@ const CommandDialog = {
     const errBox = document.getElementById('cmd-error');
     btn.disabled = true;
     try {
+      if (COMMANDS[this.type].mesh) {
+        const r = await api('mesh_action', { action: this.type, device_ids: this.ids, args });
+        if (!r.ok) throw new Error(r.output || 'İşlem tamamlanamadı.');
+        document.getElementById('cmd-dialog').close();
+        ResultDialog.show(COMMANDS[this.type].title, r.sent + ' tahtaya gönderildi.'
+          + (r.missing ? ' ' + r.missing + ' tahtada uzaktan erişim kimliği olmadığı için gönderilemedi.' : ''));
+        if (this.onDone) this.onDone();
+        return;
+      }
       const res = await api('send', { type: this.type, device_ids: this.ids, args });
       document.getElementById('cmd-dialog').close();
       ResultDialog.open(res.batch_id, COMMANDS[this.type].title);
@@ -318,9 +347,19 @@ const CommandDialog = {
 const ResultDialog = {
   timer: null,
 
+  // Anında sonuçlanan işlemler (MeshCentral) için kısa özet.
+  show(title, text) {
+    clearInterval(this.timer);
+    const dlg = document.getElementById('result-dialog');
+    dlg.querySelector('h3').textContent = title;
+    document.getElementById('result-summary').textContent = text;
+    document.getElementById('result-list').replaceChildren();
+    dlg.showModal();
+  },
+
   open(batchId, title) {
     const dlg = document.getElementById('result-dialog');
-    dlg.querySelector('h2').textContent = title + ' · sonuçlar';
+    dlg.querySelector('h3').textContent = title + ' · sonuçlar';
     document.getElementById('result-list').replaceChildren();
     document.getElementById('result-summary').textContent = 'Tahtalar komutu alıyor…';
     dlg.showModal();
@@ -631,6 +670,14 @@ const Rooms = {
 
     const foot = el('div', 'card-footer d-flex flex-wrap gap-2');
     const ids = boards.map((d) => d.id);
+    const offline = boards.filter((d) => !d.online).map((d) => d.id);
+    if (offline.length) {
+      const w = el('button', 'btn btn-sm');
+      w.type = 'button';
+      w.append(el('i', 'ti ti-player-play me-1'), 'Uzaktan aç');
+      w.addEventListener('click', () => CommandDialog.open('wake', offline, () => this.load()));
+      foot.append(w);
+    }
     for (const [type, label, icon] of [['message', 'Mesaj', 'message'], ['restart', 'Yeniden başlat', 'refresh'], ['shutdown', 'Kapat', 'power']]) {
       const b = el('button', 'btn btn-sm');
       b.type = 'button';
