@@ -1,0 +1,15 @@
+[Unit]
+Description=cloudflared tunnel (Acı Tahta: tahta / uzak.bilgecelabs.com)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/cloudflared --no-autoupdate tunnel run --token-file /etc/cloudflared-aci-tahta/token
+Restart=always
+RestartSec=5
+User=root
+
+[Install]
+WantedBy=multi-user.target

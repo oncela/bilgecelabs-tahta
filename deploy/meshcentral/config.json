@@ -1,15 +1,17 @@
 {
   "settings": {
-    "cert": "192.168.1.105",
+    "cert": "uzak.bilgecelabs.com",
     "port": 4430,
     "redirPort": 0,
-    "aliasPort": 4430,
+    "aliasPort": 443,
     "selfUpdate": false,
     "agentPong": 60,
     "allowLoginToken": true,
     "allowFraming": true,
     "loginCookieEncryptionKey": "BURAYA: openssl rand -hex 80 (panel .env ACI_MESH_LOGIN_KEY ile aynı)",
-    "mpsPort": 0
+    "mpsPort": 0,
+    "ignoreAgentHashCheck": true,
+    "trustedProxy": "127.0.0.1"
   },
   "domains": {
     "": {
