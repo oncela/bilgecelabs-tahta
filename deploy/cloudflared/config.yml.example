@@ -1,0 +1,16 @@
+# Cloudflare Tunnel: iki alan adı, tek tünel. Port açmadan HTTPS.
+# Tünel oluşturma: cloudflared tunnel login && cloudflared tunnel create aci-tahta
+# Bu dosya /etc/cloudflared-aci-tahta/config.yml olarak kopyalanır.
+tunnel: TUNEL-KIMLIGI
+credentials-file: /etc/cloudflared-aci-tahta/TUNEL-KIMLIGI.json
+
+ingress:
+  # Okul paneli
+  - hostname: tahta.bilgecelabs.com
+    service: http://127.0.0.1:8082
+  # MeshCentral (uzaktan erişim): kendi sertifikası kendinden imzalı, yerel bağlantı
+  - hostname: uzak.bilgecelabs.com
+    service: https://127.0.0.1:4430
+    originRequest:
+      noTLSVerify: true
+  - service: http_status:404

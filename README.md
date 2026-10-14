@@ -27,3 +27,20 @@ make migrate    # veritabanını güncelle
 4. `make release`
 
 Gizli bilgiler (`.env`, şifre dosyaları) depoya eklenmez.
+
+## Sunucuya kurulum
+```bash
+make release                                   # ajanı derle
+sudo ACI_BASE_URL=https://tahta.bilgecelabs.com deploy/install.sh
+sudo -u aci-tahta php /var/www/aci-tahta/tools/create_admin.php KULLANICI
+```
+`install.sh` tekrar çalıştırılabilir (güncelleme için de kullanılır). Panel ayrı
+kullanıcı (`aci-tahta`), ayrı PHP havuzu, ayrı nginx sitesi (127.0.0.1:8082) ve ayrı
+veritabanıyla çalışır; aynı sunucudaki diğer sitelere dokunmaz. nginx veya PHP ayar
+testi başarısız olursa yeni ayar geri alınır.
+
+## Testler
+```bash
+ACI_TEST_URL=http://127.0.0.1:8099 ACI_TEST_USER=... ACI_TEST_PASS=... ACI_TEST_ENROLL_KEY=... make check
+```
+Test veritabanına karşı çalıştırın; sahte bir tahta oluşturup sonunda siler.
