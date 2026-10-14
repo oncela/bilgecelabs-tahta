@@ -149,6 +149,14 @@ function new_batch_id(): string {
     return bin2hex(random_bytes(8));
 }
 
+/** Hazır betikli komutlar: tür -> src/scripts altındaki PowerShell dosyası. */
+function preset_script(string $type): ?string {
+    $map = ['wol_prepare' => 'wol_prepare.ps1'];
+    if (!isset($map[$type])) return null;
+    $f = __DIR__ . '/scripts/' . $map[$type];
+    return is_file($f) ? (string)file_get_contents($f) : null;
+}
+
 /** Komut türleri: panelde görünen ad ve izin verilen argümanlar. */
 function command_types(): array {
     return [
@@ -160,5 +168,7 @@ function command_types(): array {
         'defender_scan'   => ['Virüs taraması', []],
         'defender_update' => ['Virüs imzası güncelle', []],
         'netscan'         => ['Ağ taraması', []],
+        // Panelde tanımlı hazır betikler: tahtaya PowerShell olarak gider (bkz. preset_script)
+        'wol_prepare'     => ['Uzaktan açmaya hazırla', []],
     ];
 }

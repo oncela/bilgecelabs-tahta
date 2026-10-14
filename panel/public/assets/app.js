@@ -235,6 +235,11 @@ const COMMANDS = {
     fields: [{ k: 'delay', label: 'Kaç saniye sonra', type: 'number', value: '60' }],
   },
   cancel_shutdown: { title: 'Kapatmayı iptal et', fields: [] },
+  wol_prepare: {
+    title: 'Uzaktan açmaya hazırla',
+    note: 'Ağ kartında Wake-on-LAN açılır, Windows hızlı başlatma kapatılır ve her tahta için hazır olup olmadığı raporlanır. BIOS ayarı ayrıca elle yapılmalıdır.',
+    fields: [],
+  },
   // mesh: true olanlar MeshCentral üzerinden gider (tahta kapalıyken de çalışabilir)
   wake: {
     title: 'Uzaktan aç',

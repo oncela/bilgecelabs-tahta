@@ -53,6 +53,13 @@ case 'send:POST':
     if ($type === 'message' && ($args['text'] ?? '') === '') json_out(['error' => 'Mesaj metni boş olamaz.'], 400);
     if ($type === 'powershell' && trim($args['script'] ?? '') === '') json_out(['error' => 'Komut boş olamaz.'], 400);
 
+    // Hazır betik: tahtaya PowerShell olarak gider, geçmişte kendi adıyla görünür
+    $auditType = $type;
+    if (($script = preset_script($type)) !== null) {
+        $type = 'powershell';
+        $args = ['script' => $script, 'timeout' => '120'];
+    }
+
     $batch = new_batch_id();
     $ins = db()->prepare('INSERT INTO commands (device_id, batch_id, type, args, created_by)
                           SELECT id, ?, ?, ?, ? FROM devices WHERE id = ?');
@@ -61,7 +68,7 @@ case 'send:POST':
         $ins->execute([$batch, $type, json_encode($args, JSON_UNESCAPED_UNICODE), $_SESSION['admin_id'], $id]);
         $n += $ins->rowCount();
     }
-    audit('command', "$type → " . count($ids) . ' tahta' . ($type === 'powershell' ? ': ' . mb_substr($args['script'], 0, 500) : ''));
+    audit('command', "$auditType → " . count($ids) . ' tahta' . ($auditType === 'powershell' ? ': ' . mb_substr($args['script'], 0, 500) : ''));
     json_out(['batch_id' => $batch, 'count' => $n]);
 
 case 'batch:GET':
