@@ -1,94 +1,99 @@
-# BilgeceLabs Tahta — Özellikler ve Yol Haritası
+# BilgeceLabs Tahta — Yol Haritası
 
-MeshCentral kaynak kodu incelendi (14.10.2026). Aşağıdaki özellikler ya hazır,
-ya kendi ajanımızla, ya da MeshCentral'ın komut kanalıyla eklenebilir.
+Son güncelleme: 15.10.2026 (sürüm 0.3.8). Öncelik sırası yukarıdan aşağıya.
+Her fazın sonunda: testler (`make test`), canlıda deneme, GitHub'a kayıt.
 
-## Şu an çalışan (tamam)
-- Panel: Genel bakış (SVG grafikler), Sınıflar, Tahtalar, Ağ, Geçmiş, Ayarlar, sağlık kontrolü
-- Ajan: kayıt, durum, Defender durumu, mesaj, kapat/başlat, PowerShell, ağ tarama, tek .exe kurulum, kaldırma
-- Uzaktan erişim: panel içinde ekran/komut satırı/dosya, kendi kontrol çubuğu, soru sormadan bağlanma
-- Toplu: mesaj, kapat, başlat, uzaktan aç (WoL), web adresi aç, bildirim
-- Markalama: BilgeceLabs (panel, ajan, uzaktan erişim, logo, favicon)
-- Yayın: Cloudflare Tunnel (tahta / uzak.bilgecelabs.com), tek komutla kurulum (install.sh)
+## Bugüne kadar biten (0.3.8)
+- **Panel:** yeni tasarım (tahta duvarı, yüzen seçim çubuğu, yeni giriş ekranı), lokasyon/departman,
+  uyarılar + Telegram/webhook/e-posta, envanter + CSV, güvenlik karnesi, yazılım kataloğu,
+  ortak alan, ağ taraması, destek talepleri, geçmiş, Bitdefender kısa linki
+- **Ajan:** port açmaz; uzaktan güncelleme (5+ kez sahada denendi), Defender/güvenlik/envanter/metrik,
+  sessiz program kurma (winget/MSI), veri klasörü yalnız SYSTEM/Yöneticiler
+- **Kurulum:** penceresiz (logo + yükleme çubuğu), siyah pencere yok, /S ile sessiz toplu kurulum
+- **Self servis:** WebView2 ile modern pencere (talep, programlar, taleplerim); simge Ayarlar'dan aç/kapa
+  — **şu an kapalı**, sahada denendikten sonra açılacak
+- **Uzaktan erişim:** MeshCentral, üst bant yerine sağ altta bildirim
+- **Kararlılık:** gece veritabanı yedeği (14 gün, geri yükleme denendi), eski kayıt temizliği, tünel HTTP/2
 
-## MeshCentral'da hazır bulunan, henüz kullanmadığımız özellikler
-| Özellik | MeshCentral karşılığı | Okulda kullanımı |
-|---|---|---|
-| Çoklu ekran izleme (32 tahtaya kadar) | Multi-Desktop görünümü | "Ekranlar" sayfası: sınıfın tüm tahtaları canlı ızgarada |
-| Donanım/yazılım envanteri | getSysInfo | Tahta modeli, RAM, disk, kurulu programlar |
-| Oturum kaydı | sessionRecording | Uzaktan bağlantıların video kaydı (KVKK'ya dikkat — varsayılan kapalı) |
-| Ağ keşfi | localDiscovery | Ağdaki cihazları MeshCentral de bulabilir (bizde ajan tarama var) |
-| Web yönlendirme | webRelay | Tahtadaki bir arayüze (ör. yazıcı paneli) panel üzerinden erişim |
-| Eklenti sistemi | plugins | İleride özel modüller |
-| Intel AMT | amtManager | OPS donanımı destekliyorsa BIOS seviyesinde güç/ekran (çoğu OPS'de yok) |
+## Faz 1 — Sağlamlaştırma (hemen)
+1. **Kod imzalama sertifikası** — SmartScreen ve antivirüs uyarılarını kalıcı bitirir. Derleme hattı hazır,
+   yalnız sertifika gerekli (yıllık ücretli; OV/EV seçenekleri araştırılacak).
+2. **Self servis sahada deneme** — tek tahtada simgeyi aç, %300 ölçekli 4K tahtada pencereyi doğrula, sonra herkese aç.
+3. **Eski 0.2.0 tahtaları** — kendini güncelleyemeyenlere yeni kurulum bir kez (DESKTOP-BIU7SOQ).
+4. **Sunucu güvenliği** — şifresiz sudo'yu kapat, Cloudflare tünel anahtarını yenile, SSH yalnız yerel ağ,
+   ufw + fail2ban, MeshCentral yalnız 127.0.0.1.
+5. **Sunucu izleme** — dış izleme (UptimeRobot vb.) sunucu düşünce Telegram'a haber versin.
+6. **GitHub sürümleri** — `v0.3.x` etiketi atınca GitHub derlesin, sürüm notu yayınlansın.
 
-## Kendi ajanımızla eklenecekler (Windows Pro'da güvenli — araştırma raporuna göre)
-| Özellik | Yöntem |
-|---|---|
-| Toplu dosya gönderme (Ortak alan) | Panele yüklenir, tahtalar paralel indirir (sha256) → C:\Ortak |
-| Toplu uygulama çalıştırma | Ekranda: MeshCentral "kullanıcı olarak çalıştır"; arka planda: PowerShell/MSI |
-| Ders/teneffüs çizelgesine göre kilit | Zil saatleri, tahtada yerel çalışır (internetsiz de) |
-| İnternetsiz PIN ile açma | TOTP + okul acil PIN'i |
-| Teneffüste internet kesme | Windows Güvenlik Duvarı izin listesi |
-| Akşam otomatik kapatma/uyku | Tahtada yerel çizelge |
-| USB koruması, kenar kaydırma kapatma, Görev Yöneticisi kapatma | Kayıt defteri/politika |
-| Uygulama engelleme | AppLocker (önce izleme modu) |
-| Öğrenci hesabını sıfırlama | Standart hesap + oturum sıfırlama |
-| Uzaktan güncelleme | Yeni .exe panelden → MeshCentral dosya+komut kanalıyla dağıtım |
+## Faz 2 — Zararlı yazılım koruması (malware)
+Sahadaki bilgisayarlarda Defender geçmişinde 5–12 tespit ve RDP Wrapper görüldü; okul bilgisayarlarında
+USB ve "crack" kaynaklı bulaşma yaygın. Katmanlı plan (ucuzdan pahalıya, hepsi Windows Pro'da çalışır):
 
-## Yol haritası (öncelik sırası)
+**2.1 Görünürlük — "Tehditler" sayfası**
+- Ajan her cihazın Defender tespit listesini gönderir: tehdit adı, dosya yolu, tarih, durum
+  (temizlendi / karantinada / etkin), kaynağı (USB, indirme, e-posta).
+- Panelde tüm okulun tehditleri tek listede; aynı tehdit birden çok cihazda varsa "salgın" uyarısı.
+- Etkin tehdit kalırsa kritik uyarı + Telegram (mevcut motor).
 
-### Aşama A — yönetim derinliği (hemen)
-1. **Ekranlar sayfası** — çoklu ekran canlı izleme (MeshCentral Multi-Desktop)
-2. **Ortak alan** — tüm sınıfa/okula dosya gönderme
-3. **Toplu uygulama/web açma** — ders materyalini aynı anda açma
-4. **Kurulum sihirbazı** — BilgeceLabs logolu, siyah pencere yok, Programlar'da görünür
-5. **Bildirim alanı simgesi** — logo + "Bağlı · sürüm" durumu
-6. **Uzaktan güncelleme**
+**2.2 Tarama — panelden ve zamanlanmış**
+- Tek tık: hızlı / tam tarama, imza güncelleme (hızlı tarama ve imza bugün de var).
+- **Çevrimdışı tarama** (Microsoft Defender Offline): Defender'ın temizleyemediği inatçı zararlılar için;
+  cihaz yeniden başlar, Windows açılmadan tarar. Panelde onaylı (öğretmene bildirimle) tetiklenir.
+- **İkinci görüş:** Microsoft Safety Scanner (ücretsiz, her seferinde güncel indirilir) uzaktan çalıştırılır.
+- Gece otomatik hızlı tarama (Zamanlama fazıyla birleşir).
 
-### Aşama B — sınıf disiplini (okulun en çok istediği)
-7. **Zamanlama** — ders/teneffüs çizelgesi
-8. **Kilit ekranı + çevrimdışı PIN** — duyuru panosu olarak da
-9. **Teneffüste internet kesme, akşam kapatma**
-10. **Envanter** — getSysInfo ile donanım/yazılım listesi
+**2.3 Önleme — Defender ayarları panelden**
+- **PUA koruması** (istenmeyen/crack/reklam yazılımlarını engeller) — okul için en etkili tek ayar.
+- **ASR kuralları** (Saldırı Yüzeyi Azaltma): Office makroları, USB'den çalışan imzasız programlar,
+  e-postadan gelen çalıştırılabilirler, kimlik bilgisi hırsızlığı. Önce "denetim" modunda, sonra "engelle".
+- **Kontrollü klasör erişimi** (fidye yazılımına karşı belgeler/masaüstü).
+- USB otomatik çalıştırmayı kapatma, SmartScreen'i zorunlu açma.
+- Cihazların bu ayarlara uyumu güvenlik karnesinde görünür.
 
-### Aşama C — sertleştirme (dikkatli, aşamalı)
-11. **USB, kenar kaydırma, Görev Yöneticisi, uygulama engelleme** (AppLocker izleme modu)
-12. **Öğrenci hesabı sıfırlama**
-13. **DNS filtresi** (AdGuard Home)
+**2.4 Derin inceleme — şüpheli programlar**
+- Açılışta çalışan programlar listesi (Sysinternals Autoruns mantığı) envantere eklenir.
+- İmzasız/şüpheli dosyaların özeti **MalwareBazaar / VirusTotal** ile karşılaştırılır (yalnız özet
+  gönderilir, dosya gönderilmez; KVKK uyumlu).
+- "Okulda yalnız bu cihazda çalışan imzasız program" gibi anormallikler işaretlenir.
 
-### Aşama D — ileri
-14. **Öğretmen ekranını tahtalara yansıtma** (yayın)
-15. **e-Yoklama, raporlar**
-16. **Kod imzalama** (SmartScreen/Defender uyarılarını bitirir)
-17. **QR/NFC ile öğretmen girişi, mobil uygulama**
+**2.5 Ağ katmanı**
+- Zararlı alan adı engelleyen DNS (Quad9 veya sunucuda AdGuard Home) — tek ayarla tüm okul.
+- İsteğe bağlı: teneffüs/akşam internet kısıtı ile birleşir (Faz 4).
 
-## Riskler (araştırma raporundan)
-- Enterprise/Education gerektirenler: Keyboard Filter (Ctrl+Alt+Del engelleme), Shell Launcher — Pro'da yok
-- WDAC/AppLocker önce izleme modunda; güvenlik duvarını varsayılan engelle açmak ajanı koparır
-- KVKK: ekran kaydı ve izleme varsayılan kapalı, bildirim çubuğu açık, saklama süresi tanımlı
-- İmzasız ajan: SmartScreen/Defender uyarısı — kod imzalama kalıcı çözüm
+**2.6 Bitdefender GravityZone ile birleştirme** (lisans varsa)
+- GravityZone API'den cihaz koruma durumu ve olaylar panele çekilir; Defender olmayan cihazlarda
+  "korumalı" sayılır. Tarama görevleri panelden GravityZone'a iletilir.
 
-## Güvenlik notları (14.10.2026 incelemesi)
-- Tahtadaki ajanımız HİÇBİR port açmıyor (sadece dışa bağlantı) → dışarıdan tahtaya bağlanılamaz
-- Sunucuda düzeltilecek: MeshCentral *:4430 yerine 127.0.0.1; ufw kapalı; SSH tüm arayüzlerde
-- Test paneli (8099) iş bitince kapatılacak
+**2.7 Raporlama**
+- Haftalık güvenlik raporu (e-posta/PDF): tehditler, temizlenenler, güncel olmayan imzalar, uyumsuz cihazlar.
 
-## Sonradan eklenenler
-- Kurulumda cihaz türü (tahta/sınıf PC/idare/danışma) ve konum otomatik belirlenir, panelde gruplanır
-  - Yöntem önerisi: kurulum dosyası adında tür+konum (ör. _7B, _danisma) veya kurulumda tek soru
-- Güvenlik sertleştirme (Aşama C başı): sunucu (MeshCentral localhost, ufw, fail2ban, SSH),
-  kayıt güvenliği (IP/zaman sınırı, anahtar rotasyonu), kod imzalama
+## Faz 3 — Windows güncellemeleri ve donanım sağlığı
+- Bekleyen Windows güncellemelerini listeleme, panelden kurma, gece otomatik + yeniden başlatma penceresi.
+- Disk sağlığı (SMART: yeniden atanmış sektör, sıcaklık, kalan ömür) → arıza öncesi uyarı.
+- Pil/ekran/dokunmatik durumu (tahta modeline göre), sürücü sürümleri.
 
-## Açık kaynak araştırması ve ürün yönü (15.10.2026)
-- Lisans: MeshCentral Apache-2.0 (güvenli omurga). AGPL bileşen (Snipe-IT, Zabbix, RustDesk-server)
-  GÖMME — ürünü açık kaynağa zorlar. Tactical RMM: sadece mimari ilham (özel lisans).
-- Çoklu kiracılık: "tek firma, çok şube" = basit branch_id/department_id kapsamlama. Laravel paketi (stancl/spatie) GEREKSİZ.
-- Pixven seviyesi build sırası:
-  1. Hiyerarşi (lokasyon/departman) + yetki + audit log  ← ŞİMDİ
-  2. Alarm/bildirim motoru (eşik + e-posta/Telegram/webhook)
-  3. Detaylı envanter (seri no, kurulu yazılım) + CSV/PDF rapor
-  4. Güvenlik durumu (Defender ✅ var, firewall, BitLocker)
-  5. Zamanlama + script kütüphanesi + yazılım/patch dağıtımı (winget/choco)
-  6. Dashboard cilası + PWA mobil + WoL/ağ keşfi
-- Kendin yaz: hiyerarşi, alarm motoru, zamanlayıcı, rapor. Entegre: MeshCentral (bitti), gerekirse osquery (Apache).
+## Faz 4 — Sınıf düzeni (okulun en çok istediği)
+- **Zamanlama:** ders/teneffüs çizelgesi; akşam otomatik kapatma, sabah uzaktan açma (WoL).
+- **Kilit ekranı + internetsiz PIN** (duyuru panosu olarak da kullanılır).
+- Teneffüste internet kesme, USB kısıtı, öğrenci hesabını sıfırlama.
+- Ekranlar sayfası: bir sınıfın/okulun tahtalarını canlı ızgarada izleme (MeshCentral çoklu ekran).
+
+## Faz 5 — Çok şube, yetki, raporlar
+- Kullanıcı rolleri: şube yöneticisi yalnız kendi lokasyonunu görür; öğretmen yalnız kendi sınıfını.
+- Rapor merkezi: kullanım, arıza, envanter, güvenlik — PDF/Excel, e-postayla düzenli gönderim.
+- Mobil uyumlu panel (PWA) ve anlık bildirimler.
+
+## Faz 6 — İleri
+- Öğretmen ekranını tahtalara yansıtma, QR ile öğretmen girişi.
+- Android tarafı (tahtaların dahili Android'i).
+- Yapay zekâ destekli talep sınıflandırma ve çözüm önerisi.
+
+## Kurallar ve riskler
+- **Lisans:** MeshCentral Apache-2.0 (güvenli). AGPL bileşen gömülmez (Snipe-IT, Zabbix, RustDesk-server).
+  go-webview2 (MIT) çatalı `agent/third_party` altında; WebView2Loader.dll Microsoft lisanslı.
+- **Antivirüs uyumu:** exe içine exe/DLL gömülmez, bellekten yükleme yapılmaz; yardımcı dosyalar ayrı ve
+  özetle doğrulanarak dağıtılır. Kalıcı çözüm kod imzalama.
+- **Windows Pro sınırı:** Keyboard Filter, Shell Launcher yok (Enterprise/Education gerekir).
+  AppLocker/WDAC ve ASR önce denetim modunda.
+- **KVKK:** ekran kaydı ve izleme varsayılan kapalı; uzaktan bağlanınca kullanıcıya bildirim; saklama süreleri tanımlı.
+- **Ajan port açmaz;** tüm bağlantılar dışa doğru ve HTTPS.
