@@ -39,3 +39,29 @@ splash('splash.bmp', 'Akıllı Tahta Yönetimi')
 header('baslik.bmp')
 splash('splash-bitti.bmp', 'Kurulum tamamlandı')
 print('splash üretildi')
+
+# --- Ajanın çizdiği çerçevesiz kurulum ekranı (2x çözünürlük; ajan ölçekler) ---
+# Mantıksal boyut 480x260; yükleme çubuğu yolu x=60..420, y=214..220 (splash.go ile aynı)
+def frame(dest, status, color):
+    S = 2
+    W, H = 480 * S, 260 * S
+    c = Image.new('RGB', (W, H), (255, 255, 255))
+    scale = (W - 160 * S) / logo.width
+    lw, lh = int(logo.width * scale), int(logo.height * scale)
+    lg = logo.resize((lw, lh), Image.LANCZOS)
+    bg = Image.new('RGBA', (lw, lh), (255, 255, 255, 255)); bg.alpha_composite(lg)
+    c.paste(bg.convert('RGB'), ((W - lw) // 2, 70 * S))
+    d = ImageDraw.Draw(c)
+    try:
+        f1 = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 15 * S)
+    except Exception:
+        f1 = ImageFont.load_default()
+    tw = d.textlength(status, font=f1)
+    d.text(((W - tw) // 2, 180 * S), status, fill=color, font=f1)
+    d.rounded_rectangle([60 * S, 214 * S, 420 * S, 220 * S], radius=3 * S, fill=(229, 233, 240))
+    d.rectangle([0, 0, W - 1, H - 1], outline=(214, 220, 230), width=S)
+    c.save(os.path.join(HERE, '../agent/cmd/aci-ajan/assets', dest), optimize=True)
+
+frame('kurulum.png', 'BilgeceLabs Tahta kuruluyor…', (91, 102, 120))
+frame('kurulum-tamam.png', 'Kurulum tamamlandı ✓', (40, 44, 52))
+print('kurulum ekranı üretildi')

@@ -20,6 +20,8 @@ BrandingText "BilgeceLabs"
 OutFile "bilgece-tahta-kurulum.exe"
 InstallDir "$PROGRAMFILES64\BilgeceLabs\Tahta"
 RequestExecutionLevel admin
+; Kurulum penceresi yok: ekranda yalnız logo + yükleme çubuğu (ajanın kurulum-ekrani modu)
+SilentInstall silent
 ShowInstDetails nevershow
 VIProductVersion "${VERSION}.0"
 VIAddVersionKey "ProductName" "BilgeceLabs Tahta"
@@ -31,24 +33,12 @@ VIAddVersionKey "ProductVersion" "${VERSION}.0"
 
 !define MUI_ICON "bilgece.ico"
 !define MUI_UNICON "bilgece.ico"
-; Üst şeritte BilgeceLabs logosu
-!define MUI_HEADERIMAGE
-!define MUI_HEADERIMAGE_RIGHT
-!define MUI_HEADERIMAGE_BITMAP "baslik.bmp"
-!define MUI_HEADERIMAGE_UNBITMAP "baslik.bmp"
-!define MUI_INSTFILESPAGE_COLORS "1F63D6 FFFFFF"
-!define MUI_INSTFILESPAGE_PROGRESSBAR "smooth"
-; Tek ekran: soru sorulmaz, ilerleme biter bitmez pencere kendiliğinden kapanır
-!define MUI_PAGE_HEADER_TEXT "BilgeceLabs Tahta kuruluyor"
-!define MUI_PAGE_HEADER_SUBTEXT "Lütfen bekleyin, birkaç saniye sürer…"
-!define MUI_INSTFILESPAGE_FINISHHEADER_TEXT "Kurulum tamamlandı"
-!define MUI_INSTFILESPAGE_FINISHHEADER_SUBTEXT "Cihaz panele bağlanıyor."
-AutoCloseWindow true
-
-; Cihaz türü ve konum sorulmaz (panelden atanır). Toplu kurulum için isteğe bağlı
-; komut satırı: kurulum.exe /S /TUR=classroom /KONUM=7-B
+; Cihaz türü ve konum sorulmaz (panelden atanır). Toplu/sessiz kurulum için
+; isteğe bağlı komut satırı: kurulum.exe /S /TUR=classroom /KONUM=7-B
 Var DevType
 Var Room
+Var Quiet          ; 1: hiçbir şey gösterme (/S)
+Var Durum          ; kurulum ekranına "bitti" sinyali
 
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_UNPAGE_CONFIRM
@@ -59,16 +49,24 @@ Function .onInit
   ${GetParameters} $R0
   ${GetOptions} $R0 "/TUR=" $DevType
   ${GetOptions} $R0 "/KONUM=" $Room
-  ; Açılış: BilgeceLabs logosu yumuşak geçişle (sessiz kurulumda gösterilmez)
-  ${IfNot} ${Silent}
-    InitPluginsDir
-    File "/oname=$PLUGINSDIR\splash.bmp" "splash.bmp"
-    advsplash::show 1200 600 500 -1 "$PLUGINSDIR\splash"
-    Pop $0
+  StrCpy $Quiet 0
+  ClearErrors
+  ${GetOptions} $R0 "/S" $R1
+  ${IfNot} ${Errors}
+    StrCpy $Quiet 1
   ${EndIf}
 FunctionEnd
 
 Section "Install"
+  StrCpy $Durum "$TEMP\bilgece-kurulum.durum"
+  Delete $Durum
+  ${If} $Quiet == 0
+    SetOverwrite try   ; önceki ekran hâlâ açıksa dosya kilitli olabilir
+    File "/oname=$TEMP\BilgeceKurulumEkrani.exe" "${AGENT}"
+    SetOverwrite on
+    Exec '"$TEMP\BilgeceKurulumEkrani.exe" kurulum-ekrani "$Durum"'
+  ${EndIf}
+
   SetOutPath "$INSTDIR"
   ; Önceki kurulum çalışıyorsa durdur ve çalışan programı kenara al:
   ; çalışan exe kilitlidir, üzerine yazılamaz (ajan .eski dosyasını açılışta siler).
@@ -95,8 +93,6 @@ Section "Install"
     Goto loop
   done2:
 
-  DetailPrint "Ajan kuruluyor…"
-  SetDetailsPrint textonly
   StrCpy $6 ""
   ${If} $1 != ""
     StrCpy $6 "$6 --key $1"
@@ -108,7 +104,7 @@ Section "Install"
     StrCpy $6 '$6 --room "$Room"'
   ${EndIf}
   nsExec::Exec '"$INSTDIR\bilgece-tahta.exe" install$6'
-  Pop $0
+  Pop $7
 
   ; Programlar ve Özellikler kaydı
   WriteUninstaller "$INSTDIR\kaldir.exe"
@@ -120,12 +116,22 @@ Section "Install"
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BilgeceTahta" "NoModify" 1
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BilgeceTahta" "NoRepair" 1
 
-  ; Kurulum bitti: "tamamlandı" ekranını 5 sn göster (fade in/out dahil)
-  DetailPrint "Cihaz panele bağlanıyor…"
-  ${IfNot} ${Silent}
-    File "/oname=$PLUGINSDIR\splash-bitti.bmp" "splash-bitti.bmp"
-    advsplash::show 5000 600 600 -1 "$PLUGINSDIR\splash-bitti"
-    Pop $0
+  ; Kurulum ekranına sonucu bildir: "tamam" -> 4 sn "Kurulum tamamlandı", sonra solar.
+  ; Önce geçici dosyaya yazılıp yeniden adlandırılır (ekran yarım dosya okumasın).
+  FileOpen $8 "$Durum.tmp" w
+  ${If} $7 == 0
+    FileWrite $8 "tamam"
+  ${Else}
+    FileWrite $8 "hata"
+  ${EndIf}
+  FileClose $8
+  Rename "$Durum.tmp" $Durum
+  ${If} $7 != 0
+    ${If} $Quiet == 0
+      ; SilentInstall'da /SD'siz mesaj kutusu gösterilir
+      MessageBox MB_ICONSTOP "BilgeceLabs Tahta kurulumu tamamlanamadı.$\r$\nKurulum dosyasını panelden yeniden indirip tekrar deneyin."
+    ${EndIf}
+    SetErrorLevel 1
   ${EndIf}
 SectionEnd
 
