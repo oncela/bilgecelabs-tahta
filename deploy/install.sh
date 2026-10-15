@@ -101,6 +101,13 @@ fi
 info "ayar testi geçti"
 systemctl reload nginx
 
+step "Gece yedeği ve kayıt temizliği"
+install -o root -g root -m 0750 "$REPO/deploy/yedek.sh" /usr/local/sbin/bilgece-tahta-yedek
+install -m 0644 "$REPO/deploy/systemd/bilgece-tahta-yedek.service" "$REPO/deploy/systemd/bilgece-tahta-yedek.timer" /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now bilgece-tahta-yedek.timer >/dev/null
+info "her gece 03:15 (/var/backups/bilgece-tahta, 14 gün)"
+
 step "Kontrol"
 sleep 1
 HEALTH="$(curl -s "http://127.0.0.1:$PORT/api/health.php" || true)"

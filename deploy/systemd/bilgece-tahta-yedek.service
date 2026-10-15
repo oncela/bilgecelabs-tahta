@@ -1,0 +1,9 @@
+[Unit]
+Description=BilgeceLabs Tahta gece yedeği ve kayıt temizliği
+After=mariadb.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/bilgece-tahta-yedek
+Nice=10
+IOSchedulingClass=idle
