@@ -4,6 +4,7 @@
 declare(strict_types=1);
 require __DIR__ . '/../../src/bootstrap.php';
 require_once __DIR__ . '/../../src/mesh.php';
+require_once __DIR__ . '/../../src/alerts.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_out(['error' => 'POST gerekli'], 405);
 
@@ -53,6 +54,15 @@ $pdo->prepare("INSERT IGNORE INTO device_activity (device_id, hour) VALUES (?, D
 if (random_int(1, 500) === 1) {
     $pdo->exec('DELETE FROM device_activity WHERE hour < NOW() - INTERVAL ' . ACI_ACTIVITY_DAYS . ' DAY');
 }
+
+// Uyarı değerlendirmesi: bu cihazın güncel durumunu kontrol et
+try {
+    $dev = $pdo->prepare('SELECT id, hostname, name, disk_used, disk_free, mem_used, defender, mesh_state, last_seen FROM devices WHERE id = ?');
+    $dev->execute([$deviceId]);
+    if ($row = $dev->fetch()) alert_eval_device($row);
+    // Filo süpürmesi (çevrimdışı tespiti) ara sıra
+    if (random_int(1, 50) === 1) alert_sweep();
+} catch (Throwable $e) { /* uyarı motoru poll'u düşürmesin */ }
 
 // 2) Komut sonuçları
 $upd = $pdo->prepare("UPDATE commands SET status = ?, output = ?, done_at = NOW()

@@ -4,6 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/../src/bootstrap.php';
 require_once __DIR__ . '/../src/status.php';
 require_once __DIR__ . '/../src/meshctl.php';
+require_once __DIR__ . '/../src/alerts.php';
 require_once __DIR__ . '/../src/stats.php';
 require_login();
 
@@ -274,6 +275,24 @@ case 'assign_location:POST':
     db()->prepare("UPDATE devices SET location_id = ? WHERE id IN ($ph)")->execute(array_merge([$loc], $ids));
     audit('assign_location', ($loc ?? 'yok') . ' <- ' . count($ids) . ' cihaz');
     json_out(['ok' => true, 'count' => count($ids)]);
+
+case 'alerts:GET':
+    $open = db()->query("SELECT a.id, a.device_id, a.type, a.severity, a.message, a.created_at,
+            d.hostname, d.name FROM alerts a LEFT JOIN devices d ON d.id = a.device_id
+            WHERE a.status = 'open' ORDER BY a.severity = 'critical' DESC, a.created_at DESC")->fetchAll();
+    $resolved = db()->query("SELECT a.id, a.type, a.severity, a.message, a.created_at, a.resolved_at,
+            d.hostname, d.name FROM alerts a LEFT JOIN devices d ON d.id = a.device_id
+            WHERE a.status = 'resolved' ORDER BY a.resolved_at DESC LIMIT 50")->fetchAll();
+    json_out(['open' => $open, 'resolved' => $resolved, 'open_count' => count($open)]);
+
+case 'alerts_count:GET':
+    json_out(['open' => (int)db()->query("SELECT COUNT(*) FROM alerts WHERE status='open'")->fetchColumn()]);
+
+case 'alert_resolve:POST':
+    $aid = (int)($in['id'] ?? 0);
+    db()->prepare("UPDATE alerts SET status='resolved', resolved_at=NOW() WHERE id=? AND status='open'")->execute([$aid]);
+    audit('alert_resolve', "#$aid");
+    json_out(['ok' => true]);
 
 case 'stats:GET':
     json_out(dashboard_stats());

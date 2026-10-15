@@ -12,6 +12,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         setting_set('enroll_key', bin2hex(random_bytes(16)));
         audit('enroll_key', 'yenilendi');
         $msg = 'Yeni kayıt anahtarı oluşturuldu. Eski kurulum dosyaları artık yeni tahta kaydedemez; kayıtlı tahtalar etkilenmez.';
+    } elseif (($_POST['do'] ?? '') === 'notify') {
+        foreach (['notify_telegram_token', 'notify_telegram_chat', 'notify_webhook', 'notify_email', 'notify_email_from',
+                  'alert_disk_warn', 'alert_disk_crit', 'alert_mem_warn', 'alert_offline_hours'] as $k) {
+            setting_set($k, trim((string)($_POST[$k] ?? '')));
+        }
+        audit('notify_settings', 'güncellendi');
+        $msg = 'Bildirim ayarları kaydedildi.';
     } elseif (($_POST['do'] ?? '') === 'password') {
         $cur = (string)($_POST['current'] ?? '');
         $new = (string)($_POST['new'] ?? '');
@@ -78,6 +85,33 @@ page_header('Ayarlar', 'settings.php');
     <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
     <input type="hidden" name="do" value="rotate_key">
     <button class="btn">Anahtarı yenile</button>
+  </form>
+</div></section></div>
+
+<div class="col-12"><section class="card"><div class="card-body">
+  <h3 class="card-title">Uyarı bildirimleri</h3>
+  <p class="text-secondary">Yeni uyarı oluştuğunda (disk dolu, çevrimdışı, virüs koruması kapalı…) bildirim gönderilir.</p>
+  <form method="post" class="row g-3">
+    <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
+    <input type="hidden" name="do" value="notify">
+    <div class="col-md-6"><label class="form-label">Telegram bot token</label>
+      <input class="form-control" name="notify_telegram_token" value="<?= h((string)setting('notify_telegram_token')) ?>" placeholder="123456:ABC..."></div>
+    <div class="col-md-6"><label class="form-label">Telegram sohbet/kanal ID</label>
+      <input class="form-control" name="notify_telegram_chat" value="<?= h((string)setting('notify_telegram_chat')) ?>" placeholder="-100123..."></div>
+    <div class="col-md-6"><label class="form-label">Webhook adresi</label>
+      <input class="form-control" name="notify_webhook" value="<?= h((string)setting('notify_webhook')) ?>" placeholder="https://..."></div>
+    <div class="col-md-6"><label class="form-label">E-posta (alıcı)</label>
+      <input class="form-control" name="notify_email" value="<?= h((string)setting('notify_email')) ?>" placeholder="yonetici@firma.com"></div>
+    <div class="col-12"><hr class="my-1"><span class="text-secondary small">Eşik değerleri</span></div>
+    <div class="col-md-3"><label class="form-label">Disk uyarı %</label>
+      <input class="form-control" type="number" name="alert_disk_warn" value="<?= h((string)(setting('alert_disk_warn') ?? '90')) ?>" min="50" max="99"></div>
+    <div class="col-md-3"><label class="form-label">Disk kritik %</label>
+      <input class="form-control" type="number" name="alert_disk_crit" value="<?= h((string)(setting('alert_disk_crit') ?? '95')) ?>" min="50" max="100"></div>
+    <div class="col-md-3"><label class="form-label">Bellek uyarı %</label>
+      <input class="form-control" type="number" name="alert_mem_warn" value="<?= h((string)(setting('alert_mem_warn') ?? '92')) ?>" min="50" max="100"></div>
+    <div class="col-md-3"><label class="form-label">Çevrimdışı (saat)</label>
+      <input class="form-control" type="number" name="alert_offline_hours" value="<?= h((string)(setting('alert_offline_hours') ?? '24')) ?>" min="1" max="720"></div>
+    <div class="col-12"><button class="btn btn-primary">Kaydet</button></div>
   </form>
 </div></section></div>
 

@@ -1015,6 +1015,59 @@ const Locations = {
   },
 };
 
+const SEV = { critical: ['Kritik', 'bg-danger-lt'], warning: ['Uyarı', 'bg-warning-lt'] };
+
+const Alerts = {
+  async load() {
+    try {
+      const d = await api('alerts');
+      document.getElementById('open-count').textContent = d.open_count + ' açık';
+      const ob = document.getElementById('open-rows');
+      if (!d.open.length) {
+        const tr = el('tr', 'empty-row'); const td = el('td', '', 'Açık uyarı yok.'); td.colSpan = 5; tr.append(td); ob.replaceChildren(tr);
+      } else {
+        ob.replaceChildren(...d.open.map((a) => {
+          const tr = el('tr');
+          const [lbl, cls] = SEV[a.severity] || SEV.warning;
+          tr.append(tag2(cls, lbl), el('td', '', a.name || a.hostname || '—'), el('td', '', a.message),
+            el('td', 'text-nowrap', fmtTime(a.created_at)));
+          const act = el('td', 'text-nowrap');
+          const btn = el('button', 'btn btn-sm', 'Çözüldü'); btn.type = 'button';
+          btn.addEventListener('click', async () => { try { await api('alert_resolve', { id: a.id }); this.load(); } catch (e) { alert(e.message); } });
+          act.append(btn); tr.append(act); return tr;
+        }));
+      }
+      const rb = document.getElementById('resolved-rows');
+      rb.replaceChildren(...(d.resolved.length ? d.resolved.map((a) => {
+        const tr = el('tr'); const [lbl, cls] = SEV[a.severity] || SEV.warning;
+        tr.append(tag2(cls, lbl), el('td', '', a.name || a.hostname || '—'), el('td', '', a.message),
+          el('td', 'text-nowrap', fmtTime(a.resolved_at))); return tr;
+      }) : [(() => { const tr = el('tr', 'empty-row'); const td = el('td', '', '—'); td.colSpan = 4; tr.append(td); return tr; })()]));
+    } catch (err) {
+      document.getElementById('open-rows').replaceChildren((() => { const tr = el('tr', 'empty-row'); const td = el('td', '', err.message); td.colSpan = 5; tr.append(td); return tr; })());
+    }
+  },
+  init() { this.load(); setInterval(() => { if (!document.hidden) this.load(); }, 20000); },
+};
+
+function tag2(cls, text) { const td = el('td'); td.append(el('span', 'badge ' + cls, text)); return td; }
+
+// Menüde açık uyarı rozeti (her sayfada)
+async function updateAlertBadge() {
+  try {
+    const d = await api('alerts_count');
+    const link = document.querySelector('.aci-sidebar a[href="alerts.php"]');
+    if (!link) return;
+    let b = link.querySelector('.alert-badge');
+    if (d.open > 0) {
+      if (!b) { b = el('span', 'badge bg-danger ms-auto alert-badge'); link.append(b); }
+      b.textContent = d.open;
+    } else if (b) { b.remove(); }
+  } catch (e) {}
+}
+updateAlertBadge();
+setInterval(updateAlertBadge, 30000);
+
 if (page === 'devices') {
   Devices.init();
   CommandDialog.init();
@@ -1030,4 +1083,6 @@ if (page === 'devices') {
   Shared.init();
 } else if (page === 'locations') {
   Locations.init();
+} else if (page === 'alerts') {
+  Alerts.init();
 }
