@@ -12,6 +12,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         setting_set('enroll_key', bin2hex(random_bytes(16)));
         audit('enroll_key', 'yenilendi');
         $msg = 'Yeni kayıt anahtarı oluşturuldu. Eski kurulum dosyaları artık yeni tahta kaydedemez; kayıtlı tahtalar etkilenmez.';
+    } elseif (($_POST['do'] ?? '') === 'auto_update') {
+        setting_set('auto_update', isset($_POST['auto_update']) ? '1' : '0');
+        audit('auto_update', isset($_POST['auto_update']) ? 'açık' : 'kapalı');
+        $msg = 'Otomatik güncelleme ayarı kaydedildi.';
     } elseif (($_POST['do'] ?? '') === 'notify') {
         foreach (['notify_telegram_token', 'notify_telegram_chat', 'notify_webhook', 'notify_email', 'notify_email_from',
                   'alert_disk_warn', 'alert_disk_crit', 'alert_mem_warn', 'alert_offline_hours'] as $k) {
@@ -76,6 +80,13 @@ page_header('Ayarlar', 'settings.php');
   <?php else: ?>
     <div class="alert alert-warning">Sunucuda ajan dosyası yok: <code>storage/aci-ajan.exe</code> yüklenmeli.</div>
   <?php endif; ?>
+  <hr>
+  <form method="post" class="d-flex align-items-center gap-2">
+    <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
+    <input type="hidden" name="do" value="auto_update">
+    <label class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" name="auto_update" value="1" onchange="this.form.submit()" <?= (setting('auto_update', '1') === '1') ? 'checked' : '' ?>><span class="form-check-label">Uzaktan otomatik güncelleme (cihazlar yeni sürümü kendiliğinden kurar)</span></label>
+  </form>
+  <p class="text-secondary small mb-0 mt-1">Sunucudaki ajan sürümü: <code><?= h(agent_version()) ?></code></p>
 </div></section></div>
 
 <div class="col-12"><section class="card"><div class="card-body">

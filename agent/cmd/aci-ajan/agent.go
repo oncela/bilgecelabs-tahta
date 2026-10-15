@@ -45,9 +45,10 @@ type pollRequest struct {
 }
 
 type pollResponse struct {
-	Commands []command `json:"commands"`
-	Interval int       `json:"interval"`
-	Mesh     *meshInfo `json:"mesh"`
+	Commands []command   `json:"commands"`
+	Interval int         `json:"interval"`
+	Mesh     *meshInfo   `json:"mesh"`
+	Update   *updateInfo `json:"update"`
 }
 
 var errUnauthorized = errors.New("yetkisiz")
@@ -87,6 +88,7 @@ func runAgent(stop <-chan struct{}) {
 		http: &http.Client{Timeout: 30 * time.Second},
 	}
 	a.osName = osVersion()
+	cleanupOldBinary()
 
 	interval := 10 * time.Second
 	for {
@@ -121,6 +123,7 @@ func runAgent(stop <-chan struct{}) {
 				interval = time.Duration(resp.Interval) * time.Second
 			}
 			go a.mesh.ensure(a, resp.Mesh)
+			go a.maybeUpdate(resp.Update)
 			for _, c := range resp.Commands {
 				go a.run(c)
 			}

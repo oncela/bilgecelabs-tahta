@@ -124,6 +124,12 @@ if ($ids) {
 $pdo->commit();
 
 $resp = ['commands' => $cmds, 'interval' => ACI_POLL_INTERVAL];
+// Uzaktan güncelleme: sunucudaki ajan sürümü cihazınkinden yeniyse bildir
+$srvVer = agent_version();
+$devVer = (string)($in['version'] ?? '');
+if ($srvVer !== '' && $devVer !== '' && version_cmp($srvVer, $devVer) > 0 && setting('auto_update', '1') === '1') {
+    $resp['update'] = ['version' => $srvVer, 'url' => '/api/agent.php'];
+}
 if (mesh_enabled() && cfg('ACI_MESH_GROUP') !== '') {
     // Ajan bu servisi kontrol eder; yoksa aşağıdaki adresten indirip kurar.
     $resp['mesh'] = ['service' => 'BilgeceUzak', 'url' => '/api/meshagent.php'];

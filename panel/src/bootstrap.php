@@ -60,6 +60,22 @@ function setting_set(string $k, string $v): void {
 }
 
 /** Ortak alan dosyalarının saklandığı klasör (NAS'a taşınabilir: ACI_SHARED_DIR). */
+/** Sunucudaki (dağıtılacak) ajan sürümü. */
+function agent_version(): string {
+    return trim((string)@file_get_contents(ACI_ROOT . '/storage/aci-ajan.version')) ?: '';
+}
+
+/** a > b ise 1, a < b ise -1, eşitse 0 (semver benzeri, sayısal parçalar). */
+function version_cmp(string $a, string $b): int {
+    $pa = array_map('intval', explode('.', $a));
+    $pb = array_map('intval', explode('.', $b));
+    for ($i = 0; $i < max(count($pa), count($pb)); $i++) {
+        $x = $pa[$i] ?? 0; $y = $pb[$i] ?? 0;
+        if ($x !== $y) return $x <=> $y;
+    }
+    return 0;
+}
+
 function shared_dir(): string {
     $d = cfg('ACI_SHARED_DIR');
     return $d !== '' ? rtrim($d, '/') : ACI_ROOT . '/storage/shared';
