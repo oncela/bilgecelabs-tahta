@@ -330,6 +330,59 @@ case 'inventory_csv:GET':
     fclose($out);
     exit;
 
+case 'catalog:GET':
+    json_out(['items' => db()->query('SELECT id, name, icon, method, winget_id, url, sha256, silent, self_service, sort
+        FROM software_catalog ORDER BY sort, name')->fetchAll()]);
+
+case 'catalog_save:POST':
+    $cid = (int)($in['id'] ?? 0);
+    $name = trim(mb_substr((string)($in['name'] ?? ''), 0, 96));
+    if ($name === '') json_out(['error' => 'Program adı boş olamaz.'], 400);
+    $method = in_array($in['method'] ?? '', ['winget', 'url'], true) ? $in['method'] : 'winget';
+    $wid = trim(mb_substr((string)($in['winget_id'] ?? ''), 0, 128)) ?: null;
+    $url = trim(mb_substr((string)($in['url'] ?? ''), 0, 512)) ?: null;
+    if ($method === 'winget' && !$wid) json_out(['error' => 'winget paket kimliği gerekli.'], 400);
+    if ($method === 'url' && (!$url || !preg_match('#^https://#i', $url))) json_out(['error' => 'Geçerli https adresi gerekli.'], 400);
+    $sha = preg_match('/^[0-9a-f]{64}$/i', (string)($in['sha256'] ?? '')) ? $in['sha256'] : null;
+    $silent = trim(mb_substr((string)($in['silent'] ?? ''), 0, 96)) ?: null;
+    $icon = preg_replace('/[^a-z0-9-]/', '', (string)($in['icon'] ?? '')) ?: null;
+    $self = !empty($in['self_service']) ? 1 : 0;
+    if ($cid) {
+        db()->prepare('UPDATE software_catalog SET name=?, icon=?, method=?, winget_id=?, url=?, sha256=?, silent=?, self_service=? WHERE id=?')
+            ->execute([$name, $icon, $method, $wid, $url, $sha, $silent, $self, $cid]);
+    } else {
+        db()->prepare('INSERT INTO software_catalog (name, icon, method, winget_id, url, sha256, silent, self_service) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+            ->execute([$name, $icon, $method, $wid, $url, $sha, $silent, $self]);
+        $cid = (int)db()->lastInsertId();
+    }
+    audit('catalog_save', "#$cid $name");
+    json_out(['ok' => true, 'id' => $cid]);
+
+case 'catalog_delete:POST':
+    db()->prepare('DELETE FROM software_catalog WHERE id = ?')->execute([(int)($in['id'] ?? 0)]);
+    audit('catalog_delete', '#' . (int)($in['id'] ?? 0));
+    json_out(['ok' => true]);
+
+case 'catalog_install:POST':
+    // Katalogdaki programı seçili cihazlara kurar (install_software komutu).
+    $cid = (int)($in['catalog_id'] ?? 0);
+    $st = db()->prepare('SELECT * FROM software_catalog WHERE id = ?');
+    $st->execute([$cid]);
+    $app = $st->fetch();
+    if (!$app) json_out(['error' => 'Program bulunamadı.'], 404);
+    $ids = array_values(array_unique(array_map('intval', (array)($in['device_ids'] ?? []))));
+    if (!$ids) json_out(['error' => 'Önce cihaz seçin.'], 400);
+    $args = json_encode([
+        'method' => $app['method'], 'id' => $app['winget_id'], 'url' => $app['url'],
+        'sha256' => $app['sha256'], 'silent' => $app['silent'], 'name' => $app['name'],
+    ], JSON_UNESCAPED_UNICODE);
+    $batch = new_batch_id();
+    $insc = db()->prepare("INSERT INTO commands (device_id, batch_id, type, args, created_by)
+                           SELECT id, ?, 'install_software', ?, ? FROM devices WHERE id = ?");
+    foreach ($ids as $id) $insc->execute([$batch, $args, $_SESSION['admin_id'], $id]);
+    audit('catalog_install', $app['name'] . ' -> ' . count($ids) . ' cihaz');
+    json_out(['batch_id' => $batch, 'count' => count($ids)]);
+
 case 'stats:GET':
     json_out(dashboard_stats());
 

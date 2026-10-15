@@ -21,12 +21,11 @@
       "userConsentFlags": {
         "desktopnotify": true,
         "terminalnotify": true,
-        "filenotify": true,
-        "desktopprivacybar": true
+        "filenotify": true
       },
       "consentMessages": {
         "title": "BilgeceLabs Tahta",
-        "desktop": "Bu tahta şu anda {0} tarafından uzaktan izleniyor.",
+        "desktop": "BilgeceLabs destek bu cihaza bağlandı ({0}).",
         "terminal": "{0} bu tahtada komut satırına bağlandı.",
         "files": "{0} bu tahtanın dosyalarına erişiyor."
       },

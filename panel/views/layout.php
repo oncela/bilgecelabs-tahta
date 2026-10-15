@@ -14,7 +14,7 @@ function menu_items(): array {
         'Yönetim' => [
             ['locations.php', 'Lokasyonlar', 'building', true],
             ['inventory.php', 'Envanter', 'list-details', true],
-            ['software.php', 'Yazılımlar', 'apps', false],
+            ['software.php', 'Yazılımlar', 'apps', true],
             ['shared.php', 'Ortak alan', 'folder', true],
             ['security.php', 'Güvenlik', 'shield-check', true],
             ['network.php', 'Ağ', 'network', true],

@@ -46,7 +46,7 @@ jobs:
 
       - name: Derle
         working-directory: agent
-        run: go build -trimpath -ldflags "-X main.version=$env:VERSION" -o build/bilgece-tahta.exe ./cmd/aci-ajan
+        run: go build -trimpath -ldflags "-H windowsgui -X main.version=$env:VERSION" -o build/bilgece-tahta.exe ./cmd/aci-ajan
 
       - name: Açılış testi (Windows)
         working-directory: agent

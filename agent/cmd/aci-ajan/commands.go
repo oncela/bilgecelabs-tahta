@@ -41,6 +41,8 @@ func (a *agent) execute(c command) (string, error) {
 		return runPowerShell(c.Args["script"], timeout)
 	case "fetch_file":
 		return fetchFile(a, c.Args)
+	case "install_software":
+		return installSoftware(c.Args)
 	case "run_app":
 		return runApp(c.Args)
 	case "uninstall":

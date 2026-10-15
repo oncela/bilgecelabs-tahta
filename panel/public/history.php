@@ -15,6 +15,7 @@ $names = [
     'download' => 'İndirme', 'password' => 'Şifre değişikliği',
     'mesh_wake' => 'Uzaktan açma', 'mesh_sleep' => 'Uyku', 'mesh_off' => 'Kapatma (uzaktan)', 'mesh_reset' => 'Yeniden başlatma (uzaktan)',
     'mesh_open_url' => 'Web adresi açma', 'mesh_toast' => 'Bildirim', 'shared_upload' => 'Dosya yükleme', 'shared_send' => 'Dosya gönderme', 'shared_delete' => 'Dosya silme',
+    'catalog_save' => 'Yazılım tanımı', 'catalog_delete' => 'Yazılım silme', 'catalog_install' => 'Yazılım kurma', 'location_save' => 'Lokasyon', 'assign_location' => 'Lokasyon atama', 'alert_resolve' => 'Uyarı çözme', 'auto_update' => 'Otomatik güncelleme', 'notify_settings' => 'Bildirim ayarı',
     'remote_desktop' => 'Ekran açıldı', 'remote_files' => 'Dosyalar açıldı', 'remote_terminal' => 'Komut satırı açıldı',
 ];
 page_header('İşlem geçmişi', 'history.php');

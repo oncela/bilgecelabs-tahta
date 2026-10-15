@@ -1184,6 +1184,100 @@ const Security = {
   init() { document.getElementById('only-issues').addEventListener('change', () => this.render()); this.load(); },
 };
 
+const Software = {
+  items: [], devices: [], current: null,
+  async load() {
+    try { this.items = (await api('catalog')).items; this.render(); } catch (e) { this.msg(e.message); }
+    try { this.devices = (await api('devices')).devices; } catch (e) {}
+  },
+  msg(t) { const tr = el('tr','empty-row'); const td = el('td','',t); td.colSpan=5; tr.append(td); document.getElementById('cat-rows').replaceChildren(tr); },
+  render() {
+    const tb = document.getElementById('cat-rows');
+    if (!this.items.length) { this.msg('Henüz program yok. "Program ekle" ile başlayın.'); return; }
+    tb.replaceChildren(...this.items.map((a) => {
+      const tr = el('tr');
+      const nm = el('td'); const ic = el('i', 'ti ti-' + (a.icon || 'apps') + ' me-2'); nm.append(ic, document.createTextNode(a.name)); nm.className = 'fw-medium';
+      tr.append(nm, el('td','', a.method === 'winget' ? 'winget' : 'URL'),
+        el('td','small text-truncate', a.method === 'winget' ? (a.winget_id || '') : (a.url || '')),
+        (() => { const td = el('td'); td.append(el('span','badge ' + (a.self_service ? 'bg-success-lt' : 'bg-secondary-lt'), a.self_service ? 'Açık' : 'Kapalı')); return td; })());
+      const act = el('td','text-nowrap');
+      const ins = el('button','btn btn-sm btn-primary me-1'); ins.type='button'; ins.append(el('i','ti ti-download me-1'), 'Kur');
+      ins.addEventListener('click', () => this.openInstall(a));
+      const ed = el('button','btn btn-sm me-1'); ed.type='button'; ed.textContent='Düzenle'; ed.addEventListener('click', () => this.openEdit(a));
+      const del = el('button','btn btn-sm btn-ghost-danger'); del.type='button'; del.append(el('i','ti ti-trash'));
+      del.addEventListener('click', async () => { if (del.dataset.c) { try { await api('catalog_delete',{id:a.id}); this.load(); } catch(e){alert(e.message);} } else { del.dataset.c='1'; del.title='Tekrar tıklayın'; } });
+      act.append(ins, ed, del); tr.append(act); return tr;
+    }));
+  },
+  openEdit(a) {
+    this.current = a || null;
+    document.getElementById('cat-id').value = a ? a.id : '';
+    document.getElementById('cat-name').value = a ? a.name : '';
+    document.getElementById('cat-icon').value = a ? (a.icon || '') : '';
+    document.getElementById('cat-method').value = a ? a.method : 'winget';
+    document.getElementById('cat-wid').value = a ? (a.winget_id || '') : '';
+    document.getElementById('cat-urlv').value = a ? (a.url || '') : '';
+    document.getElementById('cat-sha').value = a ? (a.sha256 || '') : '';
+    document.getElementById('cat-silent').value = a ? (a.silent || '') : '';
+    document.getElementById('cat-self').checked = a ? !!a.self_service : true;
+    this.toggleMethod();
+    document.getElementById('cat-err').hidden = true;
+    document.getElementById('cat-dialog').showModal();
+  },
+  toggleMethod() {
+    const w = document.getElementById('cat-method').value === 'winget';
+    document.getElementById('cat-winget').hidden = !w;
+    document.getElementById('cat-url').hidden = w;
+  },
+  async save(e) {
+    e.preventDefault();
+    const body = { id: document.getElementById('cat-id').value, name: document.getElementById('cat-name').value,
+      icon: document.getElementById('cat-icon').value, method: document.getElementById('cat-method').value,
+      winget_id: document.getElementById('cat-wid').value, url: document.getElementById('cat-urlv').value,
+      sha256: document.getElementById('cat-sha').value, silent: document.getElementById('cat-silent').value,
+      self_service: document.getElementById('cat-self').checked };
+    const err = document.getElementById('cat-err');
+    try { await api('catalog_save', body); document.getElementById('cat-dialog').close(); this.load(); }
+    catch (ex) { err.textContent = ex.message; err.hidden = false; }
+  },
+  openInstall(a) {
+    this.current = a;
+    document.getElementById('cat-install-info').textContent = a.name + ' seçili cihazlara kurulacak.';
+    const locs = new Map();
+    for (const d of this.devices) if (d.location_id) locs.set(d.location_id, d.location);
+    const sel = document.getElementById('cat-install-loc');
+    sel.replaceChildren(new Option('Tüm cihazlar', ''));
+    for (const [idv, nm] of locs) sel.append(new Option(nm, idv));
+    this.updateInstallCount();
+    document.getElementById('cat-install-err').hidden = true;
+    document.getElementById('cat-install-dialog').showModal();
+  },
+  installTargets() {
+    const loc = document.getElementById('cat-install-loc').value;
+    return this.devices.filter((d) => !loc || String(d.location_id||'') === loc).map((d) => d.id);
+  },
+  updateInstallCount() { document.getElementById('cat-install-count').textContent = this.installTargets().length + ' cihaza gönderilecek.'; },
+  async submitInstall(e) {
+    e.preventDefault();
+    const ids = this.installTargets();
+    const err = document.getElementById('cat-install-err');
+    if (!ids.length) { err.textContent = 'Hedef cihaz yok.'; err.hidden = false; return; }
+    try {
+      const r = await api('catalog_install', { catalog_id: this.current.id, device_ids: ids });
+      document.getElementById('cat-install-dialog').close();
+      ResultDialog.open(r.batch_id, this.current.name + ' kurulumu');
+    } catch (ex) { err.textContent = ex.message; err.hidden = false; }
+  },
+  init() {
+    document.getElementById('cat-new').addEventListener('click', () => this.openEdit(null));
+    document.getElementById('cat-method').addEventListener('change', () => this.toggleMethod());
+    document.getElementById('cat-form').addEventListener('submit', (e) => this.save(e));
+    document.getElementById('cat-install-loc').addEventListener('change', () => this.updateInstallCount());
+    document.getElementById('cat-install-form').addEventListener('submit', (e) => this.submitInstall(e));
+    this.load();
+  },
+};
+
 if (page === 'devices') {
   Devices.init();
   CommandDialog.init();
@@ -1205,4 +1299,7 @@ if (page === 'devices') {
   Inventory.init();
 } else if (page === 'security') {
   Security.init();
+} else if (page === 'software') {
+  Software.init();
+  CommandDialog.init();
 }
