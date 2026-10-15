@@ -29,9 +29,11 @@ release: lint destek agent ## Ajanı panele kopyala (indirme sayfası bunu kulla
 	echo "$(VERSION)" > panel/storage/aci-ajan.version
 	cp agent/build/bilgece-destek.exe panel/storage/bilgece-destek.exe
 	sha256sum panel/storage/bilgece-destek.exe | cut -d' ' -f1 > panel/storage/bilgece-destek.sha
+	cp agent/third_party/webview2-loader/x64/WebView2Loader.dll panel/storage/WebView2Loader.dll
+	sha256sum panel/storage/WebView2Loader.dll | cut -d' ' -f1 > panel/storage/WebView2Loader.sha
 	cp theme/brand/favicon.ico installer/bilgece.ico
 	python3 installer/make-splash.py
-	cd installer && makensis -DAGENT=../agent/build/bilgece-tahta.exe -DDESTEK=../agent/build/bilgece-destek.exe -DVERSION=$(VERSION) bilgece-tahta.nsi >/dev/null
+	cd installer && makensis -DAGENT=../agent/build/bilgece-tahta.exe -DDESTEK=../agent/build/bilgece-destek.exe -DWV2LOADER=../agent/third_party/webview2-loader/x64/WebView2Loader.dll -DVERSION=$(VERSION) bilgece-tahta.nsi >/dev/null
 	cp installer/bilgece-tahta-kurulum.exe panel/storage/kurulum.exe
 	sha256sum panel/storage/aci-ajan.exe panel/storage/kurulum.exe
 

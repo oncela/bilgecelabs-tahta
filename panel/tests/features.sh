@@ -108,6 +108,11 @@ if [[ -n "$DS" ]]; then
 else
   ok "self servis programı yayında değil (atlandı)"
 fi
+WS=$(dev '{"version":"0.0.1","results":[]}' | jget "['destek_dll_sha']")
+if [[ -n "$WS" ]]; then
+  curl -s -o "$TMP/w.dll" -H "Authorization: Bearer $TOK" "$B/api/agent.php?dosya=webview2loader"
+  [[ "$(sha256sum "$TMP/w.dll" | cut -d' ' -f1)" == "$WS" ]] && ok "WebView2 yükleyicisi indirilir, özet doğru" || fail "WebView2 yükleyicisi indirilir, özet doğru" "beklenen $WS"
+fi
 
 echo "Temizlik"
 api -X POST "$B/admin_api.php?action=delete_device" -d "{\"id\":$DID}" >/dev/null

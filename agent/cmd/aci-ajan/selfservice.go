@@ -29,7 +29,10 @@ import (
 //   - istek-*.json destek penceresi yazar; ajan panele iletip siler
 // İstekler güvenilmez veri sayılır: boyut/sayı sınırlı, panel ayrıca doğrular.
 
-const destekExeName = "bilgece-destek.exe"
+const (
+	destekExeName      = "bilgece-destek.exe"
+	webview2LoaderName = "WebView2Loader.dll" // Microsoft imzalı; destek penceresinin modern görünümü için
+)
 
 var (
 	userenv                    = windows.NewLazySystemDLL("userenv.dll")
@@ -69,12 +72,23 @@ func (s *selfService) prepare() {
 
 // sync: panelin bildirdiği destek programı özeti kurulu dosyadan farklıysa
 // yenisini indirir, doğrular, çalışanı kapatıp yerine koyar.
-func (s *selfService) sync(a *agent, wantSha string) {
-	if wantSha == "" || !s.syncMu.TryLock() {
+func (s *selfService) sync(a *agent, wantSha, wantDllSha string) {
+	if !s.syncMu.TryLock() {
 		return
 	}
 	defer s.syncMu.Unlock()
-	dst := filepath.Join(installDir(), destekExeName)
+	// Önce WebView2 yükleyicisi (modern pencere için), sonra destek programı
+	s.syncFile(a, webview2LoaderName, "webview2loader", wantDllSha, false)
+	s.syncFile(a, destekExeName, "destek", wantSha, true)
+}
+
+// syncFile: kurulu dosyanın özeti panelinkinden farklıysa yenisini indirir,
+// doğrular ve yerine koyar. kill: değiştirmeden önce çalışan programı kapat.
+func (s *selfService) syncFile(a *agent, name, param, wantSha string, kill bool) {
+	if wantSha == "" {
+		return
+	}
+	dst := filepath.Join(installDir(), name)
 	if cur, err := os.ReadFile(dst); err == nil {
 		sum := sha256.Sum256(cur)
 		if strings.EqualFold(hex.EncodeToString(sum[:]), wantSha) {
@@ -82,22 +96,24 @@ func (s *selfService) sync(a *agent, wantSha string) {
 		}
 	}
 	tmp := dst + ".yeni"
-	if err := a.downloadVerified(strings.TrimRight(a.cfg.Server, "/")+"/api/agent.php?dosya=destek", tmp); err != nil {
-		log.Printf("destek programı indirilemedi: %v", err)
+	if err := a.downloadVerified(strings.TrimRight(a.cfg.Server, "/")+"/api/agent.php?dosya="+param, tmp); err != nil {
+		log.Printf("%s indirilemedi: %v", name, err)
 		os.Remove(tmp)
 		return
 	}
-	killProcesses(destekExeName)
-	time.Sleep(500 * time.Millisecond)
+	if kill {
+		killProcesses(destekExeName)
+		time.Sleep(500 * time.Millisecond)
+	}
 	os.Remove(dst + ".eski")
-	os.Rename(dst, dst+".eski")
+	os.Rename(dst, dst+".eski") // kullanımdaki dosya yeniden adlandırılabilir
 	if err := os.Rename(tmp, dst); err != nil {
-		log.Printf("destek programı yerine konamadı: %v", err)
+		log.Printf("%s yerine konamadı: %v", name, err)
 		os.Rename(dst+".eski", dst)
 		return
 	}
 	os.Remove(dst + ".eski")
-	log.Printf("destek programı güncellendi")
+	log.Printf("%s güncellendi", name)
 }
 
 // takeRequests destek penceresinin bıraktığı istekleri okur (en çok 10).
@@ -143,13 +159,18 @@ func (s *selfService) writeState(raw json.RawMessage) {
 	if len(raw) == 0 || !json.Valid(raw) {
 		return
 	}
+	p := filepath.Join(destekDir(), "durum.json")
 	s.mu.Lock()
 	same := bytes.Equal(s.lastState, raw)
 	s.mu.Unlock()
 	if same {
+		// Değişmedi: pencere "bağlı" görebilsin diye dosya saatini dakikada bir tazele
+		if st, err := os.Stat(p); err == nil && time.Since(st.ModTime()) > time.Minute {
+			now := time.Now()
+			os.Chtimes(p, now, now)
+		}
 		return
 	}
-	p := filepath.Join(destekDir(), "durum.json")
 	if os.WriteFile(p+".tmp", raw, 0644) == nil && os.Rename(p+".tmp", p) == nil {
 		s.mu.Lock()
 		s.lastState = append([]byte(nil), raw...)

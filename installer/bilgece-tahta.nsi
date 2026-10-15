@@ -14,6 +14,9 @@ Unicode true
 !ifndef AGENT
   !error "AGENT tanımlı değil (ajan exe yolu)"
 !endif
+!ifndef WV2LOADER
+  !error "WV2LOADER tanımlı değil (WebView2Loader.dll yolu)"
+!endif
 !ifndef DESTEK
   !error "DESTEK tanımlı değil (bilgece-destek.exe yolu)"
 !endif
@@ -85,6 +88,10 @@ Section "Install"
   Delete "$INSTDIR\bilgece-destek.exe.eski"
   Rename "$INSTDIR\bilgece-destek.exe" "$INSTDIR\bilgece-destek.exe.eski"
   File "/oname=bilgece-destek.exe" "${DESTEK}"
+  ; Microsoft WebView2 yükleyicisi (imzalı): self servis penceresinin modern görünümü
+  SetOverwrite try
+  File "/oname=WebView2Loader.dll" "${WV2LOADER}"
+  SetOverwrite on
   Delete "$INSTDIR\bilgece-destek.exe.eski"
 
   ; Kayıt anahtarı: kurulum exe adından (BilgeceTahtaKurulum_<anahtar>.exe)
@@ -154,5 +161,6 @@ Section "Uninstall"
   Pop $0
   Delete "$INSTDIR\bilgece-tahta.exe"
   Delete "$INSTDIR\bilgece-destek.exe"
+  Delete "$INSTDIR\WebView2Loader.dll"
   RMDir "$INSTDIR"
 SectionEnd

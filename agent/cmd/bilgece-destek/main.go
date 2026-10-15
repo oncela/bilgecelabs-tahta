@@ -88,6 +88,8 @@ type app struct {
 	seenReplies    map[int]string
 	loaded         bool
 	taskbarCreated uint32
+	webHwnd        uintptr // açık modern pencere
+	wantWeb        bool    // ana döngü modern pencereyi açsın
 }
 
 var a = &app{ctl: map[int]uintptr{}, grayLabels: map[uintptr]bool{}, seenReplies: map[int]string{}}
@@ -171,11 +173,15 @@ func main() {
 		if int32(r) <= 0 {
 			break
 		}
-		if ok, _, _ := pIsDialogMessageW.Call(a.hwnd, uintptr(unsafe.Pointer(&m))); ok != 0 {
-			continue
+		if ok, _, _ := pIsDialogMessageW.Call(a.hwnd, uintptr(unsafe.Pointer(&m))); ok == 0 {
+			pTranslateMessage.Call(uintptr(unsafe.Pointer(&m)))
+			pDispatchMessageW.Call(uintptr(unsafe.Pointer(&m)))
 		}
-		pTranslateMessage.Call(uintptr(unsafe.Pointer(&m)))
-		pDispatchMessageW.Call(uintptr(unsafe.Pointer(&m)))
+		// Modern pencere geri çağrı içinde değil, burada açılır (kendi döngüsünü yürütür)
+		if a.wantWeb {
+			a.wantWeb = false
+			a.runWebUI()
+		}
 	}
 	a.removeTrayIcon()
 }
@@ -290,6 +296,21 @@ func (a *app) trayIcon(op uintptr, title, text string) {
 func (a *app) notify(title, text string) { a.trayIcon(nimModify, title, text) }
 
 // showMain pencereyi saatin üstünde (çalışma alanının sağ altı) açar.
+// openUI: modern pencere (WebView2) varsa onu, yoksa yerel pencereyi açar.
+func (a *app) openUI() {
+	if a.webHwnd != 0 {
+		pShowWindow.Call(a.webHwnd, swRestore)
+		pSetForegroundWindow.Call(a.webHwnd)
+		return
+	}
+	if webUIAvailable() {
+		a.wantWeb = true
+		pPostMessageW.Call(a.hwnd, wmNull, 0, 0) // döngüyü uyandır
+		return
+	}
+	a.showMain()
+}
+
 func (a *app) showMain() {
 	logf("pencere açıldı")
 	a.reload(false)
@@ -463,7 +484,7 @@ func (a *app) trayMenu() {
 	pPostMessageW.Call(a.hwnd, wmNull, 0, 0)
 	pDestroyMenu.Call(m)
 	if cmd == menuOpen {
-		a.showMain()
+		a.openUI()
 	}
 }
 
@@ -489,13 +510,13 @@ func wndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 	case wmTray:
 		switch uint32(lParam) {
 		case wmLButtonUp:
-			a.showMain()
+			a.openUI()
 		case wmRButtonUp:
 			a.trayMenu()
 		}
 		return 0
 	case wmShowMain:
-		a.showMain()
+		a.openUI()
 		return 0
 	case wmCommand:
 		id, code := int(wParam&0xFFFF), int(wParam>>16&0xFFFF)

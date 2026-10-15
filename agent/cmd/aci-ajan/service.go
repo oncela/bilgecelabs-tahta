@@ -160,6 +160,7 @@ func removeFiles() {
 	killProcesses(destekExeName)
 	time.Sleep(300 * time.Millisecond)
 	os.Remove(filepath.Join(dir, destekExeName))
+	os.Remove(filepath.Join(dir, webview2LoaderName))
 	exe := filepath.Join(dir, exeName)
 	if err := os.Remove(exe); err != nil && !os.IsNotExist(err) {
 		if p, err := windows.UTF16PtrFromString(exe); err == nil {

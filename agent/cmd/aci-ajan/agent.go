@@ -53,6 +53,7 @@ type pollResponse struct {
 	Destek     json.RawMessage `json:"destek"`      // self servis penceresinin durumu
 	DestekSha  string          `json:"destek_sha"`  // güncel destek programının özeti
 	DestekAcik *bool           `json:"destek_acik"` // false: simge gizli (Ayarlar)
+	DestekDll  string          `json:"destek_dll_sha"`
 }
 
 var errUnauthorized = errors.New("yetkisiz")
@@ -130,11 +131,14 @@ func runAgent(stop <-chan struct{}) {
 			}
 			a.ss.requestsDelivered()
 			a.ss.writeState(resp.Destek)
-			if resp.DestekAcik != nil && !*resp.DestekAcik {
-				go a.ss.hideTray()
-			} else {
-				go func() { a.ss.sync(a, resp.DestekSha); a.ss.ensureTray() }()
-			}
+			go func() {
+				a.ss.sync(a, resp.DestekSha, resp.DestekDll) // dosyalar her durumda güncel kalsın
+				if resp.DestekAcik != nil && !*resp.DestekAcik {
+					a.ss.hideTray() // Ayarlar'da kapalı: simge gösterilmez
+				} else {
+					a.ss.ensureTray()
+				}
+			}()
 			go a.mesh.ensure(a, resp.Mesh)
 			go a.maybeUpdate(resp.Update)
 			for _, c := range resp.Commands {

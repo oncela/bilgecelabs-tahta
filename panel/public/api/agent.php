@@ -4,9 +4,10 @@ declare(strict_types=1);
 require __DIR__ . '/../../src/bootstrap.php';
 device_from_token(); // geçersizse 401
 
-// ?dosya=destek: self servis penceresi (bilgece-destek.exe), yoksa ajan
-$destek = ($_GET['dosya'] ?? '') === 'destek';
-$exe = ACI_ROOT . ($destek ? '/storage/bilgece-destek.exe' : '/storage/aci-ajan.exe');
+// ?dosya=destek: self servis penceresi, ?dosya=webview2loader: Microsoft
+// WebView2Loader.dll (modern pencere), yoksa ajan.
+$files = ['destek' => 'bilgece-destek.exe', 'webview2loader' => 'WebView2Loader.dll'];
+$exe = ACI_ROOT . '/storage/' . ($files[$_GET['dosya'] ?? ''] ?? 'aci-ajan.exe');
 if (!is_file($exe)) { http_response_code(404); exit('yok'); }
 header('Content-Type: application/octet-stream');
 header('Content-Length: ' . filesize($exe));

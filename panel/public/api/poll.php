@@ -133,6 +133,7 @@ $resp['destek'] = selfservice_state($deviceId);
 $resp['destek_acik'] = setting('selfservice_enabled', '1') === '1'; // Ayarlar: self servis simgesi
 // Güncel self servis programının özeti (yayında üretilir; ajan farklıysa indirir)
 $resp['destek_sha'] = trim((string)@file_get_contents(ACI_ROOT . '/storage/bilgece-destek.sha'));
+$resp['destek_dll_sha'] = trim((string)@file_get_contents(ACI_ROOT . '/storage/WebView2Loader.sha'));
 // Uzaktan güncelleme: sunucudaki ajan sürümü cihazınkinden yeniyse bildir
 $srvVer = agent_version();
 $devVer = (string)($in['version'] ?? '');

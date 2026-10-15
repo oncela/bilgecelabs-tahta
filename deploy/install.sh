@@ -48,7 +48,7 @@ rsync -a --delete --exclude '.env' --exclude 'storage/' --exclude 'tests/' "$REP
 install -d -o "$APPUSER" -g "$APPUSER" -m 0750 "$APP/storage"
 install -o root -g "$APPUSER" -m 0640 "$REPO/panel/storage/aci-ajan.exe" "$APP/storage/aci-ajan.exe"
 [[ -f "$REPO/panel/storage/aci-ajan.version" ]] && install -o root -g "$APPUSER" -m 0640 "$REPO/panel/storage/aci-ajan.version" "$APP/storage/"
-for f in bilgece-destek.exe bilgece-destek.sha; do
+for f in bilgece-destek.exe bilgece-destek.sha WebView2Loader.dll WebView2Loader.sha; do
   [[ -f "$REPO/panel/storage/$f" ]] && install -o root -g "$APPUSER" -m 0640 "$REPO/panel/storage/$f" "$APP/storage/$f"
 done
 [[ -f "$REPO/panel/storage/kurulum.exe" ]] && install -o root -g "$APPUSER" -m 0640 "$REPO/panel/storage/kurulum.exe" "$APP/storage/kurulum.exe"
