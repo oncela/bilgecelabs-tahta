@@ -6,6 +6,7 @@ require __DIR__ . '/../../src/bootstrap.php';
 require_once __DIR__ . '/../../src/mesh.php';
 require_once __DIR__ . '/../../src/alerts.php';
 require_once __DIR__ . '/../../src/selfservice.php';
+require_once __DIR__ . '/../../src/threats.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_out(['error' => 'POST gerekli'], 405);
 
@@ -67,8 +68,17 @@ if (isset($in['inventory']) && is_array($in['inventory']) && !isset($in['invento
             mb_substr(json_encode($inv, JSON_UNESCAPED_UNICODE), 0, 16000000)]);
 }
 if (isset($in['defender']) && is_array($in['defender'])) {
-    $pdo->prepare('UPDATE devices SET defender = ?, defender_at = NOW() WHERE id = ?')
-        ->execute([json_encode($in['defender'], JSON_UNESCAPED_UNICODE), $deviceId]);
+    // Tespit listesi ayrı tabloda tutulur (Tehditler sayfası); cihaz satırında yalnız özet kalır
+    $def = $in['defender'];
+    $detections = isset($def['detections']) && is_array($def['detections']) ? $def['detections'] : null;
+    $pua = isset($def['pua']) && in_array((int)$def['pua'], [0, 1, 2], true) ? (int)$def['pua'] : null;
+    unset($def['detections']);
+    $pdo->prepare('UPDATE devices SET defender = ?, defender_at = NOW(), pua = COALESCE(?, pua) WHERE id = ?')
+        ->execute([json_encode($def, JSON_UNESCAPED_UNICODE), $pua, $deviceId]);
+    if ($detections !== null && !isset($def['error'])) {
+        threats_store($deviceId, $detections);
+        threats_eval_outbreak();
+    }
 }
 
 // Kullanım kaydı (saatte bir satır) ve eski kayıtların temizliği

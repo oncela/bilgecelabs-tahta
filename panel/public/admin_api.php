@@ -76,9 +76,9 @@ case 'send:POST':
 
     // Hazır betik: tahtaya PowerShell olarak gider, geçmişte kendi adıyla görünür
     $auditType = $type;
-    if (($script = preset_script($type)) !== null) {
+    if (($preset = preset_script($type)) !== null) {
         $type = 'powershell';
-        $args = ['script' => $script, 'timeout' => '120'];
+        $args = $preset;
     }
 
     $batch = new_batch_id();
@@ -321,6 +321,44 @@ case 'ticket_update:POST':
         ->execute([$status, $reply === '' ? null : $reply, $tid]);
     audit('ticket_update', "#$tid" . ($status ? " $status" : '') . ($reply ? ' yanıt' : ''));
     json_out(['ok' => true]);
+
+case 'threats:GET':
+    require_once __DIR__ . '/../src/threats.php';
+    $days = (int)($_GET['days'] ?? 30);
+    if (!in_array($days, [7, 30, 90, 365], true)) $days = 30;
+    $rows = db()->prepare("SELECT t.id, t.device_id, t.name, t.severity, t.status, t.active, t.source, t.resources, t.process,
+            t.user_name, t.detected_at, t.changed_at, d.hostname, d.name AS dev_name, d.room, l.name AS location
+        FROM device_threats t JOIN devices d ON d.id = t.device_id LEFT JOIN locations l ON l.id = d.location_id
+        WHERE t.active = 1 OR t.detected_at > NOW() - INTERVAL ? DAY
+        ORDER BY t.active DESC, t.detected_at DESC LIMIT 500");
+    $rows->execute([$days]);
+    $list = array_map(function ($r) {
+        [$st, $stState] = threat_status($r['status'] === null ? null : (int)$r['status'], (bool)$r['active']);
+        [$sev, $sevState] = threat_severity($r['severity'] === null ? null : (int)$r['severity']);
+        return [
+            'id' => (int)$r['id'], 'device_id' => (int)$r['device_id'],
+            'device' => $r['dev_name'] ?: $r['hostname'], 'hostname' => $r['hostname'], 'room' => $r['room'], 'location' => $r['location'],
+            'name' => $r['name'] ?: 'Bilinmeyen tehdit', 'kind' => threat_kind($r['name']),
+            'severity' => $sev, 'severity_state' => $sevState, 'status' => $st, 'status_state' => $stState, 'active' => (bool)$r['active'],
+            'source' => threat_source($r['source'] === null ? null : (int)$r['source']),
+            'resources' => json_decode((string)$r['resources'], true) ?: [], 'process' => $r['process'], 'user' => $r['user_name'],
+            'detected_at' => $r['detected_at'],
+        ];
+    }, $rows->fetchAll());
+    $pua = db()->query('SELECT pua, COUNT(*) AS n FROM devices GROUP BY pua')->fetchAll();
+    $puaCounts = ['on' => 0, 'audit' => 0, 'off' => 0, 'unknown' => 0];
+    foreach ($pua as $p) $puaCounts[[0 => 'off', 1 => 'on', 2 => 'audit'][$p['pua'] === null ? -1 : (int)$p['pua']] ?? 'unknown'] += (int)$p['n'];
+    $affected = (int)db()->query("SELECT COUNT(DISTINCT device_id) FROM device_threats WHERE active = 1 OR detected_at > NOW() - INTERVAL $days DAY")->fetchColumn();
+    json_out([
+        'threats' => $list,
+        'summary' => [
+            'active' => count(array_unique(array_map(fn($t) => $t['device_id'], array_filter($list, fn($t) => $t['active'])))),
+            'detections' => count($list), 'affected' => $affected, 'days' => $days,
+        ],
+        'outbreaks' => threats_outbreaks(),
+        'pua' => $puaCounts,
+        'device_ids' => array_map('intval', db()->query('SELECT id FROM devices')->fetchAll(PDO::FETCH_COLUMN)),
+    ]);
 
 case 'inventory:GET':
     $rows = db()->query("SELECT d.id, d.hostname, d.name, d.room, l.name AS location,

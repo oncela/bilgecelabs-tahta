@@ -94,6 +94,32 @@ api -X POST "$B/admin_api.php?action=catalog_delete" -d "{\"id\":$SID}" >/dev/nu
 api -X POST "$B/admin_api.php?action=catalog_delete" -d "{\"id\":$HID}" >/dev/null
 R=$(curl -s -b "$CJ" -o "$TMP/p.html" -w '%{http_code}' "$B/tickets.php"); [[ $R == 200 ]] && ! grep -qiE 'fatal error|warning:' "$TMP/p.html" && ok "tickets.php açılır" || fail "tickets.php açılır" "HTTP $R"
 
+echo "Tehditler ve PUA"
+DET='{"enabled":true,"realtime":true,"sig_age_days":0,"quick_scan_age_days":1,"threats":1,"threats_history":2,"pua":2,"detections":[{"id":"{AAA-1}","threat_id":"2147","name":"HackTool:Win32/AutoKMS","severity":5,"category":34,"active":true,"status":1,"source":3,"detected":"'$(date +%Y-%m-%dT%H:%M:%S)'","resources":["file:_C:\\Users\\ogr\\Downloads\\kms.exe"],"process":"explorer.exe","user":"OKUL\\ogr"},{"id":"{AAA-2}","threat_id":"9999","name":"Trojan:Win32/Wacatac.B!ml","severity":5,"category":8,"active":false,"status":3,"source":4,"detected":"'$(date +%Y-%m-%dT%H:%M:%S)'","resources":["file:_E:\\oyun.exe"]}]}'
+dev "{\"version\":\"0.0.1\",\"defender\":$DET,\"results\":[]}" >/dev/null
+R=$(api "$B/admin_api.php?action=threats"); check "tespitler Tehditler sayfasına gelir" "AutoKMS" "$R"
+check "tehdit türü Türkçe" "Saldırı aracı" "$R"
+check "karantinadaki tehdit durumu" "Karantinada" "$R"
+check "etkin tehdit sayılır" '"active":1' "$R"
+check "PUA izleme modu sayılır" '"audit":1' "$R"
+R=$(api "$B/admin_api.php?action=devices"); [[ "$R" != *"detections"* ]] && ok "tespit listesi cihaz kaydını şişirmez" || fail "tespit listesi cihaz kaydını şişirmez" "${R:0:200}"
+dev "{\"version\":\"0.0.1\",\"defender\":$DET,\"results\":[]}" >/dev/null
+N=$(api "$B/admin_api.php?action=threats" | python3 -c "import sys,json;print(len(json.load(sys.stdin)['threats']))")
+[[ "$N" == 2 ]] && ok "aynı tespit tekrar eklenmez" || fail "aynı tespit tekrar eklenmez" "kayıt: $N"
+MAC2="5e:00:00:02:$(printf '%02x:%02x' $((RANDOM%256)) $((RANDOM%256)))"
+R=$(curl -s -X POST "$B/api/enroll.php" -H "$J" -d "{\"enroll_key\":\"$KEY\",\"hostname\":\"FEAT-TEST2\",\"mac\":\"$MAC2\",\"version\":\"0.0.1\"}")
+TOK2=$(echo "$R" | jget "['token']"); DID2=$(echo "$R" | jget "['device_id']")
+curl -s -X POST "$B/api/poll.php" -H "$J" -H "Authorization: Bearer $TOK2" -d "{\"version\":\"0.0.1\",\"defender\":$(echo "$DET" | sed 's/{AAA-/{BBB-/g'),\"results\":[]}" >/dev/null
+R=$(api "$B/admin_api.php?action=alerts"); check "aynı tehdit 2 cihazda: salgın uyarısı" '"type":"outbreak"' "$R"
+R=$(api -X POST "$B/admin_api.php?action=send" -d "{\"type\":\"pua_on\",\"device_ids\":[$DID]}"); check "PUA aç komutu oluşturulur" '"count":1' "$R"
+R=$(dev '{"version":"0.0.1","results":[]}'); check "cihaz PUA betiğini alır" "Set-MpPreference -PUAProtection" "$R"
+check "PUA modu betiğe eklenir" "Mod = 'Enabled'" "$R"
+dev "{\"version\":\"0.0.1\",\"defender\":{\"threats\":0,\"pua\":1,\"detections\":[]},\"results\":[]}" >/dev/null
+N=$(api "$B/admin_api.php?action=threats" | python3 -c "import sys,json;print(sum(1 for t in json.load(sys.stdin)['threats'] if t['device_id']==$DID and t['active']))")
+[[ "$N" == 0 ]] && ok "temizlenince cihazda etkin tehdit kalmaz" || fail "temizlenince cihazda etkin tehdit kalmaz" "etkin: $N"
+R=$(curl -s -b "$CJ" -o "$TMP/p.html" -w '%{http_code}' "$B/threats.php"); [[ $R == 200 ]] && ! grep -qiE 'fatal error|warning:' "$TMP/p.html" && ok "threats.php açılır" || fail "threats.php açılır" "HTTP $R"
+api -X POST "$B/admin_api.php?action=delete_device" -d "{\"id\":$DID2}" >/dev/null
+
 echo "Uzaktan güncelleme"
 R=$(dev '{"version":"0.0.1","results":[]}'); check "eski sürüme güncelleme önerilir" '"update":{"version"' "$R"
 SV=$(echo "$R" | jget "['update']['version']")

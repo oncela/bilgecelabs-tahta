@@ -52,6 +52,9 @@ page_header('Cihazlar', 'devices.php');
           <button class="dropdown-item" data-cmd="cancel_shutdown"><i class="ti ti-x me-2"></i>Kapatmayı iptal et</button>
           <button class="dropdown-item" data-cmd="wol_prepare"><i class="ti ti-plug-connected me-2"></i>Uzaktan açmaya hazırla</button>
           <button class="dropdown-item" data-cmd="defender_update"><i class="ti ti-shield-up me-2"></i>Virüs imzalarını güncelle</button>
+          <button class="dropdown-item" data-cmd="defender_full_scan"><i class="ti ti-shield-search me-2"></i>Tam virüs taraması</button>
+          <button class="dropdown-item" data-cmd="threat_clean"><i class="ti ti-trash me-2"></i>Etkin tehditleri temizle</button>
+          <button class="dropdown-item" data-cmd="pua_on"><i class="ti ti-shield-lock me-2"></i>PUA korumasını aç</button>
           <div class="dropdown-divider"></div>
           <button class="dropdown-item" data-cmd="powershell"><i class="ti ti-terminal-2 me-2"></i>PowerShell komutu</button>
         </div>

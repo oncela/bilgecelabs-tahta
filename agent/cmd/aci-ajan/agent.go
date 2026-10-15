@@ -300,18 +300,7 @@ func (a *agent) defenderDue() bool {
 }
 
 func (a *agent) refreshDefender() {
-	out, err := runPowerShell(`$s = Get-MpComputerStatus
-# Yalnız hâlâ etkin tehditler (temizlenen/karantinadakiler sayılmaz); geçmiş ayrıca
-$t = @(Get-MpThreat -ErrorAction SilentlyContinue | Where-Object { $_.IsActive }).Count
-$h = @(Get-MpThreatDetection -ErrorAction SilentlyContinue).Count
-[pscustomobject]@{
-  enabled      = [bool]$s.AntivirusEnabled
-  realtime     = [bool]$s.RealTimeProtectionEnabled
-  sig_age_days = [int]$s.AntivirusSignatureAge
-  quick_scan_age_days = [int]$s.QuickScanAge
-  threats      = [int]$t
-  threats_history = [int]$h
-} | ConvertTo-Json -Compress`, 2*time.Minute)
+	out, err := runPowerShell(defenderScript, 2*time.Minute)
 	out = strings.TrimSpace(out)
 	if err != nil || !json.Valid([]byte(out)) {
 		out = fmt.Sprintf(`{"error":%q}`, strings.TrimSpace(out+" "+fmt.Sprint(err)))
@@ -334,3 +323,41 @@ func primaryMAC() string {
 	}
 	return ""
 }
+
+// defenderScript: koruma durumu, PUA ayarı ve son tespitler (Tehditler sayfası).
+// Tespitlerde dosya yolu, kaynak ve durum gelir; dosyanın kendisi gönderilmez.
+const defenderScript = `$ErrorActionPreference = 'SilentlyContinue'
+$s = Get-MpComputerStatus
+$names = @{}
+Get-MpThreat | ForEach-Object { $names[[string]$_.ThreatID] = $_ }
+$act = @($names.Values | Where-Object { $_.IsActive }).Count
+$all = @(Get-MpThreatDetection)
+$det = @($all | Sort-Object InitialDetectionTime -Descending | Select-Object -First 40 | ForEach-Object {
+  $t = $names[[string]$_.ThreatID]
+  [pscustomobject]@{
+    id        = [string]$_.DetectionID
+    threat_id = [string]$_.ThreatID
+    name      = [string]$t.ThreatName
+    severity  = [int]$t.SeverityID
+    category  = [int]$t.CategoryID
+    active    = [bool]$t.IsActive
+    status    = [int]$_.ThreatStatusID
+    source    = [int]$_.DetectionSourceTypeID
+    detected  = $(if ($_.InitialDetectionTime) { $_.InitialDetectionTime.ToString('s') } else { $null })
+    changed   = $(if ($_.LastThreatStatusChangeTime) { $_.LastThreatStatusChangeTime.ToString('s') } else { $null })
+    resources = @($_.Resources | Select-Object -First 3 | ForEach-Object { [string]$_ })
+    process   = [string]$_.ProcessName
+    user      = [string]$_.DomainUser
+  }
+})
+[pscustomobject]@{
+  enabled             = [bool]$s.AntivirusEnabled
+  realtime            = [bool]$s.RealTimeProtectionEnabled
+  sig_age_days        = [int]$s.AntivirusSignatureAge
+  quick_scan_age_days = [int]$s.QuickScanAge
+  full_scan_age_days  = [int]$s.FullScanAge
+  threats             = [int]$act
+  threats_history     = [int]$all.Count
+  pua                 = [int](Get-MpPreference).PUAProtection
+  detections          = $det
+} | ConvertTo-Json -Depth 4 -Compress`

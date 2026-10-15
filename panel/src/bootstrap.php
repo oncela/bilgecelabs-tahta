@@ -207,12 +207,28 @@ function new_batch_id(): string {
     return bin2hex(random_bytes(8));
 }
 
-/** Hazır betikli komutlar: tür -> src/scripts altındaki PowerShell dosyası. */
-function preset_script(string $type): ?string {
-    $map = ['wol_prepare' => 'wol_prepare.ps1'];
+/** Hazır betikli komutlar: tür -> [src/scripts altındaki PowerShell dosyası, zaman aşımı sn]. */
+function preset_scripts(): array {
+    return [
+        'wol_prepare'        => ['wol_prepare.ps1', 120],
+        'pua_on'             => ['pua.ps1', 120],
+        'pua_audit'          => ['pua.ps1', 120],
+        'pua_off'            => ['pua.ps1', 120],
+        'threat_clean'       => ['threat_clean.ps1', 1800],
+        'defender_full_scan' => ['defender_full_scan.ps1', 14400],
+    ];
+}
+
+function preset_script(string $type): ?array {
+    $map = preset_scripts();
     if (!isset($map[$type])) return null;
-    $f = __DIR__ . '/scripts/' . $map[$type];
-    return is_file($f) ? (string)file_get_contents($f) : null;
+    $f = __DIR__ . '/scripts/' . $map[$type][0];
+    if (!is_file($f)) return null;
+    $script = (string)file_get_contents($f);
+    // PUA betiği tek dosya: istenen mod başa eklenir
+    $mode = ['pua_on' => 'Enabled', 'pua_audit' => 'AuditMode', 'pua_off' => 'Disabled'][$type] ?? null;
+    if ($mode) $script = "\$Mod = '$mode'\n" . $script;
+    return ['script' => $script, 'timeout' => (string)$map[$type][1]];
 }
 
 /** Komut türleri: panelde görünen ad ve izin verilen argümanlar. */
@@ -230,5 +246,10 @@ function command_types(): array {
         'uninstall'       => ['Tahtadan kaldır', []],
         // Panelde tanımlı hazır betikler: tahtaya PowerShell olarak gider (bkz. preset_script)
         'wol_prepare'     => ['Uzaktan açmaya hazırla', []],
+        'pua_on'          => ['PUA korumasını aç', []],
+        'pua_audit'       => ['PUA korumasını izleme modunda aç', []],
+        'pua_off'         => ['PUA korumasını kapat', []],
+        'threat_clean'    => ['Tehditleri temizle', []],
+        'defender_full_scan' => ['Tam virüs taraması', []],
     ];
 }

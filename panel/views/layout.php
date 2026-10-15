@@ -18,6 +18,7 @@ function menu_items(): array {
             ['software.php', 'Yazılımlar', 'apps', true],
             ['shared.php', 'Ortak alan', 'folder', true],
             ['security.php', 'Güvenlik', 'shield-check', true],
+            ['threats.php', 'Tehditler', 'bug', true],
             ['network.php', 'Ağ', 'network', true],
         ],
         'Sistem' => [

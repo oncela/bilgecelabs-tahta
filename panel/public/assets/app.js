@@ -1149,6 +1149,90 @@ const Tickets = {
   },
 };
 
+// Tehditler: Defender tespitleri, salgın uyarısı, PUA koruması
+const Threats = {
+  data: null,
+  async load() {
+    const tb = document.getElementById('th-rows');
+    try {
+      this.data = await api('threats', undefined, '&days=' + document.getElementById('th-days').value);
+      const d = this.data, sm = d.summary;
+      document.getElementById('th-active').textContent = sm.active;
+      document.getElementById('th-active').classList.toggle('text-danger', sm.active > 0);
+      document.getElementById('th-count').textContent = sm.detections;
+      document.getElementById('th-affected').textContent = sm.affected;
+      document.getElementById('th-days-label').textContent = { 7: '7 gün', 30: '30 gün', 90: '90 gün', 365: '1 yıl' }[sm.days];
+      const total = d.device_ids.length;
+      document.getElementById('th-pua').textContent = d.pua.on + ' / ' + total;
+      const det = [];
+      if (d.pua.audit) det.push(d.pua.audit + ' cihaz izleme modunda');
+      if (d.pua.off) det.push(d.pua.off + ' cihazda kapalı');
+      if (d.pua.unknown) det.push(d.pua.unknown + ' cihazdan bilgi bekleniyor');
+      document.getElementById('th-pua-detail').textContent = det.length ? det.join(' · ') : (total ? 'Tüm cihazlarda açık.' : '');
+      const ob = document.getElementById('th-outbreak');
+      ob.hidden = !d.outbreaks.length;
+      document.getElementById('th-outbreak-text').textContent = d.outbreaks.map((o) => `${o.name} (${o.devices} cihaz)`).join(', ');
+      this.render();
+    } catch (err) {
+      const tr = el('tr', 'empty-row'); const td = el('td', '', err.message); td.colSpan = 7; tr.append(td); tb.replaceChildren(tr);
+    }
+  },
+  render() {
+    const tb = document.getElementById('th-rows');
+    const q = document.getElementById('th-search').value.trim().toLocaleLowerCase('tr');
+    const onlyActive = document.getElementById('th-only-active').checked;
+    const rows = this.data.threats.filter((t) => (!onlyActive || t.active) &&
+      (!q || [t.name, t.kind, t.device, t.hostname, t.room, t.location, ...(t.resources || [])].join(' ').toLocaleLowerCase('tr').includes(q)));
+    if (!rows.length) {
+      const tr = el('tr', 'empty-row');
+      const td = el('td', '', this.data.threats.length ? 'Filtreye uyan tespit yok.' : 'Bu dönemde tespit yok. Cihazlar temiz görünüyor.');
+      td.colSpan = 7; tr.append(td); tb.replaceChildren(tr); return;
+    }
+    tb.replaceChildren(...rows.map((t) => {
+      const tr = el('tr', t.active ? 'threat-active' : '');
+      const dev = el('td', 'text-nowrap');
+      dev.append(el('div', 'fw-medium', t.device), el('div', 'text-secondary small', [t.location, t.room].filter(Boolean).join(' · ') || t.hostname));
+      const th = el('td');
+      th.append(el('div', 'fw-medium threat-name', t.name), el('div', 'text-secondary small', t.kind));
+      const src = el('td', 'threat-src');
+      src.append(el('div', 'small', t.source + (t.user ? ' · ' + t.user : '')));
+      (t.resources || []).slice(0, 2).forEach((r) => { const p = el('div', 'mono small text-secondary text-truncate', r.replace(/^file:_/, '')); p.title = r; src.append(p); });
+      const sev = el('td'); sev.append(tag(t.severity_state, t.severity));
+      const st = el('td'); st.append(tag(t.status_state, t.status));
+      const act = el('td', 'text-nowrap text-end');
+      if (t.active) {
+        const b = el('button', 'btn btn-sm btn-danger me-1'); b.type = 'button'; b.append(el('i', 'ti ti-trash me-1'), 'Temizle'); b.title = 'Etkin tehditleri temizle';
+        b.addEventListener('click', () => this.send('threat_clean', [t.device_id], `${t.device}: etkin tehditler temizlensin mi?`));
+        act.append(b);
+      }
+      const f = el('button', 'btn btn-sm btn-icon'); f.type = 'button'; f.title = 'Tam virüs taraması'; f.setAttribute('aria-label', 'Tam virüs taraması'); f.append(el('i', 'ti ti-shield-search'));
+      f.addEventListener('click', () => this.send('defender_full_scan', [t.device_id], `${t.device}: tam virüs taraması başlatılsın mı? (saatler sürebilir, arka planda çalışır)`));
+      act.append(f);
+      tr.append(el('td', 'text-nowrap', fmtTime(t.detected_at)), dev, th, sev, src, st, act);
+      return tr;
+    }));
+  },
+  async send(type, ids, question) {
+    if (!ids.length) { alert('Henüz cihaz yok.'); return; }
+    if (!confirm(question)) return;
+    try {
+      const r = await api('send', { type, device_ids: ids, args: {} });
+      alert(r.count + ' cihaza gönderildi. Sonuçları Geçmiş sayfasında görebilirsiniz.');
+      setTimeout(() => this.load(), 3000);
+    } catch (e) { alert(e.message); }
+  },
+  init() {
+    document.getElementById('th-days').addEventListener('change', () => this.load());
+    document.getElementById('th-search').addEventListener('input', () => this.data && this.render());
+    document.getElementById('th-only-active').addEventListener('change', () => this.data && this.render());
+    document.getElementById('pua-on').addEventListener('click', () => this.send('pua_on', this.data?.device_ids || [],
+      'PUA koruması tüm cihazlarda açılsın mı? Crack ve istenmeyen yazılımlar engellenecek.'));
+    document.getElementById('pua-audit').addEventListener('click', () => this.send('pua_audit', this.data?.device_ids || [],
+      'PUA koruması tüm cihazlarda izleme modunda açılsın mı? Hiçbir şey engellenmez, yalnız kaydedilir.'));
+    this.load(); setInterval(() => { if (!document.hidden) this.load(); }, 30000);
+  },
+};
+
 function tag2(cls, text) { const td = el('td'); td.append(el('span', 'badge ' + cls, text)); return td; }
 
 // Menüde rozetler: açık uyarılar ve açık destek talepleri (her sayfada)
@@ -1359,6 +1443,8 @@ if (page === 'devices') {
   Inventory.init();
 } else if (page === 'security') {
   Security.init();
+} else if (page === 'threats') {
+  Threats.init();
 } else if (page === 'tickets') {
   Tickets.init();
 } else if (page === 'software') {

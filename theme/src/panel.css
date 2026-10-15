@@ -219,3 +219,25 @@ dialog.aci-dialog .card { margin: 0; border: 0; }
 [data-page="devices"] .card-table td { white-space: nowrap; }
 [data-page="devices"] .card-table td, [data-page="devices"] .card-table th { padding-left: .6rem; padding-right: .6rem; }
 [data-page="devices"] .card-table td:first-child, [data-page="devices"] .card-table th:first-child { padding-left: 1.1rem; }
+
+/* Tehditler sayfası */
+.stat-card .card-body { padding: 1rem 1.15rem; }
+.stat-num { font-family: var(--aci-display); font-size: 2rem; font-weight: 680; line-height: 1.1; letter-spacing: -.03em; margin-top: .35rem; }
+.alert-outbreak { display: flex; gap: .85rem; align-items: flex-start; padding: .95rem 1.15rem; margin-bottom: 1rem; border-radius: 14px;
+  background: linear-gradient(100deg, rgba(var(--aci-bad-rgb), .1), rgba(var(--aci-bad-rgb), .04)); border: 1px solid rgba(var(--aci-bad-rgb), .28); color: #7d1014; }
+.alert-outbreak[hidden] { display: none; }
+.alert-outbreak > i { font-size: 1.6rem; color: var(--aci-bad); margin-top: .05rem; }
+.pua-card .card-body { display: grid !important; grid-template-columns: auto 1fr auto; gap: 1.1rem; align-items: center; }
+@media (max-width: 767.98px) { .pua-card .card-body { grid-template-columns: auto 1fr; } .pua-card .card-body > :last-child { grid-column: 1 / -1; } }
+.pua-card .pua-icon { width: 46px; height: 46px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--aci-accent-soft); color: var(--aci-accent); font-size: 1.5rem; flex: none; }
+tr.threat-active td:first-child { box-shadow: inset 3px 0 0 var(--aci-bad); }
+tr.threat-active { background: rgba(var(--aci-bad-rgb), .035); }
+.threat-name { font-family: var(--aci-mono); font-size: .8rem; letter-spacing: -.01em; overflow-wrap: anywhere; }
+[data-page="threats"] td:nth-child(3) { min-width: 230px; }
+[data-page="threats"] td:nth-child(2) { white-space: nowrap; }
+.threat-src { max-width: 300px; }
+.btn-icon.btn-sm { padding: .3rem .45rem; }
+[data-page="threats"] .card-table td, [data-page="threats"] .card-table th { padding-left: .6rem; padding-right: .6rem; }
+[data-page="threats"] .card-table td:first-child, [data-page="threats"] .card-table th:first-child { padding-left: 1.1rem; }
+[data-page="threats"] .card-table td:last-child { padding-right: 1rem; }
