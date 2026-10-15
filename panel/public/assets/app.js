@@ -485,6 +485,14 @@ const DeviceDialog = {
     if (d.cpu !== null) add('İşlemci (CPU)', d.cpu + '%');
     if (d.mem_used !== null) add('Bellek (RAM)', d.mem_used + '%' + (d.mem_mb ? ' / ' + (d.mem_mb / 1024).toFixed(1) + ' GB' : ''));
     if (d.disk_used !== null) add('Disk (C:)', d.disk_used + '% dolu' + (d.disk_gb ? ' · ' + d.disk_free + ' / ' + d.disk_gb + ' GB boş' : ''));
+    if (d.security) {
+      const s = d.security;
+      if (s.fw_on !== null) add('Güvenlik duvarı', s.fw_on ? 'Açık' : 'Kapalı');
+      if (s.bitlocker) add('BitLocker (C:)', s.bitlocker);
+      if (s.uac !== null) add('UAC', s.uac ? 'Açık' : 'Kapalı');
+      if (s.reboot_pending !== null) add('Yeniden başlatma', s.reboot_pending ? 'Gerekli' : 'Gerekmez');
+      if (s.last_update) add('Son güncelleme', s.last_update);
+    }
     this.loadInventory(d.id, add);
     add('Ajan sürümü', d.version);
     const hist = document.getElementById('dev-history');
@@ -1131,6 +1139,51 @@ const Inventory = {
   },
 };
 
+const Security = {
+  list: [],
+  yn(v, goodTrue) {
+    if (v === null || v === undefined) return tag2('bg-secondary-lt', 'bilinmiyor');
+    const good = goodTrue ? v : !v;
+    return tag2(good ? 'bg-success-lt' : 'bg-danger-lt', v ? 'Açık' : 'Kapalı');
+  },
+  async load() {
+    try { this.list = (await api('devices')).devices; this.render(); }
+    catch (err) { this.msg(err.message); }
+  },
+  hasIssue(d) {
+    const s = d.security; if (!s) return false;
+    return s.fw_on === false || (s.tamper === false) || d.defender.state === 'bad';
+  },
+  render() {
+    const onlyIssues = document.getElementById('only-issues').checked;
+    const rows = this.list.filter((d) => !onlyIssues || this.hasIssue(d));
+    document.getElementById('sec-count').textContent = rows.length + ' cihaz';
+    const tb = document.getElementById('sec-rows');
+    if (!rows.length) { this.msg(onlyIssues ? 'Sorunlu cihaz yok.' : 'Cihaz yok.'); return; }
+    tb.replaceChildren(...rows.map((d) => {
+      const tr = el('tr');
+      const s = d.security || {};
+      const name = el('td'); name.append(el('div', 'fw-medium', d.label));
+      if (d.security && s.last_update) name.append(el('div', 'text-secondary small', d.room || ''));
+      tr.append(name);
+      if (!d.security) {
+        const td = el('td', 'text-secondary'); td.colSpan = 6; td.textContent = 'Güvenlik bilgisi henüz gelmedi';
+        tr.append(td); return tr;
+      }
+      tr.append(
+        this.yn(s.fw_on, true),
+        (() => { const td = el('td'); td.append(tag(d.defender.state === 'unknown' ? 'off' : d.defender.state, d.defender.text)); return td; })(),
+        (() => { const on = (s.bitlocker || '').toLowerCase().includes('on'); const td = el('td'); td.append(el('span', 'badge ' + (on ? 'bg-success-lt' : 'bg-secondary-lt'), s.bitlocker || '—')); return td; })(),
+        this.yn(s.uac, true),
+        (() => { const td = el('td'); td.append(el('span', 'badge ' + (s.reboot_pending ? 'bg-warning-lt' : 'bg-success-lt'), s.reboot_pending ? 'Gerekli' : 'Gerekmez')); return td; })(),
+        el('td', 'text-nowrap', s.last_update || '—'));
+      return tr;
+    }));
+  },
+  msg(t) { const tr = el('tr', 'empty-row'); const td = el('td', '', t); td.colSpan = 7; tr.append(td); document.getElementById('sec-rows').replaceChildren(tr); },
+  init() { document.getElementById('only-issues').addEventListener('change', () => this.render()); this.load(); },
+};
+
 if (page === 'devices') {
   Devices.init();
   CommandDialog.init();
@@ -1150,4 +1203,6 @@ if (page === 'devices') {
   Alerts.init();
 } else if (page === 'inventory') {
   Inventory.init();
+} else if (page === 'security') {
+  Security.init();
 }

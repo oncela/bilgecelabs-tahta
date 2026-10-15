@@ -37,6 +37,7 @@ type pollRequest struct {
 	OS        string          `json:"os"`
 	Defender  json.RawMessage `json:"defender,omitempty"`
 	Inventory json.RawMessage `json:"inventory,omitempty"`
+	Security  json.RawMessage `json:"security,omitempty"`
 	Mesh      string          `json:"mesh_state,omitempty"`
 	MeshNode  string          `json:"mesh_node,omitempty"`
 	Metrics   *metrics        `json:"metrics,omitempty"`
@@ -63,6 +64,9 @@ type agent struct {
 	invMu      sync.Mutex
 	inventory  json.RawMessage
 	invAt      time.Time
+	secMu      sync.Mutex
+	security   json.RawMessage
+	secAt      time.Time
 	osName     string
 	mesh       meshKeeper
 	cpuIdle    uint64
@@ -100,6 +104,9 @@ func runAgent(stop <-chan struct{}) {
 		}
 		if a.inventoryDue() {
 			go a.refreshInventory()
+		}
+		if a.securityDue() {
+			go a.refreshSecurity()
 		}
 		resp, err := a.poll()
 		switch {
@@ -182,6 +189,12 @@ func (a *agent) poll() (*pollResponse, error) {
 		a.inventory = nil
 	}
 	a.invMu.Unlock()
+	a.secMu.Lock()
+	if a.security != nil {
+		req.Security = a.security
+		a.security = nil
+	}
+	a.secMu.Unlock()
 
 	req.Mesh = a.mesh.currentState()
 	req.MeshNode = a.mesh.currentNodeID()

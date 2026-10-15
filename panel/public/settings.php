@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   'alert_disk_warn', 'alert_disk_crit', 'alert_mem_warn', 'alert_offline_hours'] as $k) {
             setting_set($k, trim((string)($_POST[$k] ?? '')));
         }
+        setting_set('alert_bitlocker', isset($_POST['alert_bitlocker']) ? '1' : '0');
         audit('notify_settings', 'güncellendi');
         $msg = 'Bildirim ayarları kaydedildi.';
     } elseif (($_POST['do'] ?? '') === 'password') {
@@ -111,6 +112,7 @@ page_header('Ayarlar', 'settings.php');
       <input class="form-control" type="number" name="alert_mem_warn" value="<?= h((string)(setting('alert_mem_warn') ?? '92')) ?>" min="50" max="100"></div>
     <div class="col-md-3"><label class="form-label">Çevrimdışı (saat)</label>
       <input class="form-control" type="number" name="alert_offline_hours" value="<?= h((string)(setting('alert_offline_hours') ?? '24')) ?>" min="1" max="720"></div>
+    <div class="col-12"><label class="form-check"><input type="checkbox" class="form-check-input" name="alert_bitlocker" value="1" <?= (setting('alert_bitlocker') ?? '0') === '1' ? 'checked' : '' ?>><span class="form-check-label">BitLocker (disk şifreleme) kapalıysa uyarı oluştur</span></label></div>
     <div class="col-12"><button class="btn btn-primary">Kaydet</button></div>
   </form>
 </div></section></div>

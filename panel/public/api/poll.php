@@ -43,6 +43,15 @@ if (isset($in['mesh_state'])) {
     $pdo->prepare('UPDATE devices SET mesh_state = ? WHERE id = ?')
         ->execute([mb_substr((string)$in['mesh_state'], 0, 160), $deviceId]);
 }
+if (isset($in['security']) && is_array($in['security']) && !isset($in['security']['error'])) {
+    $sec = $in['security'];
+    $b = fn($v) => $v === null ? null : ($v ? 1 : 0);
+    $pdo->prepare('UPDATE devices SET fw_on=?, bitlocker=?, reboot_pending=?, uac=?, last_update=?, tamper=?, security_at=NOW() WHERE id=?')
+        ->execute([$b($sec['firewall_on'] ?? null), mb_substr((string)($sec['bitlocker'] ?? ''), 0, 16) ?: null,
+            $b($sec['reboot_pending'] ?? null), $b($sec['uac'] ?? null),
+            (($sec['last_update'] ?? null) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$sec['last_update'])) ? $sec['last_update'] : null,
+            $b($sec['tamper_protect'] ?? null), $deviceId]);
+}
 if (isset($in['inventory']) && is_array($in['inventory']) && !isset($in['inventory']['error'])) {
     $inv = $in['inventory'];
     $cut = fn($v, $n) => $v === null ? null : mb_substr((string)$v, 0, $n);
@@ -70,7 +79,7 @@ if (random_int(1, 500) === 1) {
 
 // Uyarı değerlendirmesi: bu cihazın güncel durumunu kontrol et
 try {
-    $dev = $pdo->prepare('SELECT id, hostname, name, disk_used, disk_free, mem_used, defender, mesh_state, last_seen FROM devices WHERE id = ?');
+    $dev = $pdo->prepare('SELECT id, hostname, name, disk_used, disk_free, mem_used, defender, mesh_state, fw_on, bitlocker, last_seen FROM devices WHERE id = ?');
     $dev->execute([$deviceId]);
     if ($row = $dev->fetch()) alert_eval_device($row);
     // Filo süpürmesi (çevrimdışı tespiti) ara sıra

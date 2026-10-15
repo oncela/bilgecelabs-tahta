@@ -17,7 +17,7 @@ switch ("$action:" . ($isPost ? 'POST' : 'GET')) {
 
 case 'devices:GET':
     $rows = db()->query('SELECT d.id, d.hostname, d.name, d.room, d.location_id, l.name AS location_name, d.dev_type, d.mac, d.os, d.agent_version, d.ip,
-            d.logged_user, d.uptime_s, d.cpu, d.mem_used, d.mem_mb, d.disk_used, d.disk_free, d.disk_gb, d.defender, d.defender_at, d.last_seen, d.mesh_state,
+            d.logged_user, d.uptime_s, d.cpu, d.mem_used, d.mem_mb, d.disk_used, d.disk_free, d.disk_gb, d.fw_on, d.bitlocker, d.reboot_pending, d.uac, d.last_update, d.tamper, d.security_at, d.defender, d.defender_at, d.last_seen, d.mesh_state,
             (SELECT COUNT(*) FROM commands c WHERE c.device_id = d.id AND c.status IN (\'pending\',\'sent\')) AS busy
         FROM devices d LEFT JOIN locations l ON l.id = d.location_id
         ORDER BY l.sort, l.name, d.room IS NULL, d.room, COALESCE(d.name, d.hostname)')->fetchAll();
@@ -48,6 +48,14 @@ case 'devices:GET':
             'disk_used' => $d['disk_used'] === null ? null : (int)$d['disk_used'],
             'disk_free' => (int)$d['disk_free'],
             'disk_gb' => (int)$d['disk_gb'],
+            'security' => $d['security_at'] === null ? null : [
+                'fw_on' => $d['fw_on'] === null ? null : (bool)$d['fw_on'],
+                'bitlocker' => $d['bitlocker'],
+                'reboot_pending' => $d['reboot_pending'] === null ? null : (bool)$d['reboot_pending'],
+                'uac' => $d['uac'] === null ? null : (bool)$d['uac'],
+                'last_update' => $d['last_update'],
+                'tamper' => $d['tamper'] === null ? null : (bool)$d['tamper'],
+            ],
         ];
     }
     json_out(['devices' => $out, 'now' => date('c')]);

@@ -71,6 +71,23 @@ function alert_eval_device(array $d): void {
         alert_resolve($id, 'mem');
     }
 
+    // Güvenlik duvarı
+    if (array_key_exists('fw_on', $d)) {
+        if ($d['fw_on'] !== null && (int)$d['fw_on'] === 0) {
+            alert_open($id, 'firewall', 'warning', "$label: güvenlik duvarı kapalı");
+        } else {
+            alert_resolve($id, 'firewall');
+        }
+    }
+    // BitLocker (kapalıysa uyarı; eşik ayarıyla kapatılabilir)
+    if (array_key_exists('bitlocker', $d) && (setting('alert_bitlocker') ?? '0') === '1') {
+        if (($d['bitlocker'] ?? '') !== '' && stripos((string)$d['bitlocker'], 'On') === false) {
+            alert_open($id, 'bitlocker', 'warning', "$label: disk şifreleme (BitLocker) kapalı");
+        } else {
+            alert_resolve($id, 'bitlocker');
+        }
+    }
+
     // Virüs koruması
     $def = defender_summary($d['defender'] ?? null);
     if ($def['state'] === 'bad') {

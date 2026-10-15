@@ -16,7 +16,7 @@ function menu_items(): array {
             ['inventory.php', 'Envanter', 'list-details', true],
             ['software.php', 'Yazılımlar', 'apps', false],
             ['shared.php', 'Ortak alan', 'folder', true],
-            ['security.php', 'Güvenlik', 'shield-check', false],
+            ['security.php', 'Güvenlik', 'shield-check', true],
             ['network.php', 'Ağ', 'network', true],
         ],
         'Sistem' => [
