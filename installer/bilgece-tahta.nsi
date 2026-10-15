@@ -14,6 +14,9 @@ Unicode true
 !ifndef AGENT
   !error "AGENT tanımlı değil (ajan exe yolu)"
 !endif
+!ifndef DESTEK
+  !error "DESTEK tanımlı değil (bilgece-destek.exe yolu)"
+!endif
 
 Name "BilgeceLabs Tahta"
 BrandingText "BilgeceLabs"
@@ -61,10 +64,10 @@ Section "Install"
   StrCpy $Durum "$TEMP\bilgece-kurulum.durum"
   Delete $Durum
   ${If} $Quiet == 0
-    SetOverwrite try   ; önceki ekran hâlâ açıksa dosya kilitli olabilir
-    File "/oname=$TEMP\BilgeceKurulumEkrani.exe" "${AGENT}"
-    SetOverwrite on
-    Exec '"$TEMP\BilgeceKurulumEkrani.exe" kurulum-ekrani "$Durum"'
+    ; Kurulum ekranı (logo + yükleme çubuğu): küçük destek programının bir modu
+    InitPluginsDir
+    File "/oname=$PLUGINSDIR\BilgeceKurulumEkrani.exe" "${DESTEK}"   ; farklı ad: taskkill onu kapatmasın
+    Exec '"$PLUGINSDIR\BilgeceKurulumEkrani.exe" kurulum-ekrani "$Durum"'
   ${EndIf}
 
   SetOutPath "$INSTDIR"
@@ -76,6 +79,13 @@ Section "Install"
   Delete "$INSTDIR\bilgece-tahta.exe.eski"
   Rename "$INSTDIR\bilgece-tahta.exe" "$INSTDIR\bilgece-tahta.exe.eski"
   File "/oname=bilgece-tahta.exe" "${AGENT}"
+  ; Self servis penceresi (saatin yanındaki simge): açıksa kapat, yenisini koy
+  nsExec::Exec 'taskkill.exe /F /IM bilgece-destek.exe'
+  Pop $0
+  Delete "$INSTDIR\bilgece-destek.exe.eski"
+  Rename "$INSTDIR\bilgece-destek.exe" "$INSTDIR\bilgece-destek.exe.eski"
+  File "/oname=bilgece-destek.exe" "${DESTEK}"
+  Delete "$INSTDIR\bilgece-destek.exe.eski"
 
   ; Kayıt anahtarı: kurulum exe adından (BilgeceTahtaKurulum_<anahtar>.exe)
   ${GetFileName} "$EXEPATH" $0        ; dosya adı
@@ -140,6 +150,9 @@ Section "Uninstall"
   Pop $0
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BilgeceTahta"
   Delete "$INSTDIR\kaldir.exe"
+  nsExec::Exec 'taskkill.exe /F /IM bilgece-destek.exe'
+  Pop $0
   Delete "$INSTDIR\bilgece-tahta.exe"
+  Delete "$INSTDIR\bilgece-destek.exe"
   RMDir "$INSTDIR"
 SectionEnd

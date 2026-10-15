@@ -86,11 +86,6 @@ func main() {
 		runAgent(stop)
 	case "version":
 		fmt.Println(version)
-	case "kurulum-ekrani":
-		// Kurulum programının gösterdiği logo + yükleme çubuğu (bkz. splash.go)
-		if len(os.Args) > 2 {
-			runSplash(os.Args[2])
-		}
 	default:
 		usage()
 		os.Exit(2)

@@ -60,7 +60,7 @@ def frame(dest, status, color):
     d.text(((W - tw) // 2, 180 * S), status, fill=color, font=f1)
     d.rounded_rectangle([60 * S, 214 * S, 420 * S, 220 * S], radius=3 * S, fill=(229, 233, 240))
     d.rectangle([0, 0, W - 1, H - 1], outline=(214, 220, 230), width=S)
-    c.save(os.path.join(HERE, '../agent/cmd/aci-ajan/assets', dest), optimize=True)
+    c.save(os.path.join(HERE, '../agent/cmd/bilgece-destek', dest), optimize=True)
 
 frame('kurulum.png', 'BilgeceLabs Tahta kuruluyor…', (91, 102, 120))
 frame('kurulum-tamam.png', 'Kurulum tamamlandı ✓', (40, 44, 52))

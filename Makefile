@@ -4,32 +4,34 @@ VERSION := $(shell cat VERSION)
 
 .PHONY: test agent destek lint migrate release clean theme theme-deploy check
 
-destek: ## Self servis penceresini (BilgeceLabs Destek) derle; ajan bunu içine gömer
+destek: ## Self servis penceresini (BilgeceLabs Destek) derle; kurulum ekranı da bu programda
 	cd agent/cmd/bilgece-destek && $(HOME)/go/bin/go-winres make --arch amd64 \
 		--product-version $(VERSION).0 --file-version $(VERSION).0
 	cd agent && GOOS=windows GOARCH=amd64 $(GO) build -trimpath \
-		-ldflags "-H windowsgui -X main.version=$(VERSION)" -o cmd/aci-ajan/assets/bilgece-destek.exe ./cmd/bilgece-destek
+		-ldflags "-H windowsgui -X main.version=$(VERSION)" -o build/bilgece-destek.exe ./cmd/bilgece-destek
 
-agent: destek ## Windows ajanını derle (sürüm bilgisi ve manifest dahil)
+agent: ## Windows ajanını derle (sürüm bilgisi ve manifest dahil)
 	cd agent/cmd/aci-ajan && $(HOME)/go/bin/go-winres make --arch amd64 \
 		--product-version $(VERSION).0 --file-version $(VERSION).0
 	cd agent && GOOS=windows GOARCH=amd64 $(GO) build -trimpath \
 		-ldflags "-H windowsgui -X main.version=$(VERSION)" -o build/bilgece-tahta.exe ./cmd/aci-ajan
 
-lint: destek ## Go ve PHP sözdizimi kontrolü
+lint: ## Go ve PHP sözdizimi kontrolü
 	cd agent && GOOS=windows $(GO) vet ./...
 	find panel -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
 
 migrate: ## Veritabanı güncellemelerini uygula
 	php panel/tools/migrate.php
 
-release: lint agent ## Ajanı panele kopyala (indirme sayfası bunu kullanır)
+release: lint destek agent ## Ajanı panele kopyala (indirme sayfası bunu kullanır)
 	mkdir -p panel/storage
 	cp agent/build/bilgece-tahta.exe panel/storage/aci-ajan.exe
 	echo "$(VERSION)" > panel/storage/aci-ajan.version
+	cp agent/build/bilgece-destek.exe panel/storage/bilgece-destek.exe
+	sha256sum panel/storage/bilgece-destek.exe | cut -d' ' -f1 > panel/storage/bilgece-destek.sha
 	cp theme/brand/favicon.ico installer/bilgece.ico
 	python3 installer/make-splash.py
-	cd installer && makensis -DAGENT=../agent/build/bilgece-tahta.exe -DVERSION=$(VERSION) bilgece-tahta.nsi >/dev/null
+	cd installer && makensis -DAGENT=../agent/build/bilgece-tahta.exe -DDESTEK=../agent/build/bilgece-destek.exe -DVERSION=$(VERSION) bilgece-tahta.nsi >/dev/null
 	cp installer/bilgece-tahta-kurulum.exe panel/storage/kurulum.exe
 	sha256sum panel/storage/aci-ajan.exe panel/storage/kurulum.exe
 

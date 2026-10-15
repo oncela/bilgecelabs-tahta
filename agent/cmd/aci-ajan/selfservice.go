@@ -5,7 +5,7 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
-	_ "embed"
+	"encoding/hex"
 	"encoding/json"
 	"log"
 	"os"
@@ -21,15 +21,13 @@ import (
 )
 
 // Self servis (BilgeceLabs Destek): kullanıcı oturumunda saatin yanında duran
-// pencere. Ajan onu içinde taşır (tek güncelleme yolu), Program Files'a çıkarır
-// ve etkin oturumda kullanıcı olarak başlatır. Haberleşme port açmadan,
+// pencere. Kurulum programı onu Program Files'a koyar; yeni sürümünü ajan
+// panelden (sha256 doğrulamalı) indirir ve etkin oturumda kullanıcı olarak
+// başlatır. Haberleşme port açmadan,
 // ProgramData\BilgeceLabs\Tahta\destek klasöründeki dosyalarla olur:
 //   - durum.json   ajan yazar (panelin gönderdiği liste ve talepler)
 //   - istek-*.json destek penceresi yazar; ajan panele iletip siler
 // İstekler güvenilmez veri sayılır: boyut/sayı sınırlı, panel ayrıca doğrular.
-
-//go:embed assets/bilgece-destek.exe
-var destekExe []byte
 
 const destekExeName = "bilgece-destek.exe"
 
@@ -41,6 +39,7 @@ var (
 
 type selfService struct {
 	mu         sync.Mutex
+	syncMu     sync.Mutex
 	prepared   bool
 	lastState  []byte
 	lastLaunch time.Time
@@ -49,8 +48,7 @@ type selfService struct {
 
 func destekDir() string { return filepath.Join(dataDir(), "destek") }
 
-// prepare: klasör izinleri, yapılandırma dosyasının korunması ve destek
-// programının güncel kopyası (açılışta bir kez).
+// prepare: klasör izinleri ve yapılandırma dosyasının korunması (açılışta bir kez).
 func (s *selfService) prepare() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -67,25 +65,35 @@ func (s *selfService) prepare() {
 	d := destekDir()
 	os.MkdirAll(d, 0755)
 	runHidden("icacls.exe", d, "/grant", "*S-1-5-32-545:(OI)(CI)M", "/Q")
+}
 
-	if len(destekExe) == 0 {
+// sync: panelin bildirdiği destek programı özeti kurulu dosyadan farklıysa
+// yenisini indirir, doğrular, çalışanı kapatıp yerine koyar.
+func (s *selfService) sync(a *agent, wantSha string) {
+	if wantSha == "" || !s.syncMu.TryLock() {
 		return
 	}
+	defer s.syncMu.Unlock()
 	dst := filepath.Join(installDir(), destekExeName)
-	if cur, err := os.ReadFile(dst); err == nil && sha256.Sum256(cur) == sha256.Sum256(destekExe) {
+	if cur, err := os.ReadFile(dst); err == nil {
+		sum := sha256.Sum256(cur)
+		if strings.EqualFold(hex.EncodeToString(sum[:]), wantSha) {
+			return
+		}
+	}
+	tmp := dst + ".yeni"
+	if err := a.downloadVerified(strings.TrimRight(a.cfg.Server, "/")+"/api/agent.php?dosya=destek", tmp); err != nil {
+		log.Printf("destek programı indirilemedi: %v", err)
+		os.Remove(tmp)
 		return
 	}
-	// Eski sürüm çalışıyorsa kapat (yeniden başlatılır), dosyayı değiştir.
 	killProcesses(destekExeName)
 	time.Sleep(500 * time.Millisecond)
 	os.Remove(dst + ".eski")
 	os.Rename(dst, dst+".eski")
-	if err := os.WriteFile(dst+".yeni", destekExe, 0755); err != nil {
-		log.Printf("destek programı yazılamadı: %v", err)
-		return
-	}
-	if err := os.Rename(dst+".yeni", dst); err != nil {
+	if err := os.Rename(tmp, dst); err != nil {
 		log.Printf("destek programı yerine konamadı: %v", err)
+		os.Rename(dst+".eski", dst)
 		return
 	}
 	os.Remove(dst + ".eski")

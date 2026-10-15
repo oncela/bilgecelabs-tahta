@@ -102,6 +102,12 @@ func dir() string {
 func main() {
 	runtime.LockOSThread()
 
+	// Kurulum programı bu modu kullanır: logo + yükleme çubuğu (splash.go)
+	if len(os.Args) > 2 && os.Args[1] == "kurulum-ekrani" {
+		runSplash(os.Args[2])
+		return
+	}
+
 	// Tek kopya: ikinci çalıştırma mevcut pencereyi öne getirir.
 	pCreateMutexW.Call(0, 0, uintptr(unsafe.Pointer(utf16(`Local\BilgeceDestek`))))
 	if windows.GetLastError() == windows.ERROR_ALREADY_EXISTS {

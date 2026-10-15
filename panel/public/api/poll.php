@@ -130,6 +130,8 @@ if (!empty($in['requests']) && is_array($in['requests'])) {
     selfservice_handle($deviceId, $in['requests'], (string)($in['user'] ?? ''));
 }
 $resp['destek'] = selfservice_state($deviceId);
+// Güncel self servis programının özeti (yayında üretilir; ajan farklıysa indirir)
+$resp['destek_sha'] = trim((string)@file_get_contents(ACI_ROOT . '/storage/bilgece-destek.sha'));
 // Uzaktan güncelleme: sunucudaki ajan sürümü cihazınkinden yeniyse bildir
 $srvVer = agent_version();
 $devVer = (string)($in['version'] ?? '');

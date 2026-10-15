@@ -101,6 +101,13 @@ R=$(dev "{\"version\":\"$SV\",\"results\":[]}"); [[ "$R" != *'"update":{'* ]] &&
 H=$(curl -s -D - -o "$TMP/a.exe" -H "Authorization: Bearer $TOK" "$B/api/agent.php" | tr -d '\r' | grep -i '^x-sha256:' | cut -d' ' -f2)
 [[ -n "$H" && "$H" == "$(sha256sum "$TMP/a.exe" | cut -d' ' -f1)" ]] && ok "ajan indirilir, sha256 doğru" || fail "ajan indirilir, sha256 doğru" "başlık: $H"
 R=$(curl -s -o /dev/null -w '%{http_code}' "$B/api/agent.php"); check "ajan tokensız indirilemez" "401" "$R"
+DS=$(dev '{"version":"0.0.1","results":[]}' | jget "['destek_sha']")
+if [[ -n "$DS" ]]; then
+  curl -s -o "$TMP/d.exe" -H "Authorization: Bearer $TOK" "$B/api/agent.php?dosya=destek"
+  [[ "$(sha256sum "$TMP/d.exe" | cut -d' ' -f1)" == "$DS" ]] && ok "self servis programı indirilir, özet doğru" || fail "self servis programı indirilir, özet doğru" "beklenen $DS"
+else
+  ok "self servis programı yayında değil (atlandı)"
+fi
 
 echo "Temizlik"
 api -X POST "$B/admin_api.php?action=delete_device" -d "{\"id\":$DID}" >/dev/null
