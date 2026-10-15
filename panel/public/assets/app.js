@@ -1169,6 +1169,11 @@ const Threats = {
       if (d.pua.off) det.push(d.pua.off + ' cihazda kapalı');
       if (d.pua.unknown) det.push(d.pua.unknown + ' cihazdan bilgi bekleniyor');
       document.getElementById('th-pua-detail').textContent = det.length ? det.join(' · ') : (total ? 'Tüm cihazlarda açık.' : '');
+      const oa = Object.entries(d.other_av || {});
+      const oaEl = document.getElementById('th-other-av');
+      oaEl.hidden = !oa.length;
+      oaEl.textContent = oa.map(([n, c]) => `${c} cihaz ${n} ile korunuyor`).join(' · ') +
+        (oa.length ? ' — bu cihazlarda Defender pasiftir; tespitleri ve PUA ayarı o ürünün yönetim konsolundadır.' : '');
       const ob = document.getElementById('th-outbreak');
       ob.hidden = !d.outbreaks.length;
       document.getElementById('th-outbreak-text').textContent = d.outbreaks.map((o) => `${o.name} (${o.devices} cihaz)`).join(', ');

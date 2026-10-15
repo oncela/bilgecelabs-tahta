@@ -57,6 +57,7 @@ page_header('Tehditler', 'threats.php');
       </table>
     </div>
   </div>
+  <p class="text-secondary small mt-2" id="th-other-av" hidden></p>
   <p class="text-secondary small mt-2">Tespitler cihazlardaki Microsoft Defender'dan 15 dakikada bir gelir. Dosyaların kendisi gönderilmez, yalnız adı ve yolu.</p>
 </div>
 <?php page_footer();

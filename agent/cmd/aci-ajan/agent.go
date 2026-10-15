@@ -352,6 +352,13 @@ $det = @($all | Sort-Object InitialDetectionTime -Descending | Select-Object -Fi
     user      = [string]$_.DomainUser
   }
 })
+# Diğer antivirüsler (Windows Güvenlik Merkezi; sunucu Windows'ta yoktur).
+# productState: 2. bayt 0x10/0x11 = açık, 3. bayt 0x00 = imzalar güncel
+$av = @(Get-CimInstance -Namespace root/SecurityCenter2 -ClassName AntiVirusProduct |
+  Where-Object { $_.displayName -notmatch 'Windows Defender|Microsoft Defender' } | ForEach-Object {
+    $st = [int64]$_.productState
+    [pscustomobject]@{ name = [string]$_.displayName; on = ((($st -shr 12) -band 0xF) -eq 1); uptodate = ((($st -shr 4) -band 0xF) -eq 0) }
+  })
 [pscustomobject]@{
   enabled             = [bool]$s.AntivirusEnabled
   realtime            = [bool]$s.RealTimeProtectionEnabled
@@ -362,4 +369,5 @@ $det = @($all | Sort-Object InitialDetectionTime -Descending | Select-Object -Fi
   threats_history     = [int]$all.Count
   pua                 = [int](Get-MpPreference).PUAProtection
   detections          = $det
+  av                  = $av
 } | ConvertTo-Json -Depth 4 -Compress`

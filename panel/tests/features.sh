@@ -117,6 +117,11 @@ check "PUA modu betiğe eklenir" "Mod = 'Enabled'" "$R"
 dev "{\"version\":\"0.0.1\",\"defender\":{\"threats\":0,\"pua\":1,\"detections\":[]},\"results\":[]}" >/dev/null
 N=$(api "$B/admin_api.php?action=threats" | python3 -c "import sys,json;print(sum(1 for t in json.load(sys.stdin)['threats'] if t['device_id']==$DID and t['active']))")
 [[ "$N" == 0 ]] && ok "temizlenince cihazda etkin tehdit kalmaz" || fail "temizlenince cihazda etkin tehdit kalmaz" "etkin: $N"
+dev '{"version":"0.0.1","defender":{"enabled":false,"realtime":false,"threats":0,"pua":0,"detections":[],"av":[{"name":"Bitdefender Endpoint Security Tools Antimalware","on":true,"uptodate":true}]},"results":[]}' >/dev/null
+R=$(api "$B/admin_api.php?action=devices"); check "Bitdefender'lı cihaz korumalı sayılır" "Bitdefender Endpoint Security Tools" "$R"
+N=$(api "$B/admin_api.php?action=alerts" | python3 -c "import sys,json;print(sum(1 for a in json.load(sys.stdin)['open'] if a['type']=='defender' and str(a['device_id'])=='$DID'))")
+[[ "$N" == 0 ]] && ok "başka antivirüs varken 'koruma kapalı' uyarısı açılmaz" || fail "başka antivirüs varken 'koruma kapalı' uyarısı açılmaz" "uyarı: $N"
+R=$(api "$B/admin_api.php?action=threats"); check "Tehditler sayfası diğer antivirüsü bildirir" '"other_av":{"Bitdefender' "$R"
 R=$(curl -s -b "$CJ" -o "$TMP/p.html" -w '%{http_code}' "$B/threats.php"); [[ $R == 200 ]] && ! grep -qiE 'fatal error|warning:' "$TMP/p.html" && ok "threats.php açılır" || fail "threats.php açılır" "HTTP $R"
 api -X POST "$B/admin_api.php?action=delete_device" -d "{\"id\":$DID2}" >/dev/null
 

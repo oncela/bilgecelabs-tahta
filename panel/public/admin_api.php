@@ -349,6 +349,13 @@ case 'threats:GET':
     $puaCounts = ['on' => 0, 'audit' => 0, 'off' => 0, 'unknown' => 0];
     foreach ($pua as $p) $puaCounts[[0 => 'off', 1 => 'on', 2 => 'audit'][$p['pua'] === null ? -1 : (int)$p['pua']] ?? 'unknown'] += (int)$p['n'];
     $affected = (int)db()->query("SELECT COUNT(DISTINCT device_id) FROM device_threats WHERE active = 1 OR detected_at > NOW() - INTERVAL $days DAY")->fetchColumn();
+    // Defender yerine başka antivirüsle korunan cihazlar (tespitleri o ürünün konsolunda)
+    $otherAv = [];
+    foreach (db()->query('SELECT defender FROM devices WHERE defender IS NOT NULL')->fetchAll(PDO::FETCH_COLUMN) as $dj) {
+        foreach ((array)(json_decode((string)$dj, true)['av'] ?? []) as $a) {
+            if (is_array($a) && !empty($a['on'])) { $n = mb_substr((string)($a['name'] ?? ''), 0, 40); $otherAv[$n] = ($otherAv[$n] ?? 0) + 1; break; }
+        }
+    }
     json_out([
         'threats' => $list,
         'summary' => [
@@ -357,6 +364,7 @@ case 'threats:GET':
         ],
         'outbreaks' => threats_outbreaks(),
         'pua' => $puaCounts,
+        'other_av' => $otherAv,
         'device_ids' => array_map('intval', db()->query('SELECT id FROM devices')->fetchAll(PDO::FETCH_COLUMN)),
     ]);
 
