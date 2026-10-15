@@ -102,6 +102,13 @@ FunctionEnd
 
 Section "Install"
   SetOutPath "$INSTDIR"
+  ; Önceki kurulum çalışıyorsa durdur ve çalışan programı kenara al:
+  ; çalışan exe kilitlidir, üzerine yazılamaz (ajan .eski dosyasını açılışta siler).
+  nsExec::Exec 'sc.exe stop BilgeceTahta'
+  Pop $0
+  Sleep 3000
+  Delete "$INSTDIR\bilgece-tahta.exe.eski"
+  Rename "$INSTDIR\bilgece-tahta.exe" "$INSTDIR\bilgece-tahta.exe.eski"
   File "/oname=bilgece-tahta.exe" "${AGENT}"
 
   ; Kayıt anahtarı: kurulum exe adından (BilgeceTahtaKurulum_<anahtar>.exe)

@@ -45,3 +45,4 @@ theme-deploy: theme ## MeshCentral temasını sunucuya kopyala
 check: lint ## Sözdizimi + uçtan uca duman testi (ACI_TEST_* ortam değişkenleri gerekli)
 	/opt/node/bin/node --check panel/public/assets/app.js
 	bash panel/tests/smoke.sh
+	bash panel/tests/features.sh

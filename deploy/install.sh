@@ -48,6 +48,7 @@ rsync -a --delete --exclude '.env' --exclude 'storage/' --exclude 'tests/' "$REP
 install -d -o "$APPUSER" -g "$APPUSER" -m 0750 "$APP/storage"
 install -o root -g "$APPUSER" -m 0640 "$REPO/panel/storage/aci-ajan.exe" "$APP/storage/aci-ajan.exe"
 [[ -f "$REPO/panel/storage/aci-ajan.version" ]] && install -o root -g "$APPUSER" -m 0640 "$REPO/panel/storage/aci-ajan.version" "$APP/storage/"
+[[ -f "$REPO/panel/storage/kurulum.exe" ]] && install -o root -g "$APPUSER" -m 0640 "$REPO/panel/storage/kurulum.exe" "$APP/storage/kurulum.exe"
 chown -R root:"$APPUSER" "$APP"
 find "$APP" -path "$APP/storage" -prune -o -type d -exec chmod 0750 {} + -o -type f -exec chmod 0640 {} +
 chown -R "$APPUSER":"$APPUSER" "$APP/storage"
