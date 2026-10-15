@@ -79,3 +79,16 @@ ya kendi ajanımızla, ya da MeshCentral'ın komut kanalıyla eklenebilir.
   - Yöntem önerisi: kurulum dosyası adında tür+konum (ör. _7B, _danisma) veya kurulumda tek soru
 - Güvenlik sertleştirme (Aşama C başı): sunucu (MeshCentral localhost, ufw, fail2ban, SSH),
   kayıt güvenliği (IP/zaman sınırı, anahtar rotasyonu), kod imzalama
+
+## Açık kaynak araştırması ve ürün yönü (15.10.2026)
+- Lisans: MeshCentral Apache-2.0 (güvenli omurga). AGPL bileşen (Snipe-IT, Zabbix, RustDesk-server)
+  GÖMME — ürünü açık kaynağa zorlar. Tactical RMM: sadece mimari ilham (özel lisans).
+- Çoklu kiracılık: "tek firma, çok şube" = basit branch_id/department_id kapsamlama. Laravel paketi (stancl/spatie) GEREKSİZ.
+- Pixven seviyesi build sırası:
+  1. Hiyerarşi (lokasyon/departman) + yetki + audit log  ← ŞİMDİ
+  2. Alarm/bildirim motoru (eşik + e-posta/Telegram/webhook)
+  3. Detaylı envanter (seri no, kurulu yazılım) + CSV/PDF rapor
+  4. Güvenlik durumu (Defender ✅ var, firewall, BitLocker)
+  5. Zamanlama + script kütüphanesi + yazılım/patch dağıtımı (winget/choco)
+  6. Dashboard cilası + PWA mobil + WoL/ağ keşfi
+- Kendin yaz: hiyerarşi, alarm motoru, zamanlayıcı, rapor. Entegre: MeshCentral (bitti), gerekirse osquery (Apache).

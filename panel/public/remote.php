@@ -1,5 +1,7 @@
 <?php
 // Tahtanın ekranı / dosyaları / komut satırı, panelin içinde.
+// MeshCentral kendi (temalı) arayüzüyle çalışır: Bağlan düğmesine basınca
+// ekran açılır, klavye ve fare kontrolü doğrudan çalışır.
 declare(strict_types=1);
 require __DIR__ . '/../src/bootstrap.php';
 require_once __DIR__ . '/../src/mesh.php';
@@ -20,58 +22,36 @@ $error = '';
 if (!$d) $error = 'Tahta bulunamadı.';
 elseif (!mesh_enabled()) $error = 'Uzaktan erişim sunucusu ayarlanmamış.';
 elseif ($meshUser === '') $error = 'Hesabınıza uzaktan erişim yetkisi verilmemiş.';
-elseif ($d['mesh_state'] !== 'running') $error = 'Bu tahtada uzaktan erişim hazır değil (' . mesh_summary($d['mesh_state'])['text'] . '). Tahta açıldığında ajan otomatik kurar.';
-elseif (!is_online($d['last_seen'])) $error = 'Tahta şu an kapalı veya internete bağlı değil (son bağlantı: ' . date('d.m.Y H:i', strtotime((string)$d['last_seen'])) . ').';
+elseif ($d['mesh_state'] !== 'running') $error = 'Bu cihazda uzaktan erişim hazır değil (' . mesh_summary($d['mesh_state'])['text'] . ').';
+elseif (!is_online($d['last_seen'])) $error = 'Cihaz şu an kapalı veya internete bağlı değil.';
 
 $url = '';
 if (!$error) {
     $url = mesh_device_url($meshUser, $d, $view);
     audit('remote_' . $view, '#' . $d['id'] . ' ' . device_label($d));
 }
-$meshOrigin = '';
-if ($url !== '') {
-    $u = parse_url(cfg('ACI_MESH_URL'));
-    $meshOrigin = $u['scheme'] . '://' . $u['host'] . (isset($u['port']) ? ':' . $u['port'] : '');
-}
 $icons = ['desktop' => 'device-desktop', 'terminal' => 'terminal-2', 'files' => 'folder'];
-page_header(($d ? device_label($d) : 'Tahta') . ' · ' . MESH_VIEWS[$view][1], 'devices.php');
+page_header(($d ? device_label($d) : 'Cihaz') . ' · ' . MESH_VIEWS[$view][1], 'devices.php');
 ?>
 <?php if ($error): ?>
   <div class="alert alert-danger"><?= h($error) ?></div>
-  <a class="btn" href="devices.php"><i class="ti ti-arrow-left me-1"></i>Tahtalar</a>
+  <a class="btn" href="devices.php"><i class="ti ti-arrow-left me-1"></i>Cihazlar</a>
 <?php else: ?>
-<div data-page="remote" data-mesh-origin="<?= h($meshOrigin) ?>" data-view="<?= h($view) ?>">
-  <div class="card remote-card" id="remote-card">
-    <div class="remote-bar">
-      <div class="d-flex align-items-center gap-2 me-2">
-        <span class="remote-dot" id="remote-dot"></span>
-        <div class="lh-sm">
-          <div class="fw-medium"><?= h(device_label($d)) ?></div>
-          <div class="small text-secondary"><span id="remote-state">Bağlanıyor…</span> <span id="remote-timer"></span></div>
-        </div>
-      </div>
-      <div class="btn-group" role="group" aria-label="Görünüm">
-        <?php foreach (MESH_VIEWS as $k => [, $label]): ?>
-          <a href="remote.php?id=<?= $id ?>&amp;view=<?= $k ?>" class="btn btn-sm <?= $k === $view ? 'btn-primary' : '' ?>"><i class="ti ti-<?= $icons[$k] ?> me-1"></i><?= h($label) ?></a>
-        <?php endforeach; ?>
-      </div>
-      <div class="d-flex flex-wrap gap-1 ms-auto">
-        <?php if ($view === 'desktop'): ?>
-          <button type="button" class="btn btn-sm" data-remote="control" id="remote-control" title="Fare ve klavye kontrolünü aç/kapat"><i class="ti ti-hand-click me-1"></i><span>Kontrol açık</span></button>
-          <button type="button" class="btn btn-sm" data-remote="cad" title="Ctrl+Alt+Del gönder"><i class="ti ti-keyboard me-1"></i>Ctrl+Alt+Del</button>
-          <button type="button" class="btn btn-sm" data-remote="screenshot" title="Ekran görüntüsünü kaydet"><i class="ti ti-camera me-1"></i>Görüntü</button>
-        <?php endif; ?>
-        <button type="button" class="btn btn-sm" data-remote="reconnect" title="Yeniden bağlan"><i class="ti ti-refresh"></i></button>
-        <button type="button" class="btn btn-sm" data-remote="disconnect" title="Bağlantıyı kes"><i class="ti ti-plug-x"></i></button>
-        <button type="button" class="btn btn-sm" data-remote="fullscreen" title="Tam ekran"><i class="ti ti-maximize"></i></button>
-        <a class="btn btn-sm btn-ghost-secondary" href="devices.php" title="Tahtalara dön"><i class="ti ti-x"></i></a>
-      </div>
-    </div>
-    <div class="remote-stage">
-      <iframe id="remote-frame" class="remote-frame" src="<?= h($url) ?>" title="Tahta uzaktan erişim" allow="clipboard-read; clipboard-write; fullscreen"></iframe>
-    </div>
+<div class="d-grid gap-2">
+  <div class="d-flex flex-wrap gap-2 align-items-center">
+    <ul class="nav nav-pills">
+      <?php foreach (MESH_VIEWS as $k => [, $label]): ?>
+        <li class="nav-item"><a href="remote.php?id=<?= $id ?>&amp;view=<?= $k ?>" class="nav-link <?= $k === $view ? 'active' : '' ?>"><i class="ti ti-<?= $icons[$k] ?> me-1"></i><?= h($label) ?></a></li>
+      <?php endforeach; ?>
+    </ul>
+    <a class="btn btn-ghost-secondary ms-auto" target="_blank" rel="noopener" href="<?= h($url) ?>"><i class="ti ti-external-link me-1"></i>Yeni sekmede aç</a>
+    <a class="btn btn-ghost-secondary" href="devices.php"><i class="ti ti-arrow-left me-1"></i>Cihazlar</a>
   </div>
-  <p class="text-secondary small mt-2 mb-0" id="remote-note">Bağlantı süresince tahtanın ekranında "Uzaktan bağlantı" çubuğu görünür ve bu işlem geçmişe kaydedilir.</p>
+  <div class="card" style="overflow:hidden">
+    <iframe src="<?= h($url) ?>" title="Uzaktan erişim" allow="clipboard-read; clipboard-write; fullscreen"
+      style="width:100%;height:calc(100vh - 210px);min-height:480px;border:0;background:#0b1220;display:block"></iframe>
+  </div>
+  <p class="text-secondary small mb-0">Ekranı açmak için yukarıdaki yeşil <b>Bağlan</b> düğmesine basın. Bağlantı süresince cihazda "Uzaktan bağlantı" bildirimi görünür ve işlem geçmişe kaydedilir. Ekran açılmazsa <b>Yeni sekmede aç</b>'ı kullanın.</p>
 </div>
 <?php endif; ?>
 <?php page_footer();
