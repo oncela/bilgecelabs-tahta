@@ -283,13 +283,16 @@ func (a *agent) defenderDue() bool {
 
 func (a *agent) refreshDefender() {
 	out, err := runPowerShell(`$s = Get-MpComputerStatus
-$t = @(Get-MpThreatDetection -ErrorAction SilentlyContinue).Count
+# Yalnız hâlâ etkin tehditler (temizlenen/karantinadakiler sayılmaz); geçmiş ayrıca
+$t = @(Get-MpThreat -ErrorAction SilentlyContinue | Where-Object { $_.IsActive }).Count
+$h = @(Get-MpThreatDetection -ErrorAction SilentlyContinue).Count
 [pscustomobject]@{
   enabled      = [bool]$s.AntivirusEnabled
   realtime     = [bool]$s.RealTimeProtectionEnabled
   sig_age_days = [int]$s.AntivirusSignatureAge
   quick_scan_age_days = [int]$s.QuickScanAge
   threats      = [int]$t
+  threats_history = [int]$h
 } | ConvertTo-Json -Compress`, 2*time.Minute)
 	out = strings.TrimSpace(out)
 	if err != nil || !json.Valid([]byte(out)) {
