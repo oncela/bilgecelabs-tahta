@@ -13,6 +13,7 @@ function menu_items(): array {
         ],
         'Yönetim' => [
             ['locations.php', 'Lokasyonlar', 'building', true],
+            ['inventory.php', 'Envanter', 'list-details', true],
             ['software.php', 'Yazılımlar', 'apps', false],
             ['shared.php', 'Ortak alan', 'folder', true],
             ['security.php', 'Güvenlik', 'shield-check', false],

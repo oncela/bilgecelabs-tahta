@@ -485,6 +485,7 @@ const DeviceDialog = {
     if (d.cpu !== null) add('İşlemci (CPU)', d.cpu + '%');
     if (d.mem_used !== null) add('Bellek (RAM)', d.mem_used + '%' + (d.mem_mb ? ' / ' + (d.mem_mb / 1024).toFixed(1) + ' GB' : ''));
     if (d.disk_used !== null) add('Disk (C:)', d.disk_used + '% dolu' + (d.disk_gb ? ' · ' + d.disk_free + ' / ' + d.disk_gb + ' GB boş' : ''));
+    this.loadInventory(d.id, add);
     add('Ajan sürümü', d.version);
     const hist = document.getElementById('dev-history');
     hist.replaceChildren(el('p', 'text-secondary', 'Yükleniyor…'));
@@ -501,6 +502,37 @@ const DeviceDialog = {
     } catch (err) {
       hist.replaceChildren(el('div', 'alert alert-danger', err.message));
     }
+  },
+
+  async loadInventory(id, add) {
+    try {
+      const r = await api('device_inventory', undefined, '&id=' + id);
+      const inv = r.inventory;
+      if (!inv) return;
+      if (inv.serial) add('Seri no', inv.serial);
+      if (inv.manufacturer || inv.model) add('Üretici / model', [inv.manufacturer, inv.model].filter(Boolean).join(' '));
+      if (inv.bios) add('BIOS', inv.bios);
+      if (Array.isArray(inv.disks) && inv.disks.length) add('Diskler', inv.disks.map((x) => (x.model || '') + (x.size_gb ? ' (' + x.size_gb + ' GB)' : '')).join(', '));
+      if (inv.software_count) {
+        const dd = el('dd', 'col-sm-8 mb-1');
+        const a = el('a', ''); a.href = '#'; a.textContent = inv.software_count + ' yazılım — listele';
+        a.addEventListener('click', (ev) => { ev.preventDefault(); this.showSoftware(inv.software || []); });
+        dd.append(a);
+        document.getElementById('dev-facts').append(el('dt', 'col-sm-4 text-secondary fw-normal', 'Kurulu yazılım'), dd);
+      }
+    } catch (e) {}
+  },
+
+  showSoftware(list) {
+    const body = list.length
+      ? list.map((x) => (x.name || '') + (x.version ? ' — ' + x.version : '')).join('\n')
+      : 'Liste boş.';
+    const dlg = document.getElementById('result-dialog');
+    dlg.querySelector('h3').textContent = 'Kurulu yazılımlar (' + list.length + ')';
+    document.getElementById('result-summary').textContent = '';
+    const pre = el('pre', 'result-output'); pre.textContent = body; pre.style.maxHeight = '60vh';
+    document.getElementById('result-list').replaceChildren(pre);
+    dlg.showModal();
   },
 
   async save(e) {
@@ -1068,6 +1100,37 @@ async function updateAlertBadge() {
 updateAlertBadge();
 setInterval(updateAlertBadge, 30000);
 
+const Inventory = {
+  list: [],
+  async load() {
+    try { this.list = (await api('inventory')).devices; this.render(); }
+    catch (err) {
+      document.getElementById('inv-rows').replaceChildren((() => { const tr = el('tr','empty-row'); const td = el('td','',err.message); td.colSpan=8; tr.append(td); return tr; })());
+    }
+  },
+  render() {
+    const q = document.getElementById('inv-search').value.trim().toLocaleLowerCase('tr');
+    const rows = this.list.filter((d) => !q || [d.name, d.hostname, d.serial, d.model, d.cpu, d.os].join(' ').toLocaleLowerCase('tr').includes(q));
+    document.getElementById('inv-count').textContent = rows.length + ' cihaz';
+    const tb = document.getElementById('inv-rows');
+    if (!rows.length) { const tr = el('tr','empty-row'); const td = el('td','','Kayıt yok.'); td.colSpan=8; tr.append(td); tb.replaceChildren(tr); return; }
+    tb.replaceChildren(...rows.map((d) => {
+      const tr = el('tr');
+      const name = el('td'); name.append(el('div','fw-medium', d.name || d.hostname));
+      if (d.updated_at) name.append(el('div','text-secondary small', 'güncelleme ' + fmtTime(d.updated_at)));
+      tr.append(name, el('td','', d.location || '—'), el('td','mono', d.serial || '—'),
+        el('td','', d.model || '—'), el('td','small', d.cpu || '—'),
+        el('td','text-nowrap', d.ram_gb ? d.ram_gb + ' GB' : '—'), el('td','small', d.os || '—'),
+        el('td','', d.software_count !== null ? String(d.software_count) : '—'));
+      return tr;
+    }));
+  },
+  init() {
+    document.getElementById('inv-search').addEventListener('input', () => this.render());
+    this.load();
+  },
+};
+
 if (page === 'devices') {
   Devices.init();
   CommandDialog.init();
@@ -1085,4 +1148,6 @@ if (page === 'devices') {
   Locations.init();
 } else if (page === 'alerts') {
   Alerts.init();
+} else if (page === 'inventory') {
+  Inventory.init();
 }

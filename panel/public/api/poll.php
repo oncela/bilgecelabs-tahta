@@ -43,6 +43,19 @@ if (isset($in['mesh_state'])) {
     $pdo->prepare('UPDATE devices SET mesh_state = ? WHERE id = ?')
         ->execute([mb_substr((string)$in['mesh_state'], 0, 160), $deviceId]);
 }
+if (isset($in['inventory']) && is_array($in['inventory']) && !isset($in['inventory']['error'])) {
+    $inv = $in['inventory'];
+    $cut = fn($v, $n) => $v === null ? null : mb_substr((string)$v, 0, $n);
+    $pdo->prepare('INSERT INTO device_inventory (device_id, serial, manufacturer, model, cpu, ram_gb, os, software_count, data, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            ON DUPLICATE KEY UPDATE serial=VALUES(serial), manufacturer=VALUES(manufacturer), model=VALUES(model),
+                cpu=VALUES(cpu), ram_gb=VALUES(ram_gb), os=VALUES(os), software_count=VALUES(software_count),
+                data=VALUES(data), updated_at=NOW()')
+        ->execute([$deviceId, $cut($inv['serial'] ?? null, 96), $cut($inv['manufacturer'] ?? null, 96),
+            $cut($inv['model'] ?? null, 128), $cut($inv['cpu'] ?? null, 160), (int)($inv['ram_gb'] ?? 0) ?: null,
+            $cut($inv['os'] ?? null, 160), (int)($inv['software_count'] ?? 0) ?: null,
+            mb_substr(json_encode($inv, JSON_UNESCAPED_UNICODE), 0, 16000000)]);
+}
 if (isset($in['defender']) && is_array($in['defender'])) {
     $pdo->prepare('UPDATE devices SET defender = ?, defender_at = NOW() WHERE id = ?')
         ->execute([json_encode($in['defender'], JSON_UNESCAPED_UNICODE), $deviceId]);

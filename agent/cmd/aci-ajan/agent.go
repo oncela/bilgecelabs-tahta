@@ -30,16 +30,17 @@ type cmdResult struct {
 }
 
 type pollRequest struct {
-	Hostname string          `json:"hostname"`
-	User     string          `json:"user"`
-	UptimeS  int64           `json:"uptime_s"`
-	Version  string          `json:"version"`
-	OS       string          `json:"os"`
-	Defender json.RawMessage `json:"defender,omitempty"`
-	Mesh     string          `json:"mesh_state,omitempty"`
-	MeshNode string          `json:"mesh_node,omitempty"`
-	Metrics  *metrics        `json:"metrics,omitempty"`
-	Results  []cmdResult     `json:"results"`
+	Hostname  string          `json:"hostname"`
+	User      string          `json:"user"`
+	UptimeS   int64           `json:"uptime_s"`
+	Version   string          `json:"version"`
+	OS        string          `json:"os"`
+	Defender  json.RawMessage `json:"defender,omitempty"`
+	Inventory json.RawMessage `json:"inventory,omitempty"`
+	Mesh      string          `json:"mesh_state,omitempty"`
+	MeshNode  string          `json:"mesh_node,omitempty"`
+	Metrics   *metrics        `json:"metrics,omitempty"`
+	Results   []cmdResult     `json:"results"`
 }
 
 type pollResponse struct {
@@ -59,6 +60,9 @@ type agent struct {
 	defMu      sync.Mutex
 	defender   json.RawMessage
 	defenderAt time.Time
+	invMu      sync.Mutex
+	inventory  json.RawMessage
+	invAt      time.Time
 	osName     string
 	mesh       meshKeeper
 	cpuIdle    uint64
@@ -93,6 +97,9 @@ func runAgent(stop <-chan struct{}) {
 		}
 		if a.defenderDue() {
 			go a.refreshDefender()
+		}
+		if a.inventoryDue() {
+			go a.refreshInventory()
 		}
 		resp, err := a.poll()
 		switch {
@@ -169,6 +176,12 @@ func (a *agent) poll() (*pollResponse, error) {
 		a.defender = nil // sadece değiştiğinde gönder
 	}
 	a.defMu.Unlock()
+	a.invMu.Lock()
+	if a.inventory != nil {
+		req.Inventory = a.inventory
+		a.inventory = nil
+	}
+	a.invMu.Unlock()
 
 	req.Mesh = a.mesh.currentState()
 	req.MeshNode = a.mesh.currentNodeID()

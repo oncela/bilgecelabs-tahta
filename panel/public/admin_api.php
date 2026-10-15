@@ -294,6 +294,34 @@ case 'alert_resolve:POST':
     audit('alert_resolve', "#$aid");
     json_out(['ok' => true]);
 
+case 'inventory:GET':
+    $rows = db()->query("SELECT d.id, d.hostname, d.name, d.room, l.name AS location,
+            i.serial, i.manufacturer, i.model, i.cpu, i.ram_gb, i.os, i.software_count, i.updated_at
+        FROM devices d LEFT JOIN device_inventory i ON i.device_id = d.id
+        LEFT JOIN locations l ON l.id = d.location_id
+        ORDER BY l.sort, l.name, COALESCE(d.name, d.hostname)")->fetchAll();
+    json_out(['devices' => $rows]);
+
+case 'device_inventory:GET':
+    $st = db()->prepare('SELECT data, updated_at FROM device_inventory WHERE device_id = ?');
+    $st->execute([(int)($_GET['id'] ?? 0)]);
+    $r = $st->fetch();
+    json_out(['inventory' => $r ? json_decode($r['data'], true) : null, 'updated_at' => $r['updated_at'] ?? null]);
+
+case 'inventory_csv:GET':
+    $rows = db()->query("SELECT COALESCE(d.name, d.hostname) AS ad, l.name AS lokasyon, d.room AS departman,
+            i.serial, i.manufacturer, i.model, i.cpu, i.ram_gb, i.os, i.software_count, i.updated_at
+        FROM devices d LEFT JOIN device_inventory i ON i.device_id = d.id
+        LEFT JOIN locations l ON l.id = d.location_id ORDER BY l.sort, l.name")->fetchAll();
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="envanter-' . date('Y-m-d') . '.csv"');
+    $out = fopen('php://output', 'w');
+    fwrite($out, "ï»¿"); // UTF-8 BOM (Excel için)
+    fputcsv($out, ['Ad', 'Lokasyon', 'Departman', 'Seri No', 'Üretici', 'Model', 'İşlemci', 'RAM (GB)', 'İşletim Sistemi', 'Yazılım Sayısı', 'Güncellenme']);
+    foreach ($rows as $r) fputcsv($out, $r);
+    fclose($out);
+    exit;
+
 case 'stats:GET':
     json_out(dashboard_stats());
 
