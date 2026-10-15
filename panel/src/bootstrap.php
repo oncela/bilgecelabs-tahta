@@ -183,6 +183,26 @@ function is_online(?string $lastSeen): bool {
     return $lastSeen !== null && time() - strtotime($lastSeen) <= ACI_ONLINE_SECONDS;
 }
 
+/** Geçmiş kayıtlarının (audit_log.action) okunur Türkçe adı. */
+function action_label(string $action): string {
+    static $names = [
+        'login' => 'Giriş', 'logout' => 'Çıkış', 'login_failed' => 'Hatalı giriş',
+        'command' => 'Komut gönderildi', 'device_enroll' => 'Yeni cihaz kaydoldu', 'device_update' => 'Cihaz bilgisi düzenlendi',
+        'device_delete' => 'Cihaz silindi', 'netscan' => 'Ağ taraması', 'enroll_key' => 'Kayıt anahtarı yenilendi',
+        'download' => 'Kurulum dosyası indirildi', 'password' => 'Şifre değiştirildi',
+        'mesh_wake' => 'Uzaktan açma', 'mesh_sleep' => 'Uykuya alma', 'mesh_off' => 'Uzaktan kapatma', 'mesh_reset' => 'Uzaktan yeniden başlatma',
+        'mesh_open_url' => 'Web adresi açıldı', 'mesh_toast' => 'Bildirim gönderildi',
+        'shared_upload' => 'Ortak alana dosya yüklendi', 'shared_send' => 'Dosya gönderildi', 'shared_delete' => 'Ortak alandan dosya silindi',
+        'catalog_save' => 'Yazılım listesi güncellendi', 'catalog_delete' => 'Yazılım listeden çıkarıldı', 'catalog_install' => 'Yazılım kurulumu başlatıldı',
+        'selfservice_install' => 'Kullanıcı yazılım kurdu', 'selfservice' => 'Self servis ayarı',
+        'location_save' => 'Lokasyon kaydedildi', 'location_delete' => 'Lokasyon silindi', 'assign_location' => 'Cihazlar lokasyona atandı',
+        'alert_resolve' => 'Uyarı çözüldü', 'ticket_update' => 'Destek talebi yanıtlandı',
+        'auto_update' => 'Otomatik güncelleme ayarı', 'notify_settings' => 'Bildirim ayarı',
+        'remote_desktop' => 'Ekrana bağlanıldı', 'remote_files' => 'Dosyalar açıldı', 'remote_terminal' => 'Komut satırı açıldı',
+    ];
+    return $names[$action] ?? (str_starts_with($action, 'mesh_') ? 'Uzaktan işlem' : $action);
+}
+
 function new_batch_id(): string {
     return bin2hex(random_bytes(8));
 }

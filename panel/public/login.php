@@ -35,30 +35,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <link rel="stylesheet" href="vendor/tabler/css/tabler.min.css">
 <link rel="stylesheet" href="assets/aci.css?v=<?= h(substr(md5((string)@filemtime(__DIR__ . '/assets/aci.css')), 0, 8)) ?>">
 </head>
-<body class="d-flex flex-column">
-<div class="page page-center">
-  <div class="container container-tight py-4">
-    <div class="text-center mb-4">
-      <img src="assets/brand/logo.svg" alt="BilgeceLabs" class="login-logo mb-2">
-      <div class="h3 mb-1"><?= h(ACI_PRODUCT) ?></div>
-      <div class="text-secondary"><?= h(school_name()) ?> · Akıllı tahta yönetim paneli</div>
+<body class="login-body">
+<main class="login-split">
+  <section class="login-side" aria-hidden="true">
+    <img src="assets/brand/mark-light.svg" alt="" class="login-mark">
+    <div class="login-wall">
+      <?php foreach ([1,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1,0,1,1] as $i => $on): ?>
+        <span class="tile <?= $on ? 'is-on' : 'is-off' ?>" style="--i: <?= $i ?>"><span class="tile-screen"></span></span>
+      <?php endforeach; ?>
     </div>
-    <form method="post" class="card card-md" autocomplete="on">
-      <div class="card-body">
-        <h2 class="h3 text-center mb-4">Hesabınıza giriş yapın</h2>
-        <?php if ($error): ?><div class="alert alert-danger"><?= h($error) ?></div><?php endif; ?>
-        <div class="mb-3">
-          <label class="form-label" for="username">Kullanıcı adı</label>
-          <input id="username" name="username" class="form-control" autocomplete="username" required autofocus>
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="password">Şifre</label>
-          <input id="password" name="password" type="password" class="form-control" autocomplete="current-password" required>
-        </div>
-        <button type="submit" class="btn btn-primary w-100">Giriş yap</button>
+    <p class="login-tagline">Okulunuzdaki her tahta,<br>tek ekranda.</p>
+  </section>
+  <section class="login-main">
+    <form method="post" class="login-form" autocomplete="on">
+      <img src="assets/brand/logo.svg" alt="BilgeceLabs" class="login-logo">
+      <h1 class="login-title"><?= h(ACI_PRODUCT) ?></h1>
+      <p class="text-secondary mb-4"><?= h(school_name()) ?> yönetim paneli</p>
+      <?php if ($error): ?><div class="alert alert-danger"><?= h($error) ?></div><?php endif; ?>
+      <div class="mb-3">
+        <label class="form-label" for="username">Kullanıcı adı</label>
+        <input id="username" name="username" class="form-control form-control-lg" autocomplete="username" required autofocus>
       </div>
+      <div class="mb-4">
+        <label class="form-label" for="password">Şifre</label>
+        <input id="password" name="password" type="password" class="form-control form-control-lg" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg w-100">Giriş yap</button>
     </form>
-  </div>
-</div>
+  </section>
+</main>
 </body>
 </html>

@@ -4,7 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/../src/bootstrap.php';
 require __DIR__ . '/../views/layout.php';
 require_login();
-page_header('Sınıflar', 'rooms.php');
+page_header('Departmanlar', 'rooms.php');
 ?>
 <div data-page="rooms">
   <div class="d-flex flex-wrap gap-2 align-items-center mb-3">

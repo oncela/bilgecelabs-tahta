@@ -85,7 +85,7 @@ function page_header(string $title, string $active = ''): void {
         <form class="me-auto" action="devices.php" method="get" role="search" style="max-width: 360px; width: 100%;">
           <div class="input-icon">
             <span class="input-icon-addon"><i class="ti ti-search"></i></span>
-            <input type="search" name="q" class="form-control" placeholder="Sınıf, tahta veya IP ara" aria-label="Ara" value="<?= h($_GET['q'] ?? '') ?>">
+            <input type="search" name="q" class="form-control" placeholder="Cihaz, sınıf veya IP ara" aria-label="Ara" value="<?= h($_GET['q'] ?? '') ?>">
           </div>
         </form>
         <div class="navbar-nav flex-row order-md-last ms-3">

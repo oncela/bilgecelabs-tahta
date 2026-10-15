@@ -2,24 +2,24 @@
    bu değişkenleri kullanır. Koyu mod yok (color-scheme: light). */
 :root {
   color-scheme: light;
-  --aci-bg: #f4f6fa;
+  --aci-bg: #f5f7fa;
   --aci-surface: #ffffff;
-  --aci-fg: #18202b;
-  --aci-muted: #5b6678;
-  --aci-line: #dde3ec;
-  --aci-accent: #1f63d6;
-  --aci-accent-rgb: 31, 99, 214;
-  --aci-accent-dark: #184fae;
-  --aci-accent-soft: #e6eefb;
-  --aci-sidebar: #102a4c;
-  --aci-sidebar-fg: #c6d4ea;
-  --aci-sidebar-active: #1f63d6;
-  --aci-ok: #1f7a4a;
-  --aci-ok-rgb: 31, 122, 74;
-  --aci-warn: #b77a00;
-  --aci-warn-rgb: 183, 122, 0;
-  --aci-bad: #b1372b;
-  --aci-bad-rgb: 177, 55, 43;
+  --aci-fg: #152031;
+  --aci-muted: #5f6b7e;
+  --aci-line: #e3e8ef;
+  --aci-accent: #1f5fd6;
+  --aci-accent-rgb: 31, 95, 214;
+  --aci-accent-dark: #174bb0;
+  --aci-accent-soft: #eaf1fd;
+  --aci-sidebar: #0e1a2b;
+  --aci-sidebar-fg: #b4c1d6;
+  --aci-sidebar-active: rgba(110, 168, 255, .14);
+  --aci-ok: #12845a;
+  --aci-ok-rgb: 18, 132, 90;
+  --aci-warn: #a86400;
+  --aci-warn-rgb: 168, 100, 0;
+  --aci-bad: #cf1b21;
+  --aci-bad-rgb: 207, 27, 33;
   --aci-accent-border: #b7cdf3;
   --aci-accent-text: #123d86;
   --aci-tertiary: #eef2f8;
@@ -29,8 +29,14 @@
   --aci-chart-2: #3fa7d6;
   --aci-chart-3: #8fb3ef;
   --aci-chart-4: #c3d3ea;
-  --aci-radius: 8px;
-  --aci-font: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif;
+  --aci-radius: 10px;
+  --aci-font: "Onest", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --aci-display: "Bricolage Grotesque", "Onest", "Segoe UI", system-ui, sans-serif;
+  --aci-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --aci-brand: #e31e24;
+  --aci-glow-on: #2bd38a;
+  --aci-glow-warn: #f5a524;
+  --aci-glow-bad: #ff4b4f;
 }
 /* MeshCentral (Bootstrap 5): Bootstrap değişkenlerini Acı renklerine bağlar. */
 :root, [data-bs-theme], [data-bs-theme="dark"] {
@@ -107,6 +113,4 @@ body { background: var(--bs-body-bg); color: var(--bs-body-color); }
 }
 
 /* Dosya listesi okunaklı: panel yazı/çizgi renkleri */
-.bl-embedded #p13files, .bl-embedded #p13filetable { color: var(--aci-fg); }
-.bl-embedded #p13filetable tr { border-color: var(--aci-line); }
 

@@ -172,7 +172,7 @@ const Devices = {
     });
     tdChk.append(chk);
 
-    const tdName = el('td');
+    const tdName = el('td', 'text-nowrap');
     tdName.append(el('div', 'fw-medium', d.label));
     if (d.label !== d.hostname) tdName.append(el('div', 'text-secondary small', d.hostname));
 
@@ -204,7 +204,8 @@ const Devices = {
 
   updateSelection() {
     const n = this.selected.size;
-    document.getElementById('selcount').textContent = n + ' tahta seçili';
+    document.getElementById('selcount').textContent = n;
+    document.getElementById('selbar').hidden = n === 0;
     document.querySelectorAll('[data-cmd]').forEach((b) => { b.disabled = n === 0; });
     const vis = this.visible();
     const all = document.getElementById('select-all');
@@ -229,6 +230,7 @@ const Devices = {
     document.getElementById('type-filter').addEventListener('change', () => this.render());
     document.getElementById('loc-filter').addEventListener('change', () => this.render());
     document.getElementById('assign-loc-btn').addEventListener('click', () => this.assignLocation());
+    document.getElementById('sel-clear').addEventListener('click', () => { this.selected.clear(); this.render(); });
     document.getElementById('assign-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       try {

@@ -8,15 +8,18 @@ require_once __DIR__ . '/../src/stats.php';
 require_once __DIR__ . '/../src/charts.php';
 require_login();
 
-$devices = db()->query('SELECT id, hostname, name, room, last_seen, defender, mesh_state, disk_used, disk_free, mem_used FROM devices')->fetchAll();
+$devices = db()->query('SELECT d.id, d.hostname, d.name, d.room, d.dev_type, d.last_seen, d.defender, d.mesh_state, d.disk_used, d.disk_free, d.mem_used,
+        l.name AS location FROM devices d LEFT JOIN locations l ON l.id = d.location_id ORDER BY l.sort, l.name, d.room, d.hostname')->fetchAll();
 $total = count($devices);
 $online = 0;
 $alerts = [];   // [seviye, simge, metin, bağlantı]
 $meshReady = 0;
 $rooms = [];
+$wall = [];     // lokasyon => [[etiket, durum, bağlantı, ipucu], ...]
 foreach ($devices as $d) {
     $label = device_label($d);
     $on = is_online($d['last_seen']);
+    $tileState = $on ? 'on' : 'off';
     if ($on) $online++;
     $room = $d['room'] ?: 'Sınıfı atanmamış';
     $rooms[$room] ??= ['total' => 0, 'online' => 0];
@@ -24,6 +27,12 @@ foreach ($devices as $d) {
     if ($on) $rooms[$room]['online']++;
 
     $def = defender_summary($d['defender']);
+    if ($on && $def['state'] === 'bad') $tileState = 'bad';
+    elseif ($on && (int)$d['disk_used'] >= 90) $tileState = 'warn';
+    $wall[$d['location'] ?: 'Lokasyonsuz'][] = [
+        $d['room'] ?: $label, $tileState, 'devices.php?q=' . urlencode($d['hostname']),
+        $label . ' · ' . ($on ? 'açık' : 'kapalı') . ($d['room'] ? ' · ' . $d['room'] : ''),
+    ];
     if ($def['state'] === 'bad') $alerts[] = ['danger', 'shield-x', "$label: {$def['text']}", 'devices.php?q=' . urlencode($d['hostname'])];
     elseif ($def['state'] === 'warn') $alerts[] = ['warning', 'shield-exclamation', "$label: virüs {$def['text']}", 'devices.php?q=' . urlencode($d['hostname'])];
 
@@ -56,78 +65,44 @@ usort($alerts, fn($a, $b) => $order[$a[0]] <=> $order[$b[0]]);
 $recent = db()->query('SELECT l.created_at, l.action, l.detail, a.username FROM audit_log l
     LEFT JOIN admins a ON a.id = l.admin_id
     WHERE l.action NOT IN (\'login\', \'logout\') ORDER BY l.id DESC LIMIT 8')->fetchAll();
-$actionNames = [
-    'command' => 'Komut', 'device_enroll' => 'Tahta kaydı', 'device_update' => 'Tahta düzenleme',
-    'device_delete' => 'Tahta silme', 'netscan' => 'Ağ taraması', 'login_failed' => 'Hatalı giriş',
-    'remote_desktop' => 'Ekran açıldı', 'remote_files' => 'Dosyalar açıldı', 'remote_terminal' => 'Komut satırı açıldı',
-    'download' => 'Kurulum indirme', 'enroll_key' => 'Kayıt anahtarı', 'password' => 'Şifre değişikliği',
-];
 
 $stats = dashboard_stats();
+$openTickets = (int)db()->query("SELECT COUNT(*) FROM tickets WHERE status = 'open'")->fetchColumn();
+$problems = count(array_filter($alerts, fn($a) => $a[0] !== 'secondary'));
 page_header('Genel bakış', 'dashboard.php');
 ?>
 <div data-page="dashboard">
-  <div class="row row-cards mb-3">
-    <div class="col-sm-6 col-lg-3">
-      <div class="card card-sm"><div class="card-body">
-        <div class="text-secondary">Açık tahta</div>
-        <div class="h1 mb-0"><?= $online ?> <span class="text-secondary fs-3">/ <?= $total ?></span></div>
-      </div></div>
+  <section class="card wall-hero mb-4" aria-label="Tahtaların anlık durumu">
+    <div class="wall-summary">
+      <div class="eyebrow">Şu an · <?= h(date('H:i')) ?></div>
+      <div class="wall-figure"><span class="wall-on"><?= $online ?></span><span class="wall-total">/<?= $total ?></span></div>
+      <div class="wall-caption">cihaz açık</div>
+      <ul class="wall-facts">
+        <li class="<?= $problems ? 'is-bad' : 'is-ok' ?>"><i class="ti ti-<?= $problems ? 'alert-triangle' : 'circle-check' ?>"></i><?= $problems ? $problems . ' sorun dikkat bekliyor' : 'Sorun yok' ?></li>
+        <li><i class="ti ti-plug-connected"></i><?= $meshReady ?> cihaz uzaktan erişime hazır</li>
+        <li class="<?= $openTickets ? 'is-warn' : '' ?>"><i class="ti ti-lifebuoy"></i><a href="tickets.php"><?= $openTickets ?> açık destek talebi</a></li>
+        <?php if ($newNet): ?><li class="is-warn"><i class="ti ti-wifi"></i><a href="network.php">Ağda <?= $newNet ?> yeni cihaz</a></li><?php endif; ?>
+      </ul>
     </div>
-    <div class="col-sm-6 col-lg-3">
-      <?php $bad = count(array_filter($alerts, fn($a) => $a[0] === 'danger')); ?>
-      <div class="card card-sm"><div class="card-body">
-        <div class="text-secondary">Virüs uyarısı</div>
-        <div class="h1 mb-0 <?= $bad ? 'text-danger' : '' ?>"><?= $bad ?></div>
-      </div></div>
+    <div class="wall">
+      <?php if (!$wall): ?>
+        <div class="wall-empty">Henüz cihaz yok. <a href="settings.php">Kurulum dosyasını indirip</a> ilk tahtaya kurun.</div>
+      <?php endif; ?>
+      <?php foreach ($wall as $loc => $tiles): $on = count(array_filter($tiles, fn($t) => $t[1] !== 'off')); ?>
+        <div class="wall-group">
+          <div class="wall-group-name"><?= h((string)$loc) ?> <span><?= $on ?>/<?= count($tiles) ?></span></div>
+          <div class="wall-tiles">
+            <?php foreach ($tiles as $i => [$tl, $st, $href, $tip]): ?>
+              <a class="tile is-<?= h($st) ?>" href="<?= h($href) ?>" title="<?= h($tip) ?>" style="--i: <?= (int)$i ?>">
+                <span class="tile-screen"></span><span class="tile-label"><?= h($tl) ?></span>
+              </a>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      <?php endforeach; ?>
+      <div class="wall-legend"><span class="lg on"></span>Açık <span class="lg warn"></span>Dikkat <span class="lg bad"></span>Sorun <span class="lg off"></span>Kapalı</div>
     </div>
-    <div class="col-sm-6 col-lg-3">
-      <div class="card card-sm"><div class="card-body">
-        <div class="text-secondary">Uzaktan erişime hazır</div>
-        <div class="h1 mb-0"><?= $meshReady ?> <span class="text-secondary fs-3">/ <?= $total ?></span></div>
-      </div></div>
-    </div>
-    <div class="col-sm-6 col-lg-3">
-      <div class="card card-sm"><div class="card-body">
-        <div class="text-secondary">Yeni ağ cihazı (7 gün)</div>
-        <div class="h1 mb-0 <?= $newNet ? 'text-warning' : '' ?>"><?= $newNet ?></div>
-      </div></div>
-    </div>
-  </div>
-
-  <div class="row row-cards mb-3">
-    <div class="col-lg-8">
-      <div class="card h-100">
-        <div class="card-header"><h3 class="card-title">Son 7 gün kullanım</h3></div>
-        <div class="card-body"><?= svg_bars($stats['labels'], [['Toplam açık saat', $stats['hours'], '--aci-chart-1']], 'Son 7 gün toplam açık saat ve kullanılan tahta sayısı',
-              array_map(fn($b) => $b ? $b . ' tahta' : '', $stats['boards'])) ?></div>
-      </div>
-    </div>
-    <div class="col-lg-4">
-      <div class="card h-100">
-        <div class="card-header"><h3 class="card-title">Tahta durumu</h3></div>
-        <div class="card-body"><?= svg_donut([['Açık', $stats['state']['online'], '--aci-chart-1'], ['Kapalı', $stats['state']['offline'], '--aci-chart-4']], 'tahta', 'Açık ve kapalı tahta sayısı') ?></div>
-      </div>
-    </div>
-    <div class="col-md-6 col-lg-4">
-      <div class="card h-100">
-        <div class="card-header"><h3 class="card-title">Virüs koruması</h3></div>
-        <div class="card-body"><?= svg_donut([['Korumalı', $stats['defender']['ok'], '--aci-ok'], ['Uyarı', $stats['defender']['warn'], '--aci-warn'], ['Tehlike', $stats['defender']['bad'], '--aci-bad'], ['Bilgi yok', $stats['defender']['unknown'], '--aci-chart-4']], 'tahta', 'Virüs koruması durumları') ?></div>
-      </div>
-    </div>
-    <div class="col-md-6 col-lg-4">
-      <div class="card h-100">
-        <div class="card-header"><h3 class="card-title">Uzaktan erişim</h3></div>
-        <div class="card-body"><?= svg_donut([['Hazır', $stats['mesh']['ok'], '--aci-chart-1'], ['Kuruluyor', $stats['mesh']['warn'], '--aci-chart-2'], ['Hata', $stats['mesh']['bad'], '--aci-bad'], ['Kurulu değil', $stats['mesh']['off'], '--aci-chart-4']], 'tahta', 'Uzaktan erişim durumları') ?></div>
-      </div>
-    </div>
-    <div class="col-lg-4">
-      <div class="card h-100">
-        <div class="card-header"><h3 class="card-title">İşlemler (7 gün)</h3></div>
-        <div class="card-body"><?= svg_bars($stats['labels'], [['Tamamlanan', $stats['commands_done'], '--aci-chart-1'], ['Tamamlanamayan', $stats['commands_failed'], '--aci-bad']], 'Son 7 gün işlemler', w: 340) ?></div>
-      </div>
-    </div>
-  </div>
+  </section>
 
   <div class="row row-cards">
     <div class="col-lg-7">
@@ -150,22 +125,6 @@ page_header('Genel bakış', 'dashboard.php');
     </div>
 
     <div class="col-lg-5">
-      <div class="card mb-3">
-        <div class="card-header"><h3 class="card-title">Sınıflar</h3><a class="ms-auto" href="rooms.php">Tümü</a></div>
-        <?php if (!$rooms): ?>
-          <div class="card-body text-secondary">Henüz tahta yok. <a href="settings.php">Kurulum dosyasını indirin</a>.</div>
-        <?php else: ?>
-          <div class="list-group list-group-flush">
-            <?php foreach (array_slice($rooms, 0, 10, true) as $room => $c): ?>
-              <a href="rooms.php#<?= h(rawurlencode((string)$room)) ?>" class="list-group-item list-group-item-action d-flex align-items-center">
-                <span class="flex-fill"><?= h((string)$room) ?></span>
-                <span class="badge <?= $c['online'] ? 'bg-success-lt' : 'bg-secondary-lt' ?>"><?= $c['online'] ?> / <?= $c['total'] ?> açık</span>
-              </a>
-            <?php endforeach; ?>
-          </div>
-        <?php endif; ?>
-      </div>
-
       <div class="card">
         <div class="card-header"><h3 class="card-title">Son işlemler</h3><a class="ms-auto" href="history.php">Geçmiş</a></div>
         <?php if (!$recent): ?>
@@ -175,7 +134,7 @@ page_header('Genel bakış', 'dashboard.php');
             <?php foreach ($recent as $r): ?>
               <div class="list-group-item">
                 <div class="d-flex justify-content-between gap-2">
-                  <span class="fw-medium"><?= h($actionNames[$r['action']] ?? $r['action']) ?></span>
+                  <span class="fw-medium"><?= h(action_label($r['action'])) ?></span>
                   <span class="text-secondary small text-nowrap"><?= h(date('d.m H:i', strtotime($r['created_at']))) ?></span>
                 </div>
                 <div class="text-secondary small text-truncate"><?= h(trim(($r['username'] ? $r['username'] . ' · ' : '') . $r['detail'])) ?></div>
@@ -183,6 +142,21 @@ page_header('Genel bakış', 'dashboard.php');
             <?php endforeach; ?>
           </div>
         <?php endif; ?>
+      </div>
+    </div>
+  </div>
+  <div class="row row-cards mt-1">
+    <div class="col-lg-8">
+      <div class="card h-100">
+        <div class="card-header"><h3 class="card-title">Son 7 gün kullanım</h3></div>
+        <div class="card-body"><?= svg_bars($stats['labels'], [['Toplam açık saat', $stats['hours'], '--aci-chart-1']], 'Son 7 gün toplam açık saat ve kullanılan tahta sayısı',
+              array_map(fn($b) => $b ? $b . ' tahta' : '', $stats['boards'])) ?></div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header"><h3 class="card-title">İşlemler (7 gün)</h3></div>
+        <div class="card-body"><?= svg_bars($stats['labels'], [['Tamamlanan', $stats['commands_done'], '--aci-chart-1'], ['Tamamlanamayan', $stats['commands_failed'], '--aci-bad']], 'Son 7 gün işlemler', w: 340) ?></div>
       </div>
     </div>
   </div>

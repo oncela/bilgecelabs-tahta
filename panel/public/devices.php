@@ -3,7 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/../src/bootstrap.php';
 require __DIR__ . '/../views/layout.php';
 require_login();
-page_header('Tahtalar', 'devices.php');
+page_header('Cihazlar', 'devices.php');
 ?>
 <div data-page="devices">
   <div class="card mb-3">
@@ -11,25 +11,8 @@ page_header('Tahtalar', 'devices.php');
       <select id="loc-filter" class="form-select w-auto" aria-label="Lokasyon"><option value="">Tüm lokasyonlar</option></select>
       <select id="type-filter" class="form-select w-auto" aria-label="Tür"><option value="">Tüm türler</option><option value="board">Akıllı tahta</option><option value="classroom">Sınıf bilgisayarı</option><option value="office">İdare</option><option value="desk">Danışma</option><option value="other">Diğer</option></select>
       <select id="room-filter" class="form-select w-auto" aria-label="Sınıf"><option value="">Tüm sınıflar</option></select>
-      <input id="search" type="search" class="form-control w-auto" placeholder="Tahta, kullanıcı veya IP ara" aria-label="Ara" value="<?= h($_GET['q'] ?? '') ?>">
+      <input id="search" type="search" class="form-control w-auto" placeholder="Cihaz, kullanıcı veya IP ara" aria-label="Ara" value="<?= h($_GET['q'] ?? '') ?>">
       <span class="text-secondary ms-auto" id="counts"></span>
-    </div>
-    <div class="card-footer d-flex flex-wrap gap-2 align-items-center">
-      <span class="text-secondary me-2" id="selcount">0 tahta seçili</span>
-      <button class="btn btn-sm" data-cmd="message"><i class="ti ti-message me-1"></i>Mesaj</button>
-      <button class="btn btn-sm" data-cmd="restart"><i class="ti ti-refresh me-1"></i>Yeniden başlat</button>
-      <button class="btn btn-sm" data-cmd="shutdown"><i class="ti ti-power me-1"></i>Kapat</button>
-      <button class="btn btn-sm" data-cmd="cancel_shutdown"><i class="ti ti-x me-1"></i>Kapatmayı iptal</button>
-      <button class="btn btn-sm" data-cmd="defender_scan"><i class="ti ti-shield-search me-1"></i>Virüs taraması</button>
-      <button class="btn btn-sm" data-cmd="defender_update"><i class="ti ti-shield-up me-1"></i>İmza güncelle</button>
-      <button class="btn btn-sm" data-cmd="powershell"><i class="ti ti-terminal-2 me-1"></i>PowerShell</button>
-      <button class="btn btn-sm" id="assign-loc-btn"><i class="ti ti-building me-1"></i>Lokasyon ata</button>
-      <span class="vr mx-1"></span>
-      <button class="btn btn-sm" data-cmd="wol_prepare"><i class="ti ti-plug-connected me-1"></i>Uzaktan açmaya hazırla</button>
-      <button class="btn btn-sm" data-cmd="wake"><i class="ti ti-player-play me-1"></i>Uzaktan aç</button>
-      <button class="btn btn-sm" data-cmd="open_url"><i class="ti ti-world me-1"></i>Web adresi aç</button>
-      <button class="btn btn-sm" data-cmd="run_app"><i class="ti ti-player-play me-1"></i>Uygulama aç</button>
-      <button class="btn btn-sm" data-cmd="toast"><i class="ti ti-bell me-1"></i>Bildirim</button>
     </div>
   </div>
 
@@ -45,6 +28,35 @@ page_header('Tahtalar', 'devices.php');
     </div>
   </div>
 </div>
+
+  <!-- Seçim çubuğu: cihaz seçilince altta belirir -->
+  <div class="selbar" id="selbar" hidden role="toolbar" aria-label="Seçili cihazlara işlem">
+    <div class="selbar-count"><strong id="selcount">0</strong> cihaz seçili
+      <button type="button" class="selbar-clear" id="sel-clear" title="Seçimi temizle"><i class="ti ti-x"></i></button></div>
+    <div class="selbar-group">
+      <button class="btn btn-sm" data-cmd="message"><i class="ti ti-message"></i>Mesaj</button>
+      <button class="btn btn-sm" data-cmd="run_app"><i class="ti ti-app-window"></i>Uygulama</button></div>
+    <div class="selbar-group">
+      <button class="btn btn-sm" data-cmd="restart"><i class="ti ti-refresh"></i>Yeniden başlat</button>
+      <button class="btn btn-sm" data-cmd="shutdown"><i class="ti ti-power"></i>Kapat</button>
+      <button class="btn btn-sm" data-cmd="wake"><i class="ti ti-player-play"></i>Uzaktan aç</button></div>
+    <div class="selbar-group">
+      <button class="btn btn-sm" data-cmd="defender_scan"><i class="ti ti-shield-search"></i>Virüs taraması</button>
+      <button class="btn btn-sm" id="assign-loc-btn"><i class="ti ti-building"></i>Lokasyon ata</button>
+      <div class="dropup">
+        <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-dots"></i>Diğer</button>
+        <div class="dropdown-menu dropdown-menu-end">
+          <button class="dropdown-item" data-cmd="toast"><i class="ti ti-bell me-2"></i>Bildirim göster</button>
+          <button class="dropdown-item" data-cmd="open_url"><i class="ti ti-world me-2"></i>Web adresi aç</button>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item" data-cmd="cancel_shutdown"><i class="ti ti-x me-2"></i>Kapatmayı iptal et</button>
+          <button class="dropdown-item" data-cmd="wol_prepare"><i class="ti ti-plug-connected me-2"></i>Uzaktan açmaya hazırla</button>
+          <button class="dropdown-item" data-cmd="defender_update"><i class="ti ti-shield-up me-2"></i>Virüs imzalarını güncelle</button>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item" data-cmd="powershell"><i class="ti ti-terminal-2 me-2"></i>PowerShell komutu</button>
+        </div>
+      </div></div>
+  </div>
 
 <?php require __DIR__ . '/../views/dialogs.php'; ?>
 

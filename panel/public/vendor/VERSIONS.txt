@@ -4,3 +4,10 @@
 9d26ca1aa061a0c647305654e32efc2c8838e348b2423e9d1f4593869868e09b  tabler/js/tabler.min.js
 43968bcdf4a2254b8f2f70a939b8488c90b71b1c03e7f2c4dd77b5aeb80d2c93  tabler-icons/tabler-icons.min.css
 e6b5baf5b1bbd4d9e47ad95cb5b7540a84ffe427ca45a525a8c864e3632e7336  tabler-icons/fonts/tabler-icons.woff2
+@fontsource-variable/onest 5.1.0, bricolage-grotesque 5.1.0, jetbrains-mono 5.1.0 (OFL-1.1) - fonts/*.woff2 (latin, latin-ext)
+b95cb3b926bdc9cabd9e9be3209dec7a6664ca2ed47674ebc5a2e4e4a4a8edb1  fonts/bricolage-grotesque-latin-ext-wght-normal.woff2
+639cc4132fdda71f490d52c862b3d3ac8ed3da2f89969c96fecd8bb22e99a095  fonts/bricolage-grotesque-latin-wght-normal.woff2
+c35e6e07a3681a757d3e910cb0a43a0760a64c6fa72bf8f1fb8ab0ab3da0d9fa  fonts/jetbrains-mono-latin-ext-wght-normal.woff2
+d8188600846f4100acc72730c0576d8abca97ae837c2dbf188362df2fa785d82  fonts/jetbrains-mono-latin-wght-normal.woff2
+265f5b66519070be429a4df8c93e480ab439fe2d505e6c33ea9c8ca4f9d5ddab  fonts/onest-latin-ext-wght-normal.woff2
+9b7650d2e1b163ebdce8e7c79762bb054c49693702a6582f5cdc365a027fa591  fonts/onest-latin-wght-normal.woff2
