@@ -24,6 +24,18 @@ def splash(dest, sub):
     d.rectangle([0, H - 4, W, H], fill=(31, 99, 214))
     canvas.save(os.path.join(HERE, dest))
 
+def header(dest):
+    # Kurulum penceresinin üst şeridi (MUI başlık resmi, 150x57)
+    W, H = 150, 57
+    canvas = Image.new('RGB', (W, H), (255, 255, 255))
+    scale = min((W - 12) / logo.width, (H - 14) / logo.height)
+    lw, lh = int(logo.width * scale), int(logo.height * scale)
+    lg = logo.resize((lw, lh), Image.LANCZOS)
+    bg = Image.new('RGBA', (lw, lh), (255, 255, 255, 255)); bg.alpha_composite(lg)
+    canvas.paste(bg.convert('RGB'), ((W - lw) // 2, (H - lh) // 2))
+    canvas.save(os.path.join(HERE, dest))
+
 splash('splash.bmp', 'Akıllı Tahta Yönetimi')
+header('baslik.bmp')
 splash('splash-bitti.bmp', 'Kurulum tamamlandı')
 print('splash üretildi')

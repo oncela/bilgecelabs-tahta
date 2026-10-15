@@ -31,73 +31,41 @@ VIAddVersionKey "ProductVersion" "${VERSION}.0"
 
 !define MUI_ICON "bilgece.ico"
 !define MUI_UNICON "bilgece.ico"
-!define MUI_ABORTWARNING
+; Üst şeritte BilgeceLabs logosu
+!define MUI_HEADERIMAGE
+!define MUI_HEADERIMAGE_RIGHT
+!define MUI_HEADERIMAGE_BITMAP "baslik.bmp"
+!define MUI_HEADERIMAGE_UNBITMAP "baslik.bmp"
+!define MUI_INSTFILESPAGE_COLORS "1F63D6 FFFFFF"
+!define MUI_INSTFILESPAGE_PROGRESSBAR "smooth"
+; Tek ekran: soru sorulmaz, ilerleme biter bitmez pencere kendiliğinden kapanır
+!define MUI_PAGE_HEADER_TEXT "BilgeceLabs Tahta kuruluyor"
+!define MUI_PAGE_HEADER_SUBTEXT "Lütfen bekleyin, birkaç saniye sürer…"
+!define MUI_INSTFILESPAGE_FINISHHEADER_TEXT "Kurulum tamamlandı"
+!define MUI_INSTFILESPAGE_FINISHHEADER_SUBTEXT "Cihaz panele bağlanıyor."
+AutoCloseWindow true
 
-Var DevType          ; board/classroom/office/desk/other
-Var Room             ; konum
-Var hRoom
-Var hType
+; Cihaz türü ve konum sorulmaz (panelden atanır). Toplu kurulum için isteğe bağlı
+; komut satırı: kurulum.exe /S /TUR=classroom /KONUM=7-B
+Var DevType
+Var Room
 
-!insertmacro MUI_PAGE_WELCOME
-Page custom TypePageShow TypePageLeave
 !insertmacro MUI_PAGE_INSTFILES
-!insertmacro MUI_PAGE_FINISH
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
 !insertmacro MUI_LANGUAGE "Turkish"
 
-; --- Cihaz türü / konum sayfası ---
-Function TypePageShow
-  !insertmacro MUI_HEADER_TEXT "Cihaz bilgisi" "Bu cihazın türünü ve konumunu seçin."
-  nsDialogs::Create 1018
-  Pop $0
-
-  ${NSD_CreateLabel} 0 0 100% 12u "Cihaz türü:"
-  Pop $0
-  ${NSD_CreateDropList} 0 14u 100% 90u ""
-  Pop $hType
-  ${NSD_CB_AddString} $hType "Akıllı tahta"
-  ${NSD_CB_AddString} $hType "Sınıf bilgisayarı"
-  ${NSD_CB_AddString} $hType "İdare"
-  ${NSD_CB_AddString} $hType "Danışma"
-  ${NSD_CB_AddString} $hType "Diğer"
-  ${NSD_CB_SelectString} $hType "Akıllı tahta"
-
-  ${NSD_CreateLabel} 0 44u 100% 12u "Konum / sınıf (ör. 7-B, Danışma):"
-  Pop $0
-  ${NSD_CreateText} 0 58u 100% 12u ""
-  Pop $hRoom
-
-  nsDialogs::Show
-FunctionEnd
-
-Function TypePageLeave
-  ${NSD_GetText} $hType $0
-  ${NSD_GetText} $hRoom $Room
-  StrCmp $0 "Akıllı tahta" 0 +3
-    StrCpy $DevType "board"
-    Goto done
-  StrCmp $0 "Sınıf bilgisayarı" 0 +3
-    StrCpy $DevType "classroom"
-    Goto done
-  StrCmp $0 "İdare" 0 +3
-    StrCpy $DevType "office"
-    Goto done
-  StrCmp $0 "Danışma" 0 +3
-    StrCpy $DevType "desk"
-    Goto done
-  StrCpy $DevType "other"
-  done:
-FunctionEnd
-
-; Kurulum dosyasının adından kayıt anahtarını çıkar (_<32 hex>)
 Function .onInit
-  StrCpy $DevType "board"
-  ; Açılış: BilgeceLabs logosu yumuşak geçişle (fade in/out)
-  InitPluginsDir
-  File "/oname=$PLUGINSDIR\splash.bmp" "splash.bmp"
-  advsplash::show 1200 600 500 -1 "$PLUGINSDIR\splash"
-  Pop $0
+  ${GetParameters} $R0
+  ${GetOptions} $R0 "/TUR=" $DevType
+  ${GetOptions} $R0 "/KONUM=" $Room
+  ; Açılış: BilgeceLabs logosu yumuşak geçişle (sessiz kurulumda gösterilmez)
+  ${IfNot} ${Silent}
+    InitPluginsDir
+    File "/oname=$PLUGINSDIR\splash.bmp" "splash.bmp"
+    advsplash::show 1200 600 500 -1 "$PLUGINSDIR\splash"
+    Pop $0
+  ${EndIf}
 FunctionEnd
 
 Section "Install"
@@ -128,13 +96,19 @@ Section "Install"
   done2:
 
   DetailPrint "Ajan kuruluyor…"
+  SetDetailsPrint textonly
+  StrCpy $6 ""
   ${If} $1 != ""
-    nsExec::ExecToLog '"$INSTDIR\bilgece-tahta.exe" install --key $1 --type $DevType --room "$Room"'
-    Pop $0
-  ${Else}
-    nsExec::ExecToLog '"$INSTDIR\bilgece-tahta.exe" install --type $DevType --room "$Room"'
-    Pop $0
+    StrCpy $6 "$6 --key $1"
   ${EndIf}
+  ${If} $DevType != ""
+    StrCpy $6 "$6 --type $DevType"
+  ${EndIf}
+  ${If} $Room != ""
+    StrCpy $6 '$6 --room "$Room"'
+  ${EndIf}
+  nsExec::Exec '"$INSTDIR\bilgece-tahta.exe" install$6'
+  Pop $0
 
   ; Programlar ve Özellikler kaydı
   WriteUninstaller "$INSTDIR\kaldir.exe"
@@ -147,10 +121,12 @@ Section "Install"
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BilgeceTahta" "NoRepair" 1
 
   ; Kurulum bitti: "tamamlandı" ekranını 5 sn göster (fade in/out dahil)
-  DetailPrint "Tahta panele bağlanıyor…"
-  File "/oname=$PLUGINSDIR\splash-bitti.bmp" "splash-bitti.bmp"
-  advsplash::show 5000 600 600 -1 "$PLUGINSDIR\splash-bitti"
-  Pop $0
+  DetailPrint "Cihaz panele bağlanıyor…"
+  ${IfNot} ${Silent}
+    File "/oname=$PLUGINSDIR\splash-bitti.bmp" "splash-bitti.bmp"
+    advsplash::show 5000 600 600 -1 "$PLUGINSDIR\splash-bitti"
+    Pop $0
+  ${EndIf}
 SectionEnd
 
 Section "Uninstall"
