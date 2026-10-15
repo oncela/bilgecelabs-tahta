@@ -130,6 +130,7 @@ if (!empty($in['requests']) && is_array($in['requests'])) {
     selfservice_handle($deviceId, $in['requests'], (string)($in['user'] ?? ''));
 }
 $resp['destek'] = selfservice_state($deviceId);
+$resp['destek_acik'] = setting('selfservice_enabled', '1') === '1'; // Ayarlar: self servis simgesi
 // Güncel self servis programının özeti (yayında üretilir; ajan farklıysa indirir)
 $resp['destek_sha'] = trim((string)@file_get_contents(ACI_ROOT . '/storage/bilgece-destek.sha'));
 // Uzaktan güncelleme: sunucudaki ajan sürümü cihazınkinden yeniyse bildir

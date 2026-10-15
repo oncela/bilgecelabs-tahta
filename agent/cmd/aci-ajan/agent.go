@@ -46,12 +46,13 @@ type pollRequest struct {
 }
 
 type pollResponse struct {
-	Commands  []command       `json:"commands"`
-	Interval  int             `json:"interval"`
-	Mesh      *meshInfo       `json:"mesh"`
-	Update    *updateInfo     `json:"update"`
-	Destek    json.RawMessage `json:"destek"`     // self servis penceresinin durumu
-	DestekSha string          `json:"destek_sha"` // güncel destek programının özeti
+	Commands   []command       `json:"commands"`
+	Interval   int             `json:"interval"`
+	Mesh       *meshInfo       `json:"mesh"`
+	Update     *updateInfo     `json:"update"`
+	Destek     json.RawMessage `json:"destek"`      // self servis penceresinin durumu
+	DestekSha  string          `json:"destek_sha"`  // güncel destek programının özeti
+	DestekAcik *bool           `json:"destek_acik"` // false: simge gizli (Ayarlar)
 }
 
 var errUnauthorized = errors.New("yetkisiz")
@@ -129,7 +130,11 @@ func runAgent(stop <-chan struct{}) {
 			}
 			a.ss.requestsDelivered()
 			a.ss.writeState(resp.Destek)
-			go func() { a.ss.sync(a, resp.DestekSha); a.ss.ensureTray() }()
+			if resp.DestekAcik != nil && !*resp.DestekAcik {
+				go a.ss.hideTray()
+			} else {
+				go func() { a.ss.sync(a, resp.DestekSha); a.ss.ensureTray() }()
+			}
 			go a.mesh.ensure(a, resp.Mesh)
 			go a.maybeUpdate(resp.Update)
 			for _, c := range resp.Commands {

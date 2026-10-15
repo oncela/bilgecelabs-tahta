@@ -182,6 +182,14 @@ func (s *selfService) ensureTray() {
 	}
 }
 
+// hideTray: panelde self servis kapalı; açık simge varsa kapat.
+func (s *selfService) hideTray() {
+	if sid := activeSession(); sid != noSession && processInSession(destekExeName, sid) {
+		killProcesses(destekExeName)
+		log.Printf("self servis panelden kapatıldı, simge gizlendi")
+	}
+}
+
 func runHidden(name string, args ...string) {
 	cmd := exec.Command(name, args...)
 	cmd.SysProcAttr = &windows.SysProcAttr{HideWindow: true, CreationFlags: windows.CREATE_NO_WINDOW}
