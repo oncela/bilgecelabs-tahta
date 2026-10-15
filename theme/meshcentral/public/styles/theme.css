@@ -105,21 +105,8 @@ body { background: var(--bs-body-bg); color: var(--bs-body-color); }
   --bs-btn-bg: var(--aci-bad); --bs-btn-border-color: var(--aci-bad);
   --bs-btn-hover-bg: #933; --bs-btn-hover-border-color: #933;
 }
-/* Araç çubukları: düz, panel yüzeyi, ince kenar */
-.bl-embedded #p13toolbar, .bl-embedded #p13toolbarBottom, .bl-embedded #termarea3x {
-  background: var(--aci-surface); border-bottom: 1px solid var(--aci-line); padding: .4rem .5rem;
-}
-.bl-embedded #p13toolbar .btn, .bl-embedded #termarea3x .btn { border-radius: 6px; font-weight: 400; }
+
 /* Dosya listesi okunaklı: panel yazı/çizgi renkleri */
 .bl-embedded #p13files, .bl-embedded #p13filetable { color: var(--aci-fg); }
 .bl-embedded #p13filetable tr { border-color: var(--aci-line); }
 
-/* Panelin içinde (bl-embedded): MeshCentral'ın kendi çubukları yerine panelin çubuğu kullanılır */
-.bl-embedded .bl-hidden,
-.bl-embedded #deskarea4,
-.bl-embedded #p11DeskSessionSelector { display: none !important; }
-.bl-embedded body { background: #0b1220; }
-.bl-embedded .areaHead, .bl-embedded #termarea3x, .bl-embedded #p13toolbar, .bl-embedded #p13toolbarBottom {
-  background: var(--aci-surface); border-color: var(--aci-line);
-}
-.bl-embedded .btn { border-radius: 6px; }

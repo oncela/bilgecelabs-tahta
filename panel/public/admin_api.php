@@ -15,10 +15,11 @@ $in = $isPost ? json_in() : [];
 switch ("$action:" . ($isPost ? 'POST' : 'GET')) {
 
 case 'devices:GET':
-    $rows = db()->query('SELECT d.id, d.hostname, d.name, d.room, d.dev_type, d.mac, d.os, d.agent_version, d.ip,
+    $rows = db()->query('SELECT d.id, d.hostname, d.name, d.room, d.location_id, l.name AS location_name, d.dev_type, d.mac, d.os, d.agent_version, d.ip,
             d.logged_user, d.uptime_s, d.cpu, d.mem_used, d.mem_mb, d.disk_used, d.disk_free, d.disk_gb, d.defender, d.defender_at, d.last_seen, d.mesh_state,
             (SELECT COUNT(*) FROM commands c WHERE c.device_id = d.id AND c.status IN (\'pending\',\'sent\')) AS busy
-        FROM devices d ORDER BY d.room IS NULL, d.room, COALESCE(d.name, d.hostname)')->fetchAll();
+        FROM devices d LEFT JOIN locations l ON l.id = d.location_id
+        ORDER BY l.sort, l.name, d.room IS NULL, d.room, COALESCE(d.name, d.hostname)')->fetchAll();
     $out = [];
     foreach ($rows as $d) {
         $out[] = [
@@ -26,6 +27,8 @@ case 'devices:GET':
             'label' => device_label($d),
             'hostname' => $d['hostname'],
             'room' => $d['room'] ?? '',
+            'location_id' => $d['location_id'] ? (int)$d['location_id'] : null,
+            'location' => $d['location_name'] ?? '',
             'type' => $d['dev_type'] ?: 'board',
             'type_label' => device_types()[$d['dev_type'] ?: 'board'] ?? 'Diğer',
             'ip' => $d['ip'],
@@ -104,8 +107,9 @@ case 'update_device:POST':
     $name = trim(mb_substr((string)($in['name'] ?? ''), 0, 128));
     $room = trim(mb_substr((string)($in['room'] ?? ''), 0, 64));
     $type = in_array($in['type'] ?? '', array_keys(device_types()), true) ? $in['type'] : 'board';
-    db()->prepare('UPDATE devices SET name = ?, room = ?, dev_type = ? WHERE id = ?')
-        ->execute([$name ?: null, $room ?: null, $type, $id]);
+    $loc = (int)($in['location_id'] ?? 0) ?: null;
+    db()->prepare('UPDATE devices SET name = ?, room = ?, dev_type = ?, location_id = ? WHERE id = ?')
+        ->execute([$name ?: null, $room ?: null, $type, $loc, $id]);
     audit('device_update', "#$id ad=$name sınıf=$room tür=$type");
     json_out(['ok' => true]);
 
@@ -235,6 +239,41 @@ case 'shared_delete:POST':
         audit('shared_delete', $f['orig_name']);
     }
     json_out(['ok' => true]);
+
+case 'locations:GET':
+    json_out(['locations' => db()->query('SELECT l.id, l.name,
+        (SELECT COUNT(*) FROM devices d WHERE d.location_id = l.id) AS devices
+        FROM locations l ORDER BY l.sort, l.name')->fetchAll()]);
+
+case 'location_save:POST':
+    $lid = (int)($in['id'] ?? 0);
+    $lname = trim(mb_substr((string)($in['name'] ?? ''), 0, 96));
+    if ($lname === '') json_out(['error' => 'Lokasyon adı boş olamaz.'], 400);
+    if ($lid) {
+        db()->prepare('UPDATE locations SET name = ? WHERE id = ?')->execute([$lname, $lid]);
+    } else {
+        db()->prepare('INSERT INTO locations (name) VALUES (?)')->execute([$lname]);
+        $lid = (int)db()->lastInsertId();
+    }
+    audit('location_save', "#$lid $lname");
+    json_out(['ok' => true, 'id' => $lid]);
+
+case 'location_delete:POST':
+    $lid = (int)($in['id'] ?? 0);
+    // Cihazlar silinmez, lokasyonu boşa düşer
+    db()->prepare('UPDATE devices SET location_id = NULL WHERE location_id = ?')->execute([$lid]);
+    db()->prepare('DELETE FROM locations WHERE id = ?')->execute([$lid]);
+    audit('location_delete', "#$lid");
+    json_out(['ok' => true]);
+
+case 'assign_location:POST':
+    $loc = (int)($in['location_id'] ?? 0) ?: null;
+    $ids = array_values(array_unique(array_map('intval', (array)($in['device_ids'] ?? []))));
+    if (!$ids) json_out(['error' => 'Önce cihaz seçin.'], 400);
+    $ph = implode(',', array_fill(0, count($ids), '?'));
+    db()->prepare("UPDATE devices SET location_id = ? WHERE id IN ($ph)")->execute(array_merge([$loc], $ids));
+    audit('assign_location', ($loc ?? 'yok') . ' <- ' . count($ids) . ' cihaz');
+    json_out(['ok' => true, 'count' => count($ids)]);
 
 case 'stats:GET':
     json_out(dashboard_stats());

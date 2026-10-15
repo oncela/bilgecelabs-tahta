@@ -150,6 +150,11 @@ function device_from_token(): int {
 }
 
 /** Cihaz türü etiketleri (panelde görünen). */
+/** Lokasyonlar (şubeler), sıralı. */
+function locations_all(): array {
+    return db()->query('SELECT id, name FROM locations ORDER BY sort, name')->fetchAll();
+}
+
 function device_types(): array {
     return ['board' => 'Akıllı tahta', 'classroom' => 'Sınıf bilgisayarı', 'office' => 'İdare', 'desk' => 'Danışma', 'other' => 'Diğer'];
 }

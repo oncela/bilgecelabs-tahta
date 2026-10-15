@@ -6,11 +6,12 @@ function menu_items(): array {
     return [
         'Günlük' => [
             ['dashboard.php', 'Genel bakış', 'home', true],
-            ['rooms.php', 'Sınıflar', 'school', true],
-            ['devices.php', 'Tahtalar', 'device-desktop', true],
+            ['rooms.php', 'Departmanlar', 'layout-grid', true],
+            ['devices.php', 'Cihazlar', 'device-desktop', true],
             ['schedule.php', 'Zamanlama', 'calendar-time', false],
         ],
         'Yönetim' => [
+            ['locations.php', 'Lokasyonlar', 'building', true],
             ['software.php', 'Yazılımlar', 'apps', false],
             ['shared.php', 'Ortak alan', 'folder', true],
             ['security.php', 'Güvenlik', 'shield-check', false],

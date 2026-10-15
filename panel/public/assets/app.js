@@ -78,8 +78,10 @@ const Devices = {
   visible() {
     const room = document.getElementById('room-filter').value;
     const type = document.getElementById('type-filter').value;
+    const loc = document.getElementById('loc-filter').value;
     const q = document.getElementById('search').value.trim().toLocaleLowerCase('tr');
     return this.list.filter((d) => {
+      if (loc && String(d.location_id || '') !== loc) return false;
       if (type && d.type !== type) return false;
       if (room && d.room !== room) return false;
       if (!q) return true;
@@ -120,6 +122,14 @@ const Devices = {
     sel.value = rooms.includes(current) ? current : '';
     const dl = document.getElementById('room-list');
     dl.replaceChildren(...rooms.map((r) => new Option(r)));
+    // Lokasyon filtresi ve pencere seçimi, cihazlarda görünen lokasyonlardan
+    const locs = new Map();
+    for (const d of this.list) if (d.location_id) locs.set(d.location_id, d.location);
+    const lf = document.getElementById('loc-filter');
+    const lcur = lf.value;
+    lf.replaceChildren(new Option('Tüm lokasyonlar', ''));
+    for (const [idv, nm] of locs) lf.append(new Option(nm, idv));
+    lf.value = [...locs.keys()].map(String).includes(lcur) ? lcur : '';
   },
 
   render() {
@@ -178,6 +188,7 @@ const Devices = {
     tr.append(
       tdChk,
       tdName,
+      el('td', '', d.location || '—'),
       el('td', '', d.type_label || '—'),
       el('td', '', d.room || '—'),
       tdState,
@@ -200,9 +211,32 @@ const Devices = {
     all.checked = vis.length > 0 && vis.every((d) => this.selected.has(d.id));
   },
 
+  async assignLocation() {
+    if (!this.selected.size) { alert('Önce cihaz seçin.'); return; }
+    let opts = '<option value="">— Lokasyonsuz —</option>';
+    try {
+      const data = await api('locations');
+      opts += data.locations.map((l) => '<option value="' + l.id + '">' + l.name.replace(/[<>&]/g, '') + '</option>').join('');
+    } catch (e) {}
+    const dlg = document.getElementById('assign-dialog');
+    document.getElementById('assign-select').innerHTML = opts;
+    document.getElementById('assign-count').textContent = this.selected.size + ' cihaz seçili';
+    dlg.showModal();
+  },
+
   init() {
     document.getElementById('room-filter').addEventListener('change', () => this.render());
     document.getElementById('type-filter').addEventListener('change', () => this.render());
+    document.getElementById('loc-filter').addEventListener('change', () => this.render());
+    document.getElementById('assign-loc-btn').addEventListener('click', () => this.assignLocation());
+    document.getElementById('assign-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await api('assign_location', { location_id: document.getElementById('assign-select').value, device_ids: [...this.selected] });
+        document.getElementById('assign-dialog').close();
+        this.load();
+      } catch (err) { alert(err.message); }
+    });
     document.getElementById('search').addEventListener('input', () => this.render());
     document.getElementById('select-all').addEventListener('change', (e) => {
       for (const d of this.visible()) {
@@ -477,6 +511,7 @@ const DeviceDialog = {
         name: document.getElementById('dev-name').value,
         room: document.getElementById('dev-room').value,
         type: document.getElementById('dev-type').value,
+        location_id: document.getElementById('dev-location').value,
       });
       document.getElementById('device-dialog').close();
       Devices.load();
@@ -938,6 +973,48 @@ const Shared = {
 // ---------------- Başlatma ----------------
 
 const page = document.querySelector('[data-page]')?.dataset.page;
+const Locations = {
+  async load() {
+    const tbody = document.getElementById('loc-rows');
+    try {
+      const data = await api('locations');
+      if (!data.locations.length) {
+        const tr = el('tr', 'empty-row'); const td = el('td', '', 'Henuz lokasyon yok.'); td.colSpan = 3; tr.append(td);
+        tbody.replaceChildren(tr); return;
+      }
+      tbody.replaceChildren(...data.locations.map((l) => {
+        const tr = el('tr');
+        tr.append(el('td', 'fw-medium', l.name), el('td', '', String(l.devices)));
+        const act = el('td', 'text-nowrap');
+        const ren = el('button', 'btn btn-sm me-1'); ren.type = 'button'; ren.textContent = 'Yeniden adlandir';
+        ren.addEventListener('click', async () => {
+          const nm = prompt('Yeni ad:', l.name); if (nm === null) return;
+          try { await api('location_save', { id: l.id, name: nm }); this.load(); } catch (e) { alert(e.message); }
+        });
+        const del = el('button', 'btn btn-sm btn-ghost-danger'); del.type = 'button';
+        del.append(el('i', 'ti ti-trash'));
+        del.addEventListener('click', async () => {
+          if (del.dataset.c) { try { await api('location_delete', { id: l.id }); this.load(); } catch (e) { alert(e.message); } }
+          else { del.dataset.c = '1'; del.title = 'Tekrar tiklayin'; }
+        });
+        act.append(ren, del);
+        tr.append(act);
+        return tr;
+      }));
+    } catch (err) {
+      const tr = el('tr', 'empty-row'); const td = el('td', '', err.message); td.colSpan = 3; tr.append(td); tbody.replaceChildren(tr);
+    }
+  },
+  init() {
+    document.getElementById('loc-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const inp = document.getElementById('loc-name');
+      try { await api('location_save', { name: inp.value }); inp.value = ''; this.load(); } catch (err) { alert(err.message); }
+    });
+    this.load();
+  },
+};
+
 if (page === 'devices') {
   Devices.init();
   CommandDialog.init();
@@ -951,4 +1028,6 @@ if (page === 'devices') {
   Remote.init();
 } else if (page === 'shared') {
   Shared.init();
+} else if (page === 'locations') {
+  Locations.init();
 }
