@@ -2,15 +2,21 @@
 GO      ?= $(HOME)/.local/go/bin/go
 VERSION := $(shell cat VERSION)
 
-.PHONY: agent lint migrate release clean theme theme-deploy check
+.PHONY: test agent destek lint migrate release clean theme theme-deploy check
 
-agent: ## Windows ajanını derle (sürüm bilgisi ve manifest dahil)
+destek: ## Self servis penceresini (BilgeceLabs Destek) derle; ajan bunu içine gömer
+	cd agent/cmd/bilgece-destek && $(HOME)/go/bin/go-winres make --arch amd64 \
+		--product-version $(VERSION).0 --file-version $(VERSION).0
+	cd agent && GOOS=windows GOARCH=amd64 $(GO) build -trimpath \
+		-ldflags "-H windowsgui -X main.version=$(VERSION)" -o cmd/aci-ajan/assets/bilgece-destek.exe ./cmd/bilgece-destek
+
+agent: destek ## Windows ajanını derle (sürüm bilgisi ve manifest dahil)
 	cd agent/cmd/aci-ajan && $(HOME)/go/bin/go-winres make --arch amd64 \
 		--product-version $(VERSION).0 --file-version $(VERSION).0
 	cd agent && GOOS=windows GOARCH=amd64 $(GO) build -trimpath \
 		-ldflags "-H windowsgui -X main.version=$(VERSION)" -o build/bilgece-tahta.exe ./cmd/aci-ajan
 
-lint: ## Go ve PHP sözdizimi kontrolü
+lint: destek ## Go ve PHP sözdizimi kontrolü
 	cd agent && GOOS=windows $(GO) vet ./...
 	find panel -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
 
@@ -42,7 +48,9 @@ theme-deploy: theme ## MeshCentral temasını sunucuya kopyala
 	sudo cp -r theme/meshcentral/public /opt/meshcentral/meshcentral-data/theme-pack/aci/
 	sudo chown -R meshcentral:meshcentral /opt/meshcentral/meshcentral-data/theme-pack
 
-check: lint ## Sözdizimi + uçtan uca duman testi (ACI_TEST_* ortam değişkenleri gerekli)
+test: ## Panel testleri (geçici veritabanı ve sunucu; canlıya dokunmaz)
+	bash panel/tests/run.sh
+
+check: lint ## Sözdizimi + tüm panel testleri (geçici ortamda)
 	/opt/node/bin/node --check panel/public/assets/app.js
-	bash panel/tests/smoke.sh
-	bash panel/tests/features.sh
+	bash panel/tests/run.sh

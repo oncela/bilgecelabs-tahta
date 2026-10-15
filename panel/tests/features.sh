@@ -71,6 +71,29 @@ R=$(api -X POST "$B/admin_api.php?action=catalog_install" -d "{\"catalog_id\":$C
 R=$(dev '{"version":"0.0.1","results":[]}'); check "cihaz install_software komutunu alır" '7zip.7zip' "$R"
 R=$(api -X POST "$B/admin_api.php?action=catalog_delete" -d "{\"id\":$CID}"); check "katalog programı silinir" '"ok":true' "$R"
 
+echo "Self servis (destek penceresi)"
+R=$(api -X POST "$B/admin_api.php?action=catalog_save" -d '{"name":"FEAT WinRAR","method":"winget","winget_id":"RARLab.WinRAR","self_service":1}'); SID=$(echo "$R" | jget "['id']")
+R=$(api -X POST "$B/admin_api.php?action=catalog_save" -d '{"name":"FEAT Gizli","method":"winget","winget_id":"Gizli.Paket","self_service":0}'); HID=$(echo "$R" | jget "['id']")
+R=$(dev '{"version":"0.0.1","results":[]}'); check "durum yalnız izinli programları içerir" "FEAT WinRAR" "$R"
+[[ "$R" != *"FEAT Gizli"* ]] && ok "self servise kapalı program görünmez" || fail "self servise kapalı program görünmez" "$R"
+R=$(dev '{"version":"0.0.1","user":"ogretmen1","results":[],"requests":[{"type":"ticket","subject":"Projeksiyon yok","message":"Görüntü gelmiyor"}]}')
+check "talep pencerenin durumuna eklenir" "Projeksiyon yok" "$R"
+R=$(api "$B/admin_api.php?action=tickets"); check "talep panelde kullanıcıyla görünür" '"user_name":"ogretmen1"' "$R"
+TID=$(echo "$R" | jget "['tickets'][0]['id']")
+R=$(api "$B/admin_api.php?action=tickets_count"); check "açık talep rozeti sayar" '"open":1' "$R"
+R=$(api -X POST "$B/admin_api.php?action=ticket_update" -d "{\"id\":$TID,\"reply\":\"Kabloyu kontrol ediyoruz\",\"status\":\"closed\"}"); check "talebe yanıt yazılır" '"ok":true' "$R"
+R=$(dev '{"version":"0.0.1","results":[]}'); check "yanıt destek penceresine gider" "Kabloyu kontrol ediyoruz" "$R"
+dev "{\"version\":\"0.0.1\",\"results\":[],\"requests\":[{\"type\":\"install\",\"catalog_id\":$HID}]}" >/dev/null
+R=$(dev '{"version":"0.0.1","results":[]}'); [[ "$R" != *"Gizli.Paket"* ]] && ok "izinsiz program kurulamaz" || fail "izinsiz program kurulamaz" "$R"
+dev "{\"version\":\"0.0.1\",\"results\":[],\"requests\":[{\"type\":\"install\",\"catalog_id\":$SID},{\"type\":\"install\",\"catalog_id\":$SID}]}" >/dev/null
+R=$(dev '{"version":"0.0.1","results":[]}'); check "izinli program kurulum komutu gelir" "RARLab.WinRAR" "$R"
+N=$(echo "$R" | python3 -c "import sys,json;print(sum(1 for c in json.load(sys.stdin)['commands'] if c['type']=='install_software'))")
+[[ "$N" == 1 ]] && ok "aynı kurulum iki kez sıraya girmez" || fail "aynı kurulum iki kez sıraya girmez" "komut: $N"
+R=$(dev '{"version":"0.0.1","results":[]}'); check "kurulum durumu pencerede görünür" '"installs":[{"name":"FEAT WinRAR"' "$R"
+api -X POST "$B/admin_api.php?action=catalog_delete" -d "{\"id\":$SID}" >/dev/null
+api -X POST "$B/admin_api.php?action=catalog_delete" -d "{\"id\":$HID}" >/dev/null
+R=$(curl -s -b "$CJ" -o "$TMP/p.html" -w '%{http_code}' "$B/tickets.php"); [[ $R == 200 ]] && ! grep -qiE 'fatal error|warning:' "$TMP/p.html" && ok "tickets.php açılır" || fail "tickets.php açılır" "HTTP $R"
+
 echo "Uzaktan güncelleme"
 R=$(dev '{"version":"0.0.1","results":[]}'); check "eski sürüme güncelleme önerilir" '"update":{"version"' "$R"
 SV=$(echo "$R" | jget "['update']['version']")

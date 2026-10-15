@@ -156,6 +156,10 @@ func uninstall() error {
 func removeFiles() {
 	os.RemoveAll(dataDir())
 	dir := installDir()
+	// Self servis penceresini kapat ve sil
+	killProcesses(destekExeName)
+	time.Sleep(300 * time.Millisecond)
+	os.Remove(filepath.Join(dir, destekExeName))
 	exe := filepath.Join(dir, exeName)
 	if err := os.Remove(exe); err != nil && !os.IsNotExist(err) {
 		if p, err := windows.UTF16PtrFromString(exe); err == nil {

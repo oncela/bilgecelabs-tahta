@@ -5,6 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/../../src/bootstrap.php';
 require_once __DIR__ . '/../../src/mesh.php';
 require_once __DIR__ . '/../../src/alerts.php';
+require_once __DIR__ . '/../../src/selfservice.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_out(['error' => 'POST gerekli'], 405);
 
@@ -124,6 +125,11 @@ if ($ids) {
 $pdo->commit();
 
 $resp = ['commands' => $cmds, 'interval' => ACI_POLL_INTERVAL];
+// Self servis: destek penceresinden gelen istekler (talep, izinli program kurulumu)
+if (!empty($in['requests']) && is_array($in['requests'])) {
+    selfservice_handle($deviceId, $in['requests'], (string)($in['user'] ?? ''));
+}
+$resp['destek'] = selfservice_state($deviceId);
 // Uzaktan güncelleme: sunucudaki ajan sürümü cihazınkinden yeniyse bildir
 $srvVer = agent_version();
 $devVer = (string)($in['version'] ?? '');

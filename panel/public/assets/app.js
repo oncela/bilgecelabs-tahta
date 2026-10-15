@@ -1090,20 +1090,78 @@ const Alerts = {
   init() { this.load(); setInterval(() => { if (!document.hidden) this.load(); }, 20000); },
 };
 
+const TK_STATUS = { open: ['Açık', 'bg-warning-lt'], closed: ['Kapalı', 'bg-success-lt'] };
+
+const Tickets = {
+  list: [], current: null,
+  async load() {
+    const tb = document.getElementById('tk-rows');
+    try {
+      this.list = (await api('tickets')).tickets;
+      const open = this.list.filter((t) => t.status === 'open').length;
+      document.getElementById('tk-count').textContent = open + ' açık';
+      if (!this.list.length) {
+        const tr = el('tr', 'empty-row'); const td = el('td', '', 'Henüz destek talebi yok.'); td.colSpan = 7; tr.append(td);
+        tb.replaceChildren(tr); return;
+      }
+      tb.replaceChildren(...this.list.map((t) => {
+        const tr = el('tr');
+        const [lbl, cls] = TK_STATUS[t.status] || TK_STATUS.open;
+        const dev = [t.name || t.hostname || '—', t.location, t.room].filter(Boolean).join(' · ');
+        const subj = el('td');
+        subj.append(el('div', 'fw-medium', t.subject));
+        if (t.reply) subj.append(el('div', 'small text-secondary', 'Yanıt: ' + t.reply));
+        tr.append(el('td', 'text-secondary', '#' + t.id), tag2(cls, lbl), el('td', '', dev),
+          el('td', '', t.user_name || '—'), subj, el('td', 'text-nowrap', fmtTime(t.created_at)));
+        const act = el('td', 'text-nowrap');
+        const btn = el('button', 'btn btn-sm', 'Aç'); btn.type = 'button';
+        btn.addEventListener('click', () => this.open(t));
+        act.append(btn); tr.append(act); return tr;
+      }));
+    } catch (err) {
+      const tr = el('tr', 'empty-row'); const td = el('td', '', err.message); td.colSpan = 7; tr.append(td); tb.replaceChildren(tr);
+    }
+  },
+  open(t) {
+    this.current = t;
+    document.getElementById('tk-title').textContent = '#' + t.id + ' ' + t.subject;
+    document.getElementById('tk-meta').textContent = [t.name || t.hostname, t.user_name, fmtTime(t.created_at)].filter(Boolean).join(' · ');
+    document.getElementById('tk-message').textContent = t.message || '(açıklama yok)';
+    document.getElementById('tk-reply').value = t.reply || '';
+    document.getElementById('tk-close').checked = t.status === 'closed';
+    document.getElementById('tk-dialog').showModal();
+  },
+  async save(e) {
+    e.preventDefault();
+    const t = this.current; if (!t) return;
+    try {
+      await api('ticket_update', { id: t.id, reply: document.getElementById('tk-reply').value,
+        status: document.getElementById('tk-close').checked ? 'closed' : 'open' });
+      document.getElementById('tk-dialog').close();
+      this.load(); updateAlertBadge();
+    } catch (err) { alert(err.message); }
+  },
+  init() {
+    document.getElementById('tk-form').addEventListener('submit', (e) => this.save(e));
+    this.load(); setInterval(() => { if (!document.hidden) this.load(); }, 20000);
+  },
+};
+
 function tag2(cls, text) { const td = el('td'); td.append(el('span', 'badge ' + cls, text)); return td; }
 
-// Menüde açık uyarı rozeti (her sayfada)
+// Menüde rozetler: açık uyarılar ve açık destek talepleri (her sayfada)
+function setMenuBadge(href, n) {
+  const link = document.querySelector('.aci-sidebar a[href="' + href + '"]');
+  if (!link) return;
+  let b = link.querySelector('.alert-badge');
+  if (n > 0) {
+    if (!b) { b = el('span', 'badge bg-danger ms-auto alert-badge'); link.append(b); }
+    b.textContent = n;
+  } else if (b) { b.remove(); }
+}
 async function updateAlertBadge() {
-  try {
-    const d = await api('alerts_count');
-    const link = document.querySelector('.aci-sidebar a[href="alerts.php"]');
-    if (!link) return;
-    let b = link.querySelector('.alert-badge');
-    if (d.open > 0) {
-      if (!b) { b = el('span', 'badge bg-danger ms-auto alert-badge'); link.append(b); }
-      b.textContent = d.open;
-    } else if (b) { b.remove(); }
-  } catch (e) {}
+  try { setMenuBadge('alerts.php', (await api('alerts_count')).open); } catch (e) {}
+  try { setMenuBadge('tickets.php', (await api('tickets_count')).open); } catch (e) {}
 }
 updateAlertBadge();
 setInterval(updateAlertBadge, 30000);
@@ -1299,6 +1357,8 @@ if (page === 'devices') {
   Inventory.init();
 } else if (page === 'security') {
   Security.init();
+} else if (page === 'tickets') {
+  Tickets.init();
 } else if (page === 'software') {
   Software.init();
   CommandDialog.init();

@@ -65,3 +65,25 @@ def frame(dest, status, color):
 frame('kurulum.png', 'BilgeceLabs Tahta kuruluyor…', (91, 102, 120))
 frame('kurulum-tamam.png', 'Kurulum tamamlandı ✓', (40, 44, 52))
 print('kurulum ekranı üretildi')
+
+# --- Self servis (BilgeceLabs Destek) tepsi simgesi: beyaz yuvarlak zemin + kırmızı "b" ---
+def tray_icon(dest):
+    src = Image.open(os.path.join(HERE, '../theme/brand/apple-touch-icon.png')).convert('RGB')
+    px = src.load()
+    xs = [x for x in range(src.width) for y in range(src.height) if sum(px[x, y]) < 600]
+    ys = [y for y in range(src.height) for x in range(src.width) if sum(px[x, y]) < 600]
+    mark = src.crop((min(xs), min(ys), max(xs) + 1, max(ys) + 1))
+    S = 256
+    out = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+    ImageDraw.Draw(out).rounded_rectangle([0, 0, S - 1, S - 1], radius=56, fill=(255, 255, 255, 255))
+    pad = int(S * 0.16)
+    sc = min((S - 2 * pad) / mark.width, (S - 2 * pad) / mark.height)
+    m = mark.resize((int(mark.width * sc), int(mark.height * sc)), Image.LANCZOS)
+    out.paste(m, ((S - m.width) // 2, (S - m.height) // 2))
+    out.save(dest, sizes=[(16, 16), (20, 20), (24, 24), (32, 32), (48, 48), (64, 64), (256, 256)])
+
+tray_icon(os.path.join(HERE, '../agent/cmd/bilgece-destek/winres/icon.ico'))
+# Pencere üst şeridi için logo (2x)
+hl = logo.copy(); hsc = 68 / hl.height
+hl.resize((int(hl.width * hsc), 68), Image.LANCZOS).save(os.path.join(HERE, '../agent/cmd/bilgece-destek/logo.png'))
+print('destek simgesi üretildi')

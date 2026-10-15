@@ -7,6 +7,7 @@ function menu_items(): array {
         'Günlük' => [
             ['dashboard.php', 'Genel bakış', 'home', true],
             ['alerts.php', 'Uyarılar', 'bell', true],
+            ['tickets.php', 'Destek talepleri', 'lifebuoy', true],
             ['rooms.php', 'Departmanlar', 'layout-grid', true],
             ['devices.php', 'Cihazlar', 'device-desktop', true],
             ['schedule.php', 'Zamanlama', 'calendar-time', false],

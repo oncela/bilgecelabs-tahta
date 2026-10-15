@@ -302,6 +302,26 @@ case 'alert_resolve:POST':
     audit('alert_resolve', "#$aid");
     json_out(['ok' => true]);
 
+case 'tickets:GET':
+    $rows = db()->query("SELECT t.id, t.device_id, t.user_name, t.subject, t.message, t.status, t.reply,
+            t.created_at, t.updated_at, d.hostname, d.name, d.room, l.name AS location
+        FROM tickets t LEFT JOIN devices d ON d.id = t.device_id LEFT JOIN locations l ON l.id = d.location_id
+        ORDER BY t.status = 'open' DESC, t.id DESC LIMIT 200")->fetchAll();
+    json_out(['tickets' => $rows]);
+
+case 'tickets_count:GET':
+    json_out(['open' => (int)db()->query("SELECT COUNT(*) FROM tickets WHERE status='open'")->fetchColumn()]);
+
+case 'ticket_update:POST':
+    // Yanıt yaz ve/veya durumu değiştir (kullanıcı yanıtı destek penceresinde görür)
+    $tid = (int)($in['id'] ?? 0);
+    $status = in_array($in['status'] ?? '', ['open', 'closed'], true) ? $in['status'] : null;
+    $reply = array_key_exists('reply', $in) ? trim(mb_substr((string)$in['reply'], 0, 4000)) : null;
+    db()->prepare('UPDATE tickets SET status = COALESCE(?, status), reply = COALESCE(?, reply), updated_at = NOW() WHERE id = ?')
+        ->execute([$status, $reply === '' ? null : $reply, $tid]);
+    audit('ticket_update', "#$tid" . ($status ? " $status" : '') . ($reply ? ' yanıt' : ''));
+    json_out(['ok' => true]);
+
 case 'inventory:GET':
     $rows = db()->query("SELECT d.id, d.hostname, d.name, d.room, l.name AS location,
             i.serial, i.manufacturer, i.model, i.cpu, i.ram_gb, i.os, i.software_count, i.updated_at

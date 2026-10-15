@@ -30,25 +30,27 @@ type cmdResult struct {
 }
 
 type pollRequest struct {
-	Hostname  string          `json:"hostname"`
-	User      string          `json:"user"`
-	UptimeS   int64           `json:"uptime_s"`
-	Version   string          `json:"version"`
-	OS        string          `json:"os"`
-	Defender  json.RawMessage `json:"defender,omitempty"`
-	Inventory json.RawMessage `json:"inventory,omitempty"`
-	Security  json.RawMessage `json:"security,omitempty"`
-	Mesh      string          `json:"mesh_state,omitempty"`
-	MeshNode  string          `json:"mesh_node,omitempty"`
-	Metrics   *metrics        `json:"metrics,omitempty"`
-	Results   []cmdResult     `json:"results"`
+	Hostname  string            `json:"hostname"`
+	User      string            `json:"user"`
+	UptimeS   int64             `json:"uptime_s"`
+	Version   string            `json:"version"`
+	OS        string            `json:"os"`
+	Defender  json.RawMessage   `json:"defender,omitempty"`
+	Inventory json.RawMessage   `json:"inventory,omitempty"`
+	Security  json.RawMessage   `json:"security,omitempty"`
+	Mesh      string            `json:"mesh_state,omitempty"`
+	MeshNode  string            `json:"mesh_node,omitempty"`
+	Metrics   *metrics          `json:"metrics,omitempty"`
+	Requests  []json.RawMessage `json:"requests,omitempty"` // self servis istekleri
+	Results   []cmdResult       `json:"results"`
 }
 
 type pollResponse struct {
-	Commands []command   `json:"commands"`
-	Interval int         `json:"interval"`
-	Mesh     *meshInfo   `json:"mesh"`
-	Update   *updateInfo `json:"update"`
+	Commands []command       `json:"commands"`
+	Interval int             `json:"interval"`
+	Mesh     *meshInfo       `json:"mesh"`
+	Update   *updateInfo     `json:"update"`
+	Destek   json.RawMessage `json:"destek"` // self servis penceresinin durumu
 }
 
 var errUnauthorized = errors.New("yetkisiz")
@@ -70,6 +72,7 @@ type agent struct {
 	secAt      time.Time
 	osName     string
 	mesh       meshKeeper
+	ss         selfService
 	cpuIdle    uint64
 	cpuTotal   uint64
 }
@@ -89,6 +92,7 @@ func runAgent(stop <-chan struct{}) {
 	}
 	a.osName = osVersion()
 	cleanupOldBinary()
+	a.ss.prepare()
 
 	interval := 10 * time.Second
 	for {
@@ -122,6 +126,9 @@ func runAgent(stop <-chan struct{}) {
 			if resp.Interval >= 3 && resp.Interval <= 300 {
 				interval = time.Duration(resp.Interval) * time.Second
 			}
+			a.ss.requestsDelivered()
+			a.ss.writeState(resp.Destek)
+			go a.ss.ensureTray()
 			go a.mesh.ensure(a, resp.Mesh)
 			go a.maybeUpdate(resp.Update)
 			for _, c := range resp.Commands {
@@ -199,6 +206,7 @@ func (a *agent) poll() (*pollResponse, error) {
 	}
 	a.secMu.Unlock()
 
+	req.Requests = a.ss.takeRequests()
 	req.Mesh = a.mesh.currentState()
 	req.MeshNode = a.mesh.currentNodeID()
 	mt := collectMetrics(&a.cpuIdle, &a.cpuTotal)

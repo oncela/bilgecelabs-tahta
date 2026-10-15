@@ -40,6 +40,14 @@ jobs:
           go install github.com/tc-hib/go-winres@v0.3.3
           go-winres make --arch amd64 --product-version "$env:VERSION.0" --file-version "$env:VERSION.0"
 
+      - name: Self servis penceresi (ajan içine gömülür)
+        working-directory: agent
+        run: |
+          Push-Location cmd/bilgece-destek
+          go-winres make --arch amd64 --product-version "$env:VERSION.0" --file-version "$env:VERSION.0"
+          Pop-Location
+          go build -trimpath -ldflags "-H windowsgui -X main.version=$env:VERSION" -o cmd/aci-ajan/assets/bilgece-destek.exe ./cmd/bilgece-destek
+
       - name: Kontrol
         working-directory: agent
         run: go vet ./...

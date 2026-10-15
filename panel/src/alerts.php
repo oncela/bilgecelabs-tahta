@@ -121,8 +121,11 @@ function alert_sweep(): void {
 /** Yeni uyarıyı etkin bildirim kanallarına gönderir. */
 function alert_notify(int $alertId, string $severity, string $message): void {
     $title = ($severity === 'critical' ? '🔴 ' : '🟠 ') . ACI_PRODUCT . ' uyarı';
-    $body = $message;
+    notify_channels($title, $message, ['severity' => $severity, 'alert_id' => $alertId]);
+}
 
+/** Bir bildirimi etkin kanallara (Telegram, webhook, e-posta) gönderir. */
+function notify_channels(string $title, string $body, array $extra = []): void {
     // Telegram
     $tgToken = setting('notify_telegram_token');
     $tgChat = setting('notify_telegram_chat');
@@ -136,11 +139,10 @@ function alert_notify(int $alertId, string $severity, string $message): void {
     // Webhook
     $hook = setting('notify_webhook');
     if ($hook && filter_var($hook, FILTER_VALIDATE_URL)) {
-        http_post_json($hook, [
+        http_post_json($hook, $extra + [
             'product' => ACI_PRODUCT,
-            'severity' => $severity,
-            'message' => $message,
-            'alert_id' => $alertId,
+            'title' => $title,
+            'message' => $body,
             'time' => date('c'),
         ]);
     }
