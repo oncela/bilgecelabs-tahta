@@ -47,6 +47,7 @@ const (
 	idList    = 106
 	idStatus  = 107
 	idHello   = 108
+	idOK      = 1 // Enter tuşu (IsDialogMessage varsayılan düğme)
 	menuOpen  = 201
 	menuAbout = 202
 
@@ -158,6 +159,7 @@ func main() {
 		return
 	}
 	a.hwnd = h
+	logf("başladı: sürüm %s, kullanıcı %s, dpi %d", version, os.Getenv("USERNAME"), a.dpi)
 	a.buildControls()
 	a.addTrayIcon()
 	a.reload(false)
@@ -289,6 +291,7 @@ func (a *app) notify(title, text string) { a.trayIcon(nimModify, title, text) }
 
 // showMain pencereyi saatin üstünde (çalışma alanının sağ altı) açar.
 func (a *app) showMain() {
+	logf("pencere açıldı")
 	a.reload(false)
 	var wa rect
 	pSystemParametersInfoW.Call(spiGetWorkArea, 0, uintptr(unsafe.Pointer(&wa)), 0)
@@ -382,6 +385,20 @@ func shortDate(s string) string {
 	return t.Format("02.01 15:04")
 }
 
+// logf pencere günlüğü (destek\pencere.log): ajan ve yönetici uzaktan okuyabilir.
+func logf(format string, args ...any) {
+	p := filepath.Join(dir(), "pencere.log")
+	if st, err := os.Stat(p); err == nil && st.Size() > 256<<10 {
+		os.Rename(p, p+".1")
+	}
+	f, err := os.OpenFile(p, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return
+	}
+	fmt.Fprintf(f, "%s %s\n", time.Now().Format("2006-01-02 15:04:05"), fmt.Sprintf(format, args...))
+	f.Close()
+}
+
 // writeRequest isteği ajanın okuyacağı klasöre bırakır (önce .tmp, sonra ad değişimi).
 func writeRequest(v any) error {
 	b, err := json.Marshal(v)
@@ -399,13 +416,16 @@ func writeRequest(v any) error {
 }
 
 func (a *app) sendTicket() {
+	a.setStatus("Gönderiliyor…")
 	subj := strings.TrimSpace(windowText(a.ctl[idSubject]))
 	msg := strings.TrimSpace(windowText(a.ctl[idMessage]))
+	logf("talep: konu=%d karakter, açıklama=%d karakter", len(subj), len(msg))
 	if subj == "" && msg == "" {
 		a.setStatus("Lütfen konu veya açıklama yazın.")
 		return
 	}
 	if err := writeRequest(map[string]string{"type": "ticket", "subject": subj, "message": msg}); err != nil {
+		logf("talep yazılamadı: %v", err)
 		a.setStatus("Talep kaydedilemedi: " + err.Error())
 		return
 	}
@@ -423,6 +443,7 @@ func (a *app) installSelected() {
 	}
 	name := a.st.Catalog[sel].Name
 	if err := writeRequest(map[string]any{"type": "install", "catalog_id": a.catalogIDs[sel]}); err != nil {
+		logf("kurulum isteği yazılamadı: %v", err)
 		a.setStatus("İstek kaydedilemedi: " + err.Error())
 		return
 	}
@@ -478,9 +499,12 @@ func wndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		return 0
 	case wmCommand:
 		id, code := int(wParam&0xFFFF), int(wParam>>16&0xFFFF)
+		if id == idSend || id == idInstall || id == idOK {
+			logf("komut: id=%d kod=%d", id, code)
+		}
 		if code == bnClicked {
 			switch id {
-			case idSend:
+			case idSend, idOK: // düğme ya da Konu alanında Enter
 				a.sendTicket()
 			case idInstall:
 				a.installSelected()
