@@ -327,6 +327,8 @@ func primaryMAC() string {
 // defenderScript: koruma durumu, PUA ayarı ve son tespitler (Tehditler sayfası).
 // Tespitlerde dosya yolu, kaynak ve durum gelir; dosyanın kendisi gönderilmez.
 const defenderScript = `$ErrorActionPreference = 'SilentlyContinue'
+# Yaş alanları "hiç yapılmadı" için 4294967295 döner: -1 olarak bildir (int taşmasın)
+function Gun($v) { if ($v -eq $null -or [int64]$v -gt 100000) { -1 } else { [int]$v } }
 $s = Get-MpComputerStatus
 $names = @{}
 Get-MpThreat | ForEach-Object { $names[[string]$_.ThreatID] = $_ }
@@ -353,9 +355,9 @@ $det = @($all | Sort-Object InitialDetectionTime -Descending | Select-Object -Fi
 [pscustomobject]@{
   enabled             = [bool]$s.AntivirusEnabled
   realtime            = [bool]$s.RealTimeProtectionEnabled
-  sig_age_days        = [int]$s.AntivirusSignatureAge
-  quick_scan_age_days = [int]$s.QuickScanAge
-  full_scan_age_days  = [int]$s.FullScanAge
+  sig_age_days        = Gun $s.AntivirusSignatureAge
+  quick_scan_age_days = Gun $s.QuickScanAge
+  full_scan_age_days  = Gun $s.FullScanAge
   threats             = [int]$act
   threats_history     = [int]$all.Count
   pua                 = [int](Get-MpPreference).PUAProtection
