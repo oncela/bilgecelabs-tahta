@@ -216,7 +216,7 @@ function preset_scripts(): array {
         'pua_off'            => ['pua.ps1', 120],
         'threat_clean'       => ['threat_clean.ps1', 1800],
         'defender_full_scan' => ['defender_full_scan.ps1', 14400],
-    ];
+    ] + array_fill_keys(array_map(fn($k) => 'koruma_' . $k, array_keys(koruma_islemleri())), ['koruma.ps1', 300]);
 }
 
 function preset_script(string $type): ?array {
@@ -228,7 +228,20 @@ function preset_script(string $type): ?array {
     // PUA betiği tek dosya: istenen mod başa eklenir
     $mode = ['pua_on' => 'Enabled', 'pua_audit' => 'AuditMode', 'pua_off' => 'Disabled'][$type] ?? null;
     if ($mode) $script = "\$Mod = '$mode'\n" . $script;
+    if (str_starts_with($type, 'koruma_')) $script = "\$Islem = '" . substr($type, 7) . "'\n" . $script;
     return ['script' => $script, 'timeout' => (string)$map[$type][1]];
+}
+
+/** Koruma ayarı işlemleri (src/scripts/koruma.ps1): işlem => panelde görünen ad. */
+function koruma_islemleri(): array {
+    return [
+        'asr_audit' => 'ASR kuralları: izleme modu', 'asr_on' => 'ASR kuralları: engelle', 'asr_off' => 'ASR kuralları: kapat',
+        'net_audit' => 'Ağ koruması: izleme modu', 'net_on' => 'Ağ koruması: engelle', 'net_off' => 'Ağ koruması: kapat',
+        'cfa_audit' => 'Klasör koruması: izleme modu', 'cfa_on' => 'Klasör koruması: engelle', 'cfa_off' => 'Klasör koruması: kapat',
+        'autorun_off' => 'USB otomatik çalıştırmayı kapat', 'autorun_default' => 'USB otomatik çalıştırma: varsayılan',
+        'scan_daily' => 'Günlük hızlı tarama (12:30)', 'scan_daily_off' => 'Günlük hızlı taramayı kapat',
+        'paket_izleme' => 'Okul koruma paketi: izleme modu', 'paket_engelle' => 'Okul koruma paketi: engelleme modu',
+    ];
 }
 
 /** Komut türleri: panelde görünen ad ve izin verilen argümanlar. */
@@ -251,5 +264,6 @@ function command_types(): array {
         'pua_off'         => ['PUA korumasını kapat', []],
         'threat_clean'    => ['Tehditleri temizle', []],
         'defender_full_scan' => ['Tam virüs taraması', []],
-    ];
+    ] + array_map(fn($ad) => [$ad, []], array_combine(
+        array_map(fn($k) => 'koruma_' . $k, array_keys(koruma_islemleri())), koruma_islemleri()));
 }

@@ -359,6 +359,31 @@ $av = @(Get-CimInstance -Namespace root/SecurityCenter2 -ClassName AntiVirusProd
     $st = [int64]$_.productState
     [pscustomobject]@{ name = [string]$_.displayName; on = ((($st -shr 12) -band 0xF) -eq 1); uptodate = ((($st -shr 4) -band 0xF) -eq 0) }
   })
+# Koruma ayarları (ASR, ağ koruması, klasör koruması, USB otomatik çalıştırma, günlük tarama)
+$p = Get-MpPreference
+$asr = @{}
+$ids = @($p.AttackSurfaceReductionRules_Ids); $acts = @($p.AttackSurfaceReductionRules_Actions)
+for ($i = 0; $i -lt $ids.Count; $i++) { if ($ids[$i]) { $asr[([string]$ids[$i]).ToLower()] = [int]$acts[$i] } }
+$ar = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer' -Name NoDriveTypeAutoRun).NoDriveTypeAutoRun
+$harden = [pscustomobject]@{
+  asr        = $asr
+  net        = [int]$p.EnableNetworkProtection
+  cfa        = [int]$p.EnableControlledFolderAccess
+  autorun    = $(if ($ar -eq $null) { -1 } else { [int]$ar })
+  quick_time = $(if ($p.ScanScheduleQuickScanTime -and $p.ScanScheduleQuickScanTime.TotalMinutes -gt 0) { [int]$p.ScanScheduleQuickScanTime.TotalMinutes } else { -1 })
+}
+# Koruma olayları (son 7 gün): 1121/1122 ASR, 1123/1124 klasör koruması, 1125/1126 ağ koruması, 1160 PUA izleme
+$ev = @(Get-WinEvent -FilterHashtable @{ LogName = 'Microsoft-Windows-Windows Defender/Operational'; Id = 1121,1122,1123,1124,1125,1126,1160; StartTime = (Get-Date).AddDays(-7) } -MaxEvents 30 | ForEach-Object {
+  $x = @{}; foreach ($d in ([xml]$_.ToXml()).Event.EventData.Data) { $x[$d.Name] = [string]$d.'#text' }
+  [pscustomobject]@{
+    time    = $_.TimeCreated.ToString('s')
+    event   = [int]$_.Id
+    rule    = ([string]$x['ID']).ToLower()
+    path    = [string]$(if ($x['Path']) { $x['Path'] } elseif ($x['Domain']) { $x['Domain'] } else { $x['Remote IP'] })
+    process = [string]$x['Process Name']
+    user    = [string]$x['User']
+  }
+})
 [pscustomobject]@{
   enabled             = [bool]$s.AntivirusEnabled
   realtime            = [bool]$s.RealTimeProtectionEnabled
@@ -370,4 +395,6 @@ $av = @(Get-CimInstance -Namespace root/SecurityCenter2 -ClassName AntiVirusProd
   pua                 = [int](Get-MpPreference).PUAProtection
   detections          = $det
   av                  = $av
+  harden              = $harden
+  events              = $ev
 } | ConvertTo-Json -Depth 4 -Compress`

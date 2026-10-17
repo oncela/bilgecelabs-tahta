@@ -356,7 +356,31 @@ case 'threats:GET':
             if (is_array($a) && !empty($a['on'])) { $n = mb_substr((string)($a['name'] ?? ''), 0, 40); $otherAv[$n] = ($otherAv[$n] ?? 0) + 1; break; }
         }
     }
+    // Koruma ayarları: her koruma için cihaz sayıları
+    $items = protection_items();
+    $prot = array_map(fn($it) => ['name' => $it[0], 'desc' => $it[1], 'audit' => $it[2],
+        'counts' => ['on' => 0, 'audit' => 0, 'partial' => 0, 'off' => 0, 'unknown' => 0, 'external' => 0]], $items);
+    foreach (db()->query('SELECT pua, harden, defender FROM devices')->fetchAll() as $dv) {
+        $dj = json_decode((string)$dv['defender'], true) ?: [];
+        $external = array_filter((array)($dj['av'] ?? []), fn($a) => is_array($a) && !empty($a['on'])) && empty($dj['realtime']);
+        $states = protection_states($dv['pua'] === null ? null : (int)$dv['pua'], json_decode((string)$dv['harden'], true) ?: null);
+        foreach ($items as $k => $_) $prot[$k]['counts'][$external ? 'external' : ($states[$k] ?? 'unknown')]++;
+    }
+    $ev = db()->query("SELECT e.event_id, e.rule, e.target, e.process, e.user_name, e.occurred_at, d.id AS device_id,
+            COALESCE(d.name, d.hostname) AS device, d.room
+        FROM protection_events e JOIN devices d ON d.id = e.device_id
+        WHERE e.occurred_at > NOW() - INTERVAL 7 DAY ORDER BY e.occurred_at DESC LIMIT 200")->fetchAll();
+    $rules = asr_rules();
+    $events = array_map(function ($e) use ($rules) {
+        [$kind, $mode] = protection_event_label((int)$e['event_id']);
+        return ['device' => $e['device'], 'room' => $e['room'], 'kind' => $kind, 'mode' => $mode,
+            'rule' => $rules[(string)$e['rule']] ?? null, 'target' => $e['target'], 'process' => $e['process'],
+            'user' => $e['user_name'], 'time' => $e['occurred_at']];
+    }, $ev);
+
     json_out([
+        'protections' => $prot,
+        'events' => $events,
         'threats' => $list,
         'summary' => [
             'active' => count(array_unique(array_map(fn($t) => $t['device_id'], array_filter($list, fn($t) => $t['active'])))),

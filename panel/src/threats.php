@@ -87,3 +87,69 @@ function threats_eval_outbreak(): void {
         alert_resolve(null, 'outbreak');
     }
 }
+
+/** Okul paketindeki ASR kuralları (src/scripts/koruma.ps1 ile aynı) => Türkçe ad. */
+function asr_rules(): array {
+    return [
+        'be9ba2d9-53ea-4cdc-84e5-9b1eeee46550' => "E-postadan gelen çalıştırılabilir içerik",
+        'd4f940ab-401b-4efc-aadc-ad5f3c50688a' => "Office'in alt işlem başlatması",
+        '3b576869-a4ec-4529-8536-b80a7769e899' => "Office'in çalıştırılabilir dosya üretmesi",
+        '75668c1f-73b5-4cf0-bb93-3ecf5cb7cc84' => "Office'in kod enjekte etmesi",
+        'd3e037e1-3eb8-44c8-a917-57927947596d' => 'Betiğin indirilen programı başlatması',
+        '5beb7efe-fd9a-4556-801d-275e5ffc04cc' => 'Gizlenmiş betik',
+        '92e97fa1-2edf-4476-bdd6-9dd0b4dddc7b' => 'Office makrosundan sistem çağrısı',
+        'b2b3f03d-6a65-4f7b-a9c7-1c7ef74a9ba4' => "USB'den imzasız program",
+        '9e6c4e1f-7d60-472f-ba1a-a39ef669e4b2' => 'Parola hırsızlığı (LSASS)',
+        'e6db77e5-3df2-4cf1-b95a-636979351e5b' => 'WMI ile kalıcılık',
+    ];
+}
+
+/**
+ * Bir cihazın koruma ayarlarını ortak durumlara indirger: on / audit / off / unknown.
+ * $pua: devices.pua, $h: devices.harden (JSON çözülmüş).
+ */
+function protection_states(?int $pua, ?array $h): array {
+    $m = fn($v) => $v === null ? 'unknown' : ([0 => 'off', 1 => 'on', 2 => 'audit'][(int)$v] ?? 'off');
+    $st = ['pua' => $m($pua)];
+    if (!$h) return $st + ['asr' => 'unknown', 'net' => 'unknown', 'cfa' => 'unknown', 'autorun' => 'unknown', 'scan' => 'unknown'];
+    $asr = (array)($h['asr'] ?? []);
+    $modes = array_map(fn($id) => (int)($asr[$id] ?? 0), array_keys(asr_rules()));
+    $st['asr'] = count(array_filter($modes, fn($x) => $x === 1)) === count($modes) ? 'on'
+        : (count(array_filter($modes, fn($x) => $x === 2 || $x === 1)) === count($modes) ? 'audit'
+        : (array_filter($modes) ? 'partial' : 'off'));
+    $st['net'] = $m($h['net'] ?? null);
+    $st['cfa'] = $m($h['cfa'] ?? null);
+    $st['autorun'] = ((int)($h['autorun'] ?? -1)) === 255 ? 'on' : 'off';
+    $st['scan'] = ((int)($h['quick_time'] ?? -1)) > 0 ? 'on' : 'off';
+    return $st;
+}
+
+/** Koruma satırları: anahtar => [ad, açıklama, izleme modu var mı] */
+function protection_items(): array {
+    return [
+        'pua' => ['PUA koruması', 'Crack/keygen, reklam yazılımı ve izinsiz paket yükleyicileri engeller.', true],
+        'asr' => ['ASR kuralları (10)', "USB'den imzasız program, Office makroları, e-postadan exe, gizlenmiş betik ve parola hırsızlığına karşı.", true],
+        'net' => ['Ağ koruması', 'Bilinen zararlı ve oltalama sitelerine bağlantıyı keser.', true],
+        'cfa' => ['Fidye yazılımı klasör koruması', 'Belgeleri tanımadığı programlara karşı korur. Tahta yazılımlarını engelleyebilir; önce izleyin.', true],
+        'autorun' => ['USB otomatik çalıştırma kapalı', 'USB takılınca kendiliğinden çalışan programları durdurur.', false],
+        'scan' => ['Günlük hızlı tarama', 'Her gün 12:30\'da (tahtalar açıkken) hızlı tarama.', false],
+    ];
+}
+
+/** Koruma olayı türü: [ad, mod: block/audit] */
+function protection_event_label(int $id): array {
+    return [1121 => ['ASR', 'block'], 1122 => ['ASR', 'audit'], 1123 => ['Klasör koruması', 'block'], 1124 => ['Klasör koruması', 'audit'],
+        1125 => ['Ağ koruması', 'audit'], 1126 => ['Ağ koruması', 'block'], 1160 => ['PUA', 'audit']][$id] ?? ['Defender', 'audit'];
+}
+
+/** Ajanın gönderdiği koruma olaylarını saklar. */
+function protection_events_store(int $deviceId, array $events): void {
+    $ins = db()->prepare('INSERT IGNORE INTO protection_events (device_id, event_id, rule, target, process, user_name, occurred_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)');
+    foreach (array_slice($events, 0, 50) as $e) {
+        if (!is_array($e) || empty($e['time']) || !preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', (string)$e['time'])) continue;
+        $ins->execute([$deviceId, (int)($e['event'] ?? 0), mb_substr((string)($e['rule'] ?? ''), 0, 64) ?: null,
+            mb_substr((string)($e['path'] ?? ''), 0, 500) ?: null, mb_substr((string)($e['process'] ?? ''), 0, 500) ?: null,
+            mb_substr((string)($e['user'] ?? ''), 0, 128) ?: null, str_replace('T', ' ', substr((string)$e['time'], 0, 19))]);
+    }
+}

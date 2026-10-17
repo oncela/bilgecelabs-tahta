@@ -72,9 +72,13 @@ if (isset($in['defender']) && is_array($in['defender'])) {
     $def = $in['defender'];
     $detections = isset($def['detections']) && is_array($def['detections']) ? $def['detections'] : null;
     $pua = isset($def['pua']) && in_array((int)$def['pua'], [0, 1, 2], true) ? (int)$def['pua'] : null;
-    unset($def['detections']);
-    $pdo->prepare('UPDATE devices SET defender = ?, defender_at = NOW(), pua = COALESCE(?, pua) WHERE id = ?')
-        ->execute([json_encode($def, JSON_UNESCAPED_UNICODE), $pua, $deviceId]);
+    $harden = isset($def['harden']) && is_array($def['harden']) ? $def['harden'] : null;
+    $events = isset($def['events']) && is_array($def['events']) ? $def['events'] : null;
+    unset($def['detections'], $def['harden'], $def['events']);
+    $pdo->prepare('UPDATE devices SET defender = ?, defender_at = NOW(), pua = COALESCE(?, pua), harden = COALESCE(?, harden) WHERE id = ?')
+        ->execute([json_encode($def, JSON_UNESCAPED_UNICODE), $pua,
+            $harden ? mb_substr(json_encode($harden, JSON_UNESCAPED_UNICODE), 0, 8000) : null, $deviceId]);
+    if ($events) protection_events_store($deviceId, $events);
     if ($detections !== null && !isset($def['error'])) {
         threats_store($deviceId, $detections);
         threats_eval_outbreak();

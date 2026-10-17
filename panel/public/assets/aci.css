@@ -267,10 +267,6 @@ dialog.aci-dialog .card { margin: 0; border: 0; }
   background: linear-gradient(100deg, rgba(var(--aci-bad-rgb), .1), rgba(var(--aci-bad-rgb), .04)); border: 1px solid rgba(var(--aci-bad-rgb), .28); color: #7d1014; }
 .alert-outbreak[hidden] { display: none; }
 .alert-outbreak > i { font-size: 1.6rem; color: var(--aci-bad); margin-top: .05rem; }
-.pua-card .card-body { display: grid !important; grid-template-columns: auto 1fr auto; gap: 1.1rem; align-items: center; }
-@media (max-width: 767.98px) { .pua-card .card-body { grid-template-columns: auto 1fr; } .pua-card .card-body > :last-child { grid-column: 1 / -1; } }
-.pua-card .pua-icon { width: 46px; height: 46px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center;
-  background: var(--aci-accent-soft); color: var(--aci-accent); font-size: 1.5rem; flex: none; }
 tr.threat-active td:first-child { box-shadow: inset 3px 0 0 var(--aci-bad); }
 tr.threat-active { background: rgba(var(--aci-bad-rgb), .035); }
 .threat-name { font-family: var(--aci-mono); font-size: .8rem; letter-spacing: -.01em; overflow-wrap: anywhere; }
@@ -281,3 +277,16 @@ tr.threat-active { background: rgba(var(--aci-bad-rgb), .035); }
 [data-page="threats"] .card-table td, [data-page="threats"] .card-table th { padding-left: .6rem; padding-right: .6rem; }
 [data-page="threats"] .card-table td:first-child, [data-page="threats"] .card-table th:first-child { padding-left: 1.1rem; }
 [data-page="threats"] .card-table td:last-child { padding-right: 1rem; }
+
+/* Koruma ayarları (Tehditler) */
+.prot-row { display: grid; grid-template-columns: minmax(240px, 1.3fr) minmax(200px, 1fr) 210px; gap: 1.25rem; align-items: center;
+  padding: .9rem 1.25rem; border-top: 1px solid #eef1f5; }
+.prot-row:first-child { border-top: 0; }
+.prot-bar { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: #eef1f5; margin-bottom: .35rem; }
+.prot-bar .sw { display: block; height: 100%; }
+.prot-actions { display: flex; gap: .35rem; justify-content: flex-end; }
+.sw.on { background: var(--aci-ok); } .sw.audit { background: #f0b429; } .sw.partial { background: #8fb3ef; }
+.sw.off { background: var(--aci-bad); } .sw.external { background: #6f84a6; } .sw.unknown { background: #d5dbe5; }
+.prot-legend { display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-size: .75rem; color: var(--aci-muted); background: #fafbfd; }
+.prot-legend i.sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: .35rem; vertical-align: -1px; }
+@media (max-width: 991.98px) { .prot-row { grid-template-columns: 1fr; gap: .6rem; } .prot-actions { justify-content: flex-start; } }

@@ -117,6 +117,20 @@ check "PUA modu betiğe eklenir" "Mod = 'Enabled'" "$R"
 dev "{\"version\":\"0.0.1\",\"defender\":{\"threats\":0,\"pua\":1,\"detections\":[]},\"results\":[]}" >/dev/null
 N=$(api "$B/admin_api.php?action=threats" | python3 -c "import sys,json;print(sum(1 for t in json.load(sys.stdin)['threats'] if t['device_id']==$DID and t['active']))")
 [[ "$N" == 0 ]] && ok "temizlenince cihazda etkin tehdit kalmaz" || fail "temizlenince cihazda etkin tehdit kalmaz" "etkin: $N"
+echo "Koruma ayarları ve olayları"
+ASRJ='{"be9ba2d9-53ea-4cdc-84e5-9b1eeee46550":2,"d4f940ab-401b-4efc-aadc-ad5f3c50688a":2,"3b576869-a4ec-4529-8536-b80a7769e899":2,"75668c1f-73b5-4cf0-bb93-3ecf5cb7cc84":2,"d3e037e1-3eb8-44c8-a917-57927947596d":2,"5beb7efe-fd9a-4556-801d-275e5ffc04cc":2,"92e97fa1-2edf-4476-bdd6-9dd0b4dddc7b":2,"b2b3f03d-6a65-4f7b-a9c7-1c7ef74a9ba4":2,"9e6c4e1f-7d60-472f-ba1a-a39ef669e4b2":2,"e6db77e5-3df2-4cf1-b95a-636979351e5b":2}'
+EVT='[{"time":"'$(date +%Y-%m-%dT%H:%M:%S)'","event":1122,"rule":"b2b3f03d-6a65-4f7b-a9c7-1c7ef74a9ba4","path":"E:\\oyun.exe","process":"C:\\Windows\\explorer.exe","user":"OKUL\\ogr"}]'
+dev "{\"version\":\"0.0.1\",\"defender\":{\"enabled\":true,\"realtime\":true,\"threats\":0,\"pua\":2,\"detections\":[],\"harden\":{\"asr\":$ASRJ,\"net\":2,\"cfa\":0,\"autorun\":255,\"quick_time\":750},\"events\":$EVT},\"results\":[]}" >/dev/null
+dev "{\"version\":\"0.0.1\",\"defender\":{\"enabled\":true,\"realtime\":true,\"threats\":0,\"pua\":2,\"detections\":[],\"harden\":{\"asr\":$ASRJ,\"net\":2,\"cfa\":0,\"autorun\":255,\"quick_time\":750},\"events\":$EVT},\"results\":[]}" >/dev/null
+R=$(api "$B/admin_api.php?action=threats")
+P=$(echo "$R" | python3 -c "import sys,json;d=json.load(sys.stdin)['protections'];print(d['asr']['counts']['audit'],d['net']['counts']['audit'],d['cfa']['counts']['off'],d['autorun']['counts']['on'],d['scan']['counts']['on'])")
+[[ "$P" == "1 1 1 1 1" ]] && ok "koruma durumları doğru sayılır (ASR/ağ izleme, klasör kapalı, USB ve tarama açık)" || fail "koruma durumları doğru sayılır" "$P"
+check "koruma olayı Türkçe kural adıyla gelir" "USB'den imzasız program" "$R"
+N=$(echo "$R" | python3 -c "import sys,json;print(len(json.load(sys.stdin)['events']))")
+[[ "$N" == 1 ]] && ok "aynı koruma olayı tekrar eklenmez" || fail "aynı koruma olayı tekrar eklenmez" "olay: $N"
+R=$(api -X POST "$B/admin_api.php?action=send" -d "{\"type\":\"koruma_paket_izleme\",\"device_ids\":[$DID]}"); check "okul paketi komutu oluşturulur" '"count":1' "$R"
+R=$(dev '{"version":"0.0.1","results":[]}'); check "cihaz koruma betiğini işlem adıyla alır" "Islem = 'paket_izleme'" "$R"
+check "betik ASR kurallarını içerir" "AttackSurfaceReductionRules_Ids" "$R"
 dev '{"version":"0.0.1","defender":{"enabled":false,"realtime":false,"threats":0,"pua":0,"detections":[],"av":[{"name":"Bitdefender Endpoint Security Tools Antimalware","on":true,"uptodate":true}]},"results":[]}' >/dev/null
 R=$(api "$B/admin_api.php?action=devices"); check "Bitdefender'lı cihaz korumalı sayılır" "Bitdefender Endpoint Security Tools" "$R"
 N=$(api "$B/admin_api.php?action=alerts" | python3 -c "import sys,json;print(sum(1 for a in json.load(sys.stdin)['open'] if a['type']=='defender' and str(a['device_id'])=='$DID'))")

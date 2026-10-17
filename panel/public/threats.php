@@ -23,19 +23,32 @@ page_header('Tehditler', 'threats.php');
       <div class="eyebrow">PUA koruması açık</div><div class="stat-num" id="th-pua">—</div></div></div></div>
   </div>
 
-  <div class="card mb-3 pua-card">
-    <div class="card-body d-flex flex-wrap align-items-center gap-3">
-      <span class="pua-icon"><i class="ti ti-shield-lock"></i></span>
+  <div class="card mb-3">
+    <div class="card-header flex-wrap gap-2">
       <div>
-        <h3 class="card-title mb-1">PUA koruması (istenmeyen yazılım)</h3>
-        <div class="text-secondary small">Crack/keygen araçlarını, reklam yazılımlarını ve izinsiz paket yükleyicileri engeller —
-          okul bilgisayarlarında en sık bulaşma kaynağı. Önce <b>izleme modu</b> ile birkaç gün ne engelleneceğini görebilirsiniz.</div>
-        <div class="small mt-2" id="th-pua-detail"></div>
+        <h3 class="card-title">Koruma ayarları</h3>
+        <div class="text-secondary small">İzleme modunda hiçbir şey engellenmez, yalnız aşağıdaki "Koruma olayları"na yazılır. Birkaç gün izleyip sonra engellemeye geçin.</div>
       </div>
-      <div class="d-flex flex-wrap gap-2">
-        <button class="btn" id="pua-audit"><i class="ti ti-eye me-1"></i>İzleme modunda aç</button>
-        <button class="btn btn-primary" id="pua-on"><i class="ti ti-shield-check me-1"></i>Tüm cihazlarda aç</button>
+      <div class="ms-auto d-flex flex-wrap gap-2">
+        <button class="btn" id="pkg-audit"><i class="ti ti-eye me-1"></i>Okul paketi: izleme modu</button>
+        <button class="btn btn-primary" id="pkg-block"><i class="ti ti-shield-check me-1"></i>Okul paketi: engelle</button>
       </div>
+    </div>
+    <div class="prot-list" id="prot-list"><div class="text-secondary p-3">Yükleniyor…</div></div>
+    <div class="card-footer prot-legend">
+      <span><i class="sw on"></i>Açık</span><span><i class="sw audit"></i>İzleme modu</span><span><i class="sw partial"></i>Kısmen</span>
+      <span><i class="sw off"></i>Kapalı</span><span><i class="sw external"></i>Başka antivirüs</span><span><i class="sw unknown"></i>Bilgi bekleniyor</span>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header"><h3 class="card-title">Koruma olayları <span class="text-secondary fw-normal">· son 7 gün</span></h3>
+      <span class="badge ms-auto bg-secondary-lt" id="ev-count"></span></div>
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead><tr><th>Zaman</th><th>Cihaz</th><th>Olay</th><th>Ne / nerede</th><th>Hangi program</th></tr></thead>
+        <tbody id="ev-rows"><tr class="empty-row"><td colspan="5">Yükleniyor…</td></tr></tbody>
+      </table>
     </div>
   </div>
 

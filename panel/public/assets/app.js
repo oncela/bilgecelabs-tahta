@@ -1164,11 +1164,8 @@ const Threats = {
       document.getElementById('th-days-label').textContent = { 7: '7 gün', 30: '30 gün', 90: '90 gün', 365: '1 yıl' }[sm.days];
       const total = d.device_ids.length;
       document.getElementById('th-pua').textContent = d.pua.on + ' / ' + total;
-      const det = [];
-      if (d.pua.audit) det.push(d.pua.audit + ' cihaz izleme modunda');
-      if (d.pua.off) det.push(d.pua.off + ' cihazda kapalı');
-      if (d.pua.unknown) det.push(d.pua.unknown + ' cihazdan bilgi bekleniyor');
-      document.getElementById('th-pua-detail').textContent = det.length ? det.join(' · ') : (total ? 'Tüm cihazlarda açık.' : '');
+      this.renderProtections();
+      this.renderEvents();
       const oa = Object.entries(d.other_av || {});
       const oaEl = document.getElementById('th-other-av');
       oaEl.hidden = !oa.length;
@@ -1181,6 +1178,61 @@ const Threats = {
     } catch (err) {
       const tr = el('tr', 'empty-row'); const td = el('td', '', err.message); td.colSpan = 7; tr.append(td); tb.replaceChildren(tr);
     }
+  },
+  renderProtections() {
+    const ORDER = ['on', 'audit', 'partial', 'off', 'external', 'unknown'];
+    const NAMES = { on: 'açık', audit: 'izlemede', partial: 'kısmen', off: 'kapalı', external: 'başka antivirüs', unknown: 'bilgi bekleniyor' };
+    const CMD = {
+      pua: ['pua_audit', 'pua_on', 'pua_off'], asr: ['koruma_asr_audit', 'koruma_asr_on', 'koruma_asr_off'],
+      net: ['koruma_net_audit', 'koruma_net_on', 'koruma_net_off'], cfa: ['koruma_cfa_audit', 'koruma_cfa_on', 'koruma_cfa_off'],
+      autorun: [null, 'koruma_autorun_off', 'koruma_autorun_default'], scan: [null, 'koruma_scan_daily', 'koruma_scan_daily_off'],
+    };
+    const ids = this.data.device_ids;
+    document.getElementById('prot-list').replaceChildren(...Object.entries(this.data.protections).map(([key, p]) => {
+      const row = el('div', 'prot-row');
+      const info = el('div', 'prot-info'); info.append(el('div', 'fw-medium', p.name), el('div', 'text-secondary small', p.desc));
+      const total = ORDER.reduce((n, k) => n + p.counts[k], 0) || 1;
+      const bar = el('div', 'prot-bar'); const txt = [];
+      ORDER.forEach((k) => {
+        if (!p.counts[k]) return;
+        const seg = el('span', 'sw ' + k); seg.style.width = (p.counts[k] / total * 100) + '%'; seg.title = p.counts[k] + ' cihaz ' + NAMES[k]; bar.append(seg);
+        txt.push(p.counts[k] + ' ' + NAMES[k]);
+      });
+      const st = el('div', 'prot-status'); st.append(bar, el('div', 'text-secondary small', txt.join(' · ') || 'Cihaz yok'));
+      const act = el('div', 'prot-actions');
+      const [aud, on, off] = CMD[key];
+      const mk = (cmd, label, cls, q) => { const b = el('button', 'btn btn-sm ' + cls, label); b.type = 'button'; b.addEventListener('click', () => this.send(cmd, ids, q)); return b; };
+      if (p.audit) {
+        act.append(mk(aud, 'İzle', '', `${p.name}: tüm cihazlarda izleme modu açılsın mı? (engellemez, kaydeder)`),
+          mk(on, 'Engelle', 'btn-primary', `${p.name}: tüm cihazlarda engelleme açılsın mı?`),
+          mk(off, 'Kapat', 'btn-ghost-secondary', `${p.name}: tüm cihazlarda kapatılsın mı?`));
+      } else {
+        act.append(mk(on, 'Uygula', 'btn-primary', `${p.name}: tüm cihazlarda uygulansın mı?`),
+          mk(off, 'Geri al', 'btn-ghost-secondary', `${p.name}: tüm cihazlarda geri alınsın mı?`));
+      }
+      row.append(info, st, act);
+      return row;
+    }));
+  },
+  renderEvents() {
+    const tb = document.getElementById('ev-rows');
+    const ev = this.data.events;
+    document.getElementById('ev-count').textContent = ev.length + ' olay';
+    if (!ev.length) {
+      const tr = el('tr', 'empty-row'); const td = el('td', '', 'Son 7 günde koruma olayı yok. İzleme modunu açınca engellenecek şeyler burada görünür.');
+      td.colSpan = 5; tr.append(td); tb.replaceChildren(tr); return;
+    }
+    tb.replaceChildren(...ev.map((e) => {
+      const tr = el('tr');
+      const dev = el('td', 'text-nowrap'); dev.append(el('div', 'fw-medium', e.device), el('div', 'text-secondary small', e.room || ''));
+      const kind = el('td'); kind.append(tag(e.mode === 'block' ? 'bad' : 'warn', e.mode === 'block' ? 'Engellendi' : 'İzlendi'), ' ', el('span', 'small', e.kind));
+      if (e.rule) kind.append(el('div', 'text-secondary small', e.rule));
+      const tgt = el('td'); const t = el('div', 'mono small text-truncate', e.target || '—'); t.title = e.target || ''; tgt.append(t);
+      const pr = el('td'); const pp = el('div', 'mono small text-secondary text-truncate', (e.process || '—').split('\\').pop()); pp.title = e.process || ''; pr.append(pp);
+      if (e.user) pr.append(el('div', 'text-secondary small', e.user));
+      tr.append(el('td', 'text-nowrap', fmtTime(e.time)), dev, kind, tgt, pr);
+      return tr;
+    }));
   },
   render() {
     const tb = document.getElementById('th-rows');
@@ -1230,10 +1282,10 @@ const Threats = {
     document.getElementById('th-days').addEventListener('change', () => this.load());
     document.getElementById('th-search').addEventListener('input', () => this.data && this.render());
     document.getElementById('th-only-active').addEventListener('change', () => this.data && this.render());
-    document.getElementById('pua-on').addEventListener('click', () => this.send('pua_on', this.data?.device_ids || [],
-      'PUA koruması tüm cihazlarda açılsın mı? Crack ve istenmeyen yazılımlar engellenecek.'));
-    document.getElementById('pua-audit').addEventListener('click', () => this.send('pua_audit', this.data?.device_ids || [],
-      'PUA koruması tüm cihazlarda izleme modunda açılsın mı? Hiçbir şey engellenmez, yalnız kaydedilir.'));
+    document.getElementById('pkg-audit').addEventListener('click', () => this.send('koruma_paket_izleme', this.data?.device_ids || [],
+      'Okul koruma paketi tüm cihazlarda İZLEME modunda açılsın mı?\n\nPUA, ASR, ağ ve klasör koruması izlemeye alınır (hiçbir şey engellenmez); USB otomatik çalıştırma kapatılır; günlük 12:30 taraması açılır.'));
+    document.getElementById('pkg-block').addEventListener('click', () => this.send('koruma_paket_engelle', this.data?.device_ids || [],
+      'Okul koruma paketi tüm cihazlarda ENGELLEME moduna alınsın mı?\n\nPUA, ASR ve ağ koruması engeller; USB otomatik çalıştırma kapanır; günlük tarama açılır. Klasör koruması değişmez.\nÖnerilen: önce birkaç gün izleme modunda olayları inceleyin.'));
     this.load(); setInterval(() => { if (!document.hidden) this.load(); }, 30000);
   },
 };
