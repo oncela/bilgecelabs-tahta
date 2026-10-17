@@ -108,6 +108,8 @@ function alert_sweep(): void {
     foreach ($rows as $d) {
         $id = (int)$d['id'];
         $label = device_label($d);
+        // Kapalı cihazın anlık bellek ölçümü eskidir: uyarısı açık kalmasın
+        if (!is_online($d['last_seen'])) alert_resolve($id, 'mem');
         $offline = $d['last_seen'] && strtotime($d['last_seen']) < time() - $hours * 3600;
         if ($offline) {
             $since = date('d.m.Y H:i', strtotime($d['last_seen']));
